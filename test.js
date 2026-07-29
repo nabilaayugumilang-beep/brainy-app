@@ -36,6 +36,15 @@ test('mobile app fills the true phone viewport without desktop overflow', () => 
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.prompt-chip \{[^}]*width:100%;[^}]*min-height:48px;/);
 });
 
+test('mobile composer can preview and securely attach a camera or gallery photo', () => {
+  assert.match(html, /<input[^>]+id="imageInput"[^>]+type="file"[^>]+accept="image\/\*"[^>]*>/);
+  assert.match(html, /id="attachBtn"/);
+  assert.match(html, /id="attachmentPreview"/);
+  assert.match(html, /rpc\('image\.attach_bytes',\{session_id:sid,content_base64:image\.base64,filename:image\.name\}\)/);
+  assert.match(html, /const MAX_IMAGE_DIMENSION = 1600/);
+  assert.match(html, /className = 'chat-image'/);
+});
+
 test('app discovers the latest rotating backend without storing its access key', () => {
   const config = JSON.parse(fs.readFileSync('backend.json', 'utf8'));
   assert.match(config.backend, /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/);
