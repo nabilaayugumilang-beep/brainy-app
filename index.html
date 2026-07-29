@@ -180,7 +180,7 @@
   const queryAccess = queryParams.get('access') || '';
   if (queryBackend) localStorage.setItem('brainy_backend', queryBackend);
   if (queryAccess) localStorage.setItem('brainy_access', queryAccess);
-  const backendUrl = (queryBackend || localStorage.getItem('brainy_backend') || location.origin).replace(/\/$/, '');
+  let backendUrl = (queryBackend || localStorage.getItem('brainy_backend') || location.origin).replace(/\/$/, '');
   const accessKey = queryAccess || localStorage.getItem('brainy_access') || '';
   const authHeaders = { 'x-brainy-key': accessKey };
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
@@ -189,6 +189,18 @@
   let historyRendered = false;
   let runtimeInfo = {}, latestUsage = {};
   const pending = new Map();
+
+  async function refreshBackend() {
+    try {
+      const response = await fetch('./backend.json',{cache:'no-store'});
+      if (!response.ok) return backendUrl;
+      const config = await response.json();
+      if (!/^https:\/\/[a-z0-9.-]+(?::\d+)?$/i.test(config.backend || '')) return backendUrl;
+      backendUrl = config.backend.replace(/\/$/, '');
+      localStorage.setItem('brainy_backend', backendUrl);
+    } catch { /* keep last known backend */ }
+    return backendUrl;
+  }
 
   const themeOrder = ['auto','light','dark'];
   let theme = localStorage.getItem('brainy_theme') || 'auto';
@@ -424,7 +436,7 @@
     clearTimeout(reconnectTimer); ready=false; updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Menyambungkan...');
     let r;
     try { r = await fetch(`${backendUrl}/api/auth/ws-ticket`,{method:'POST',headers:authHeaders}); }
-    catch (err) { connecting=false; throw err; }
+    catch (err) { connecting=false; await refreshBackend(); throw err; }
     if (r.status === 404) { connecting=false; throw new Error('Akses BRAINY tidak valid'); }
     if (!r.ok) { connecting=false; throw new Error('Tidak bisa membuka workspace'); }
     const {ticket} = await r.json();
@@ -485,7 +497,7 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }
-  connect().catch(fail);
+  refreshBackend().finally(() => connect().catch(fail));
   setInterval(refreshAccountUsage, 5 * 60 * 1000);
 })();
 </script>

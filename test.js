@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const html = fs.readFileSync('index.html', 'utf8');
 
 test('bridge keeps all backend calls on the dynamic tunnel', () => {
-  assert.match(html, /const backendUrl/);
+  assert.match(html, /let backendUrl/);
   assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/auth\/ws-ticket`/);
   assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/codex-usage`/);
   assert.match(html, /new WebSocket\(`\$\{proto\}\/\/\$\{wsBackend\.host\}/);
@@ -27,6 +27,14 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
   assert.match(html, /serviceWorker\.register\('\.\/sw\.js'/);
+});
+
+test('app discovers the latest rotating backend without storing its access key', () => {
+  const config = JSON.parse(fs.readFileSync('backend.json', 'utf8'));
+  assert.match(config.backend, /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/);
+  assert.equal(Object.hasOwn(config, 'access'), false);
+  assert.match(html, /fetch\('\.\/backend\.json',\s*\{cache:'no-store'\}\)/);
+  assert.match(html, /async function refreshBackend/);
 });
 
 test('manifest and service worker provide a standalone offline app shell', () => {

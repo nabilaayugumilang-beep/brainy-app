@@ -3,6 +3,7 @@ const SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './backend.json',
   './icons/brainy-192.png',
   './icons/brainy-512.png',
   './fonts-terminal/JetBrainsMono-Regular.woff2',
