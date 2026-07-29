@@ -1,0 +1,41 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+
+const html = fs.readFileSync('index.html', 'utf8');
+
+test('bridge keeps all backend calls on the dynamic tunnel', () => {
+  assert.match(html, /const backendUrl/);
+  assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/auth\/ws-ticket`/);
+  assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/codex-usage`/);
+  assert.match(html, /new WebSocket\(`\$\{proto\}\/\/\$\{wsBackend\.host\}/);
+});
+
+test('repository contains no access key or backend URL', () => {
+  assert.doesNotMatch(html, /trycloudflare\.com/);
+  assert.doesNotMatch(html, /access=[a-f0-9]{32,}/);
+});
+
+test('fonts are served by GitHub Pages using relative paths', () => {
+  assert.match(html, /\.\/fonts-terminal\/JetBrainsMono-Regular\.woff2/);
+  assert.match(html, /\.\/fonts-terminal\/JetBrainsMono-Bold\.woff2/);
+});
+
+test('app is installable and keeps its secure backend after launch', () => {
+  assert.match(html, /rel="manifest" href="\.\/manifest\.webmanifest"/);
+  assert.match(html, /rel="apple-touch-icon"/);
+  assert.match(html, /localStorage\.setItem\('brainy_backend'/);
+  assert.match(html, /localStorage\.getItem\('brainy_backend'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js'/);
+});
+
+test('manifest and service worker provide a standalone offline app shell', () => {
+  const manifest = JSON.parse(fs.readFileSync('manifest.webmanifest', 'utf8'));
+  const sw = fs.readFileSync('sw.js', 'utf8');
+  assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.name, 'BRAINY Desk');
+  assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
+  assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
+  assert.match(sw, /index\.html/);
+  assert.match(sw, /manifest\.webmanifest/);
+});

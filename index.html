@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="id" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f5f2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/brainy-192.png">
+  <title>BRAINY Desk</title>
+  <style>
+    @font-face {
+      font-family:'JetBrains Mono'; font-style:normal; font-weight:400; font-display:swap;
+      src:url('./fonts-terminal/JetBrainsMono-Regular.woff2') format('woff2');
+    }
+    @font-face {
+      font-family:'JetBrains Mono'; font-style:normal; font-weight:700; font-display:swap;
+      src:url('./fonts-terminal/JetBrainsMono-Bold.woff2') format('woff2');
+    }
+    :root {
+      --page:#f6f5f2; --panel:#ffffff; --text:#292724; --muted:#77716a;
+      --line:#dedbd5; --soft:#ebe8e2; --accent:#6c5c49; --accentText:#ffffff;
+      --user:#e9e5de; --danger:#9a4238; --shadow:0 1px 2px rgba(35,30,24,.04);
+    }
+    :root[data-theme="dark"] {
+      --page:#191816; --panel:#23211e; --text:#eeeae3; --muted:#aaa39a;
+      --line:#3a3732; --soft:#302d29; --accent:#c7b69f; --accentText:#211f1c;
+      --user:#35312c; --danger:#ee9388; --shadow:none;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --page:#191816; --panel:#23211e; --text:#eeeae3; --muted:#aaa39a;
+        --line:#3a3732; --soft:#302d29; --accent:#c7b69f; --accentText:#211f1c;
+        --user:#35312c; --danger:#ee9388; --shadow:none;
+      }
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; height:100%; background:var(--page); color:var(--text); }
+    body { font:14px/1.55 'JetBrains Mono',ui-monospace,'SFMono-Regular',Consolas,monospace; letter-spacing:-.005em; }
+    button,textarea { font:inherit; }
+    button { color:inherit; }
+    .app { height:100svh; display:grid; grid-template-rows:auto 1fr auto; max-width:920px; margin:0 auto; background:var(--panel); border-inline:1px solid var(--line); }
+    .topbar { background:var(--panel); border-bottom:1px solid var(--line); }
+    header { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:color-mix(in srgb,var(--panel) 94%,transparent); }
+    .brand { display:flex; align-items:center; gap:10px; min-width:0; }
+    .mark { width:28px; height:28px; border:1px solid var(--line); border-radius:8px; display:grid; place-items:center; font-weight:600; background:var(--soft); }
+    .title { font-size:14px; font-weight:600; line-height:1.2; }
+    .connection { color:var(--muted); font-size:12px; white-space:nowrap; }
+    .head-actions { display:flex; gap:6px; }
+    .icon-btn { min-width:34px; height:34px; border:1px solid var(--line); background:var(--panel); border-radius:8px; cursor:pointer; padding:0 9px; }
+    .icon-btn:hover { background:var(--soft); }
+    .meta-bar { width:100%; min-height:38px; display:flex; align-items:center; gap:16px; padding:8px 18px; border:0; border-top:1px solid var(--line); background:var(--panel); color:var(--muted); font-size:11px; text-align:left; cursor:pointer; overflow:auto; }
+    .meta-bar:hover { background:var(--soft); }
+    .meta-item { white-space:nowrap; }
+    .meta-item b { color:var(--text); font-weight:600; }
+    .meta-more { margin-left:auto; color:var(--muted); }
+    .info-panel { padding:14px 18px 16px; border-top:1px solid var(--line); background:var(--soft); }
+    .info-panel[hidden] { display:none; }
+    .info-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px 18px; }
+    .info-cell span { display:block; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+    .info-cell strong { display:block; margin-top:2px; font-size:12px; font-weight:500; overflow-wrap:anywhere; }
+    main { overflow:auto; scroll-behavior:smooth; background:var(--panel); }
+    .thread { width:min(720px,100%); margin:0 auto; padding:28px 24px 120px; }
+    .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
+    .empty h1 { margin:0; font-size:clamp(27px,5vw,38px); line-height:1.1; letter-spacing:-.035em; font-weight:600; }
+    .empty p { margin:0 0 12px; color:var(--muted); font-size:15px; }
+    .prompts { display:flex; flex-wrap:wrap; gap:8px; }
+    .prompt-chip { border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:var(--panel); cursor:pointer; box-shadow:var(--shadow); }
+    .prompt-chip:hover { background:var(--soft); }
+    .message { display:grid; grid-template-columns:72px minmax(0,1fr); gap:14px; padding:22px 0; border-bottom:1px solid var(--line); }
+    .speaker { color:var(--muted); font-size:12px; font-weight:600; padding-top:2px; }
+    .message.user .content { display:inline-block; justify-self:start; padding:10px 13px; background:var(--user); border-radius:10px; }
+    .content { white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; }
+    .content.pending { color:var(--muted); }
+    .work-note { margin-top:10px; font-size:12px; color:var(--muted); }
+    .request-card { margin:12px 0; border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--soft); }
+    .request-card p { margin:0 0 10px; }
+    .request-actions { display:flex; flex-wrap:wrap; gap:7px; }
+    .small-btn { border:1px solid var(--line); border-radius:7px; background:var(--panel); padding:7px 10px; cursor:pointer; }
+    .small-btn.primary { background:var(--accent); color:var(--accentText); border-color:var(--accent); }
+    footer { border-top:1px solid var(--line); background:var(--panel); padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+    .composer { width:min(720px,100%); margin:0 auto; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; padding:8px 8px 8px 14px; border:1px solid var(--line); border-radius:14px; background:var(--panel); box-shadow:0 6px 30px rgba(35,30,24,.08); }
+    textarea { resize:none; max-height:140px; min-height:34px; padding:6px 0; border:0; outline:0; background:transparent; color:var(--text); }
+    textarea::placeholder { color:var(--muted); }
+    .send { height:36px; min-width:64px; border:0; border-radius:9px; padding:0 14px; background:var(--accent); color:var(--accentText); font-weight:600; cursor:pointer; }
+    .send:disabled { opacity:.42; cursor:default; }
+    .footnote { width:min(720px,100%); margin:6px auto 0; color:var(--muted); font-size:11px; text-align:center; }
+    .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:12px; display:none; z-index:5; }
+    @media (max-width:640px) {
+      .app { border:0; }
+      header { padding-inline:13px; }
+      .meta-bar { padding-inline:13px; gap:12px; }
+      .meta-secondary { display:none; }
+      .meta-more { margin-left:auto; }
+      .info-panel { padding-inline:13px; }
+      .info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .thread { padding:22px 16px 110px; }
+      .message { grid-template-columns:50px minmax(0,1fr); gap:10px; padding:18px 0; }
+      .connection { display:none; }
+      footer { padding-top:9px; }
+      .composer { border-radius:12px; }
+      .footnote { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <header>
+        <div class="brand">
+          <div class="mark">B</div>
+          <div><div class="title">BRAINY Desk</div><div class="connection" id="status">Menyambungkan...</div></div>
+        </div>
+        <div class="head-actions">
+          <button class="icon-btn" id="themeBtn" type="button" title="Ganti tema">◐</button>
+          <button class="icon-btn" id="newBtn" type="button" title="Percakapan baru">Baru</button>
+        </div>
+      </header>
+      <button class="meta-bar" id="metaBar" type="button" aria-expanded="false">
+        <span class="meta-item">Brain&nbsp; <b id="modelMeta">Loading...</b></span>
+        <span class="meta-item meta-secondary">Provider&nbsp; <b id="providerMeta">—</b></span>
+        <span class="meta-item">Remaining&nbsp; <b id="contextMeta">—</b></span>
+        <span class="meta-item">Usage&nbsp; <b id="usageMeta">—</b></span>
+        <span class="meta-item">Weekly&nbsp; <b id="weeklyMeta">Loading...</b></span>
+        <span class="meta-item meta-secondary">Tokens&nbsp; <b id="tokensMeta">—</b></span>
+        <span class="meta-more">Details</span>
+      </button>
+      <section class="info-panel" id="infoPanel" hidden>
+        <div class="info-grid">
+          <div class="info-cell"><span>Brain</span><strong id="modelDetail">—</strong></div>
+          <div class="info-cell"><span>Provider</span><strong id="providerDetail">—</strong></div>
+          <div class="info-cell"><span>Context remaining</span><strong id="remainingDetail">—</strong></div>
+          <div class="info-cell"><span>Context window</span><strong id="contextDetail">—</strong></div>
+          <div class="info-cell"><span>Weekly GPT limit</span><strong id="weeklyDetail">Loading...</strong></div>
+          <div class="info-cell"><span>5-hour GPT limit</span><strong id="fiveHourDetail">Loading...</strong></div>
+          <div class="info-cell"><span>Session tokens</span><strong id="tokensDetail">—</strong></div>
+          <div class="info-cell"><span>API calls</span><strong id="callsDetail">—</strong></div>
+          <div class="info-cell"><span>Tools & skills</span><strong id="toolsDetail">—</strong></div>
+          <div class="info-cell"><span>Runtime</span><strong id="runtimeDetail">—</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <main id="scroller">
+      <div class="thread" id="thread">
+        <section class="empty" id="empty">
+          <h1>STARTS HERE</h1>
+          <p>Plans, drafts, decisions, and follow-ups.</p>
+          <div class="prompts">
+            <button class="prompt-chip" data-prompt="Bantu susun prioritas aku hari ini">Plan today</button>
+            <button class="prompt-chip" data-prompt="Bantu review draft ini: ">Review a draft</button>
+            <button class="prompt-chip" data-prompt="Tolong cari informasi tentang ">Research a topic</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <form class="composer" id="composer">
+        <textarea id="input" rows="1" placeholder="Write what needs to get done..." autocomplete="off"></textarea>
+        <button class="send" id="send" type="submit" disabled>Kirim</button>
+      </form>
+      <div class="footnote">Workspace pribadi Abila</div>
+    </footer>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const thread = $('#thread'), empty = $('#empty'), input = $('#input'), send = $('#send');
+  const statusEl = $('#status'), scroller = $('#scroller'), toast = $('#toast');
+  const modelMeta = $('#modelMeta'), providerMeta = $('#providerMeta');
+  const contextMeta = $('#contextMeta'), usageMeta = $('#usageMeta'), tokensMeta = $('#tokensMeta');
+  const weeklyMeta = $('#weeklyMeta');
+  const queryParams = new URLSearchParams(location.search);
+  const queryBackend = queryParams.get('backend') || '';
+  const queryAccess = queryParams.get('access') || '';
+  if (queryBackend) localStorage.setItem('brainy_backend', queryBackend);
+  if (queryAccess) localStorage.setItem('brainy_access', queryAccess);
+  const backendUrl = (queryBackend || localStorage.getItem('brainy_backend') || location.origin).replace(/\/$/, '');
+  const accessKey = queryAccess || localStorage.getItem('brainy_access') || '';
+  const authHeaders = { 'x-brainy-key': accessKey };
+  let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
+  let currentAssistant = null, currentText = '', reconnectTimer = null;
+  let queuedText = '', connecting = false;
+  let historyRendered = false;
+  let runtimeInfo = {}, latestUsage = {};
+  const pending = new Map();
+
+  const themeOrder = ['auto','light','dark'];
+  let theme = localStorage.getItem('brainy_theme') || 'auto';
+  function applyTheme() {
+    document.documentElement.dataset.theme = theme;
+    $('#themeBtn').title = 'Tema: ' + theme;
+  }
+  applyTheme();
+  $('#themeBtn').onclick = () => {
+    theme = themeOrder[(themeOrder.indexOf(theme) + 1) % themeOrder.length];
+    localStorage.setItem('brainy_theme', theme); applyTheme();
+  };
+  $('#metaBar').onclick = () => {
+    const panel = $('#infoPanel'); panel.hidden = !panel.hidden;
+    $('#metaBar').setAttribute('aria-expanded', String(!panel.hidden));
+    $('.meta-more').textContent = panel.hidden ? 'Details' : 'Close';
+  };
+
+  function formatCount(value) {
+    const n = Number(value || 0);
+    if (!n) return '0';
+    if (n >= 1000000) return (n / 1000000).toFixed(n >= 10000000 ? 0 : 1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'K';
+    return String(n);
+  }
+  function niceName(value) {
+    const s = String(value || '').replace(/^openai\//,'').replace(/^anthropic\//,'');
+    if (/^gpt-/i.test(s)) {
+      const parts = s.slice(4).split(/[-_]/);
+      return 'GPT-' + parts.map((part,i) => i === 0 ? part : (part ? part[0].toUpperCase() + part.slice(1) : '')).join(' ');
+    }
+    return s.split(/[-_]/).map(part => {
+      if (/^openai$/i.test(part)) return 'OpenAI';
+      return part ? part[0].toUpperCase() + part.slice(1) : '';
+    }).join(' ') || '—';
+  }
+  function groupCount(group) {
+    if (!group || typeof group !== 'object') return 0;
+    return Object.values(group).reduce((sum, value) => sum + (Array.isArray(value) ? value.length : 0), 0);
+  }
+  function renderRuntime() {
+    const model = niceName(runtimeInfo.model || latestUsage.model);
+    const provider = niceName(runtimeInfo.provider);
+    modelMeta.textContent = model; providerMeta.textContent = provider;
+    document.querySelectorAll('.assistant-brain').forEach(el => { el.textContent = `BRAINY · ${model}`; });
+    $('#modelDetail').textContent = model;
+    $('#providerDetail').textContent = provider;
+    const tools = groupCount(runtimeInfo.tools), skills = groupCount(runtimeInfo.skills);
+    $('#toolsDetail').textContent = (tools || skills) ? `${tools} tools · ${skills} skills` : 'Loading...';
+    const bits = [runtimeInfo.profile_name ? `Profile ${runtimeInfo.profile_name}` : '', runtimeInfo.reasoning_effort ? `Reasoning ${runtimeInfo.reasoning_effort}` : '', runtimeInfo.version ? `Hermes ${runtimeInfo.version}` : ''].filter(Boolean);
+    $('#runtimeDetail').textContent = bits.join(' · ') || '—';
+  }
+  function renderUsage(usage={}) {
+    latestUsage = {...latestUsage,...usage};
+    const used = Number(latestUsage.context_used || 0), max = Number(latestUsage.context_max || 0);
+    const percent = Number(latestUsage.context_percent || (used && max ? Math.round(used/max*100) : 0));
+    if (used && max) {
+      const remaining = Math.max(0,100-percent);
+      contextMeta.textContent = `${remaining}%`;
+      usageMeta.textContent = `${percent}%`;
+      $('#remainingDetail').textContent = `${remaining}%`;
+      $('#contextDetail').textContent = `${formatCount(used)} / ${formatCount(max)}`;
+    } else {
+      contextMeta.textContent = '—';
+      usageMeta.textContent = 'Calculating';
+      $('#remainingDetail').textContent = 'Available after first reply';
+      $('#contextDetail').textContent = '—';
+    }
+    const total = Number(latestUsage.total || 0);
+    tokensMeta.textContent = total ? formatCount(total) : '0';
+    $('#tokensDetail').textContent = `${formatCount(latestUsage.input)} in · ${formatCount(latestUsage.output)} out`;
+    $('#callsDetail').textContent = `${Number(latestUsage.calls || 0)} calls${latestUsage.compressions ? ` · ${latestUsage.compressions} compressions` : ''}`;
+    renderRuntime();
+  }
+  function applyRuntime(info={}) {
+    runtimeInfo = {...runtimeInfo,...info};
+    renderRuntime();
+    if (info.usage) renderUsage(info.usage);
+  }
+  async function refreshUsage() {
+    if (!sid || !ready) return;
+    try { renderUsage(await rpc('session.usage',{session_id:sid})); } catch { /* retry after next event */ }
+  }
+  function formatReset(epoch) {
+    if (!epoch) return '';
+    try {
+      const date = new Date(Number(epoch) * 1000);
+      return ' · resets ' + new Intl.DateTimeFormat('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
+    } catch { return ''; }
+  }
+  function formatLimit(window, missing='Not provided by account') {
+    if (!window) return missing;
+    return `${window.remaining_percent}% left · ${window.used_percent}% used${formatReset(window.resets_at)}`;
+  }
+  async function refreshAccountUsage() {
+    try {
+      const response = await fetch(`${backendUrl}/api/brainy/codex-usage`,{headers:authHeaders});
+      if (!response.ok) throw new Error('Unavailable');
+      const data = await response.json();
+      if (!data.ok) throw new Error('Unavailable');
+      weeklyMeta.textContent = data.weekly ? `${data.weekly.remaining_percent}% left` : 'Unavailable';
+      $('#weeklyDetail').textContent = formatLimit(data.weekly);
+      $('#fiveHourDetail').textContent = formatLimit(data.five_hour);
+    } catch {
+      weeklyMeta.textContent = 'Unavailable';
+      $('#weeklyDetail').textContent = 'Unavailable';
+      $('#fiveHourDetail').textContent = 'Unavailable';
+    }
+  }
+
+  function setStatus(text) { statusEl.textContent = text; }
+  function showToast(text) {
+    toast.textContent = text; toast.style.display = 'block';
+    clearTimeout(showToast.t); showToast.t = setTimeout(() => toast.style.display = 'none', 2800);
+  }
+  function scrollBottom() { requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; }); }
+  function hideEmpty() { if (empty) empty.style.display = 'none'; }
+  function addMessage(role, text, pendingState=false) {
+    hideEmpty();
+    const row = document.createElement('article'); row.className = 'message ' + role;
+    const speaker = document.createElement('div'); speaker.className = 'speaker' + (role === 'assistant' ? ' assistant-brain' : '');
+    speaker.textContent = role === 'user' ? 'Abila' : `BRAINY · ${niceName(runtimeInfo.model || latestUsage.model)}`;
+    const body = document.createElement('div'); body.className = 'content' + (pendingState ? ' pending' : '');
+    body.textContent = text;
+    row.append(speaker, body); thread.append(row); scrollBottom();
+    return body;
+  }
+  function addRequest(question, choices, onChoice) {
+    const card = document.createElement('div'); card.className = 'request-card';
+    const p = document.createElement('p'); p.textContent = question; card.append(p);
+    const actions = document.createElement('div'); actions.className = 'request-actions';
+    (choices || ['Lanjutkan','Batalkan']).forEach((choice, i) => {
+      const b = document.createElement('button'); b.type='button'; b.className='small-btn' + (i===0?' primary':'');
+      b.textContent=choice; b.onclick=()=>{ card.remove(); onChoice(choice, i); }; actions.append(b);
+    });
+    card.append(actions); thread.append(card); scrollBottom();
+  }
+  function renderHistory(messages) {
+    (messages || []).forEach(m => {
+      if ((m.role === 'user' || m.role === 'assistant') && m.text) addMessage(m.role, m.text);
+    });
+  }
+  function rpc(method, params={}) {
+    return new Promise((resolve,reject) => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return reject(new Error('Belum tersambung'));
+      const id = 'b' + (++seq); pending.set(id,{resolve,reject,method});
+      ws.send(JSON.stringify({jsonrpc:'2.0',id,method,params}));
+      setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error('Waktu tunggu habis')); } }, 120000);
+    });
+  }
+  async function flushQueuedMessage() {
+    if (!queuedText || !ready || busy) return;
+    const text = queuedText;
+    queuedText = '';
+    updateSend();
+    try { await rpc('prompt.submit',{session_id:sid,text}); }
+    catch (err) {
+      queuedText = text;
+      ready = false;
+      updateSend();
+      setStatus('Pesan tersimpan · menyambungkan ulang...');
+      connect().catch(fail);
+    }
+  }
+  async function startSession() {
+    const saved = localStorage.getItem('brainy_session');
+    let result;
+    if (saved) {
+      try { result = await rpc('session.resume',{session_id:saved,cols:100,source:'brainy-web'}); }
+      catch { localStorage.removeItem('brainy_session'); }
+    }
+    if (!result) result = await rpc('session.create',{cols:100,source:'brainy-web',title:'BRAINY Desk'});
+    sid = result.session_id; sessionKey = result.stored_session_id || result.session_key || result.resumed || '';
+    if (sessionKey) localStorage.setItem('brainy_session', sessionKey);
+    if (!historyRendered) { renderHistory(result.messages); historyRendered = true; }
+    ready = true; busy = !!result.running;
+    applyRuntime(result.info || {});
+    setStatus(busy ? 'Sedang mengerjakan...' : 'Siap'); updateSend();
+    setTimeout(refreshUsage, 1200);
+    refreshAccountUsage();
+    flushQueuedMessage();
+  }
+  function event(ev) {
+    const type = ev.type, payload = ev.payload || {};
+    if (ev.session_id && sid && ev.session_id !== sid) return;
+    if (type === 'gateway.ready') { startSession().catch(fail); return; }
+    if (type === 'session.info') { applyRuntime(payload); if (!busy) setStatus('Siap'); setTimeout(refreshUsage,200); return; }
+    if (type === 'message.start') {
+      busy = true; setStatus(`Answering with ${niceName(runtimeInfo.model || latestUsage.model)}...`); updateSend(); currentText='';
+      currentAssistant = addMessage('assistant','Menyiapkan jawaban...',true); return;
+    }
+    if (type === 'message.delta') {
+      if (!currentAssistant) currentAssistant = addMessage('assistant','',true);
+      const delta = payload.text || '';
+      currentText += delta; currentAssistant.textContent = currentText;
+      currentAssistant.classList.remove('pending'); scrollBottom(); return;
+    }
+    if (type === 'message.complete') {
+      if (!currentAssistant) currentAssistant = addMessage('assistant','');
+      const finalText = payload.text || currentText || 'Selesai.';
+      currentAssistant.textContent = finalText; currentAssistant.classList.remove('pending');
+      currentAssistant=null; currentText=''; busy=false; setStatus('Siap'); updateSend(); scrollBottom();
+      setTimeout(refreshUsage,250); return;
+    }
+    if (type === 'tool.start' || type === 'tool.progress' || type === 'tool.generating') {
+      setStatus('Sedang mengerjakan...'); return;
+    }
+    if (type === 'clarify.request') {
+      addRequest(payload.question || 'Perlu pilihanmu:', payload.choices, (choice) => {
+        rpc('clarify.respond',{answer:choice,request_id:payload.request_id}).catch(fail);
+      }); return;
+    }
+    if (type === 'approval.request') {
+      addRequest(payload.description || 'BRAINY perlu izin untuk melanjutkan.', ['Izinkan','Tolak'], (_choice,i) => {
+        rpc('approval.respond',{choice:i===0?'allow_once':'deny',session_id:sid}).catch(fail);
+      }); return;
+    }
+    if (type === 'error') { fail(new Error(payload.message || 'Terjadi kendala')); }
+  }
+  function scheduleReconnect() {
+    if (ready) return;
+    clearTimeout(reconnectTimer);
+    reconnectTimer=setTimeout(()=>connect().catch(fail),1500);
+  }
+  function fail(err) {
+    busy=false; updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Koneksi terganggu'); showToast(err.message || String(err));
+    if (currentAssistant && !currentText) currentAssistant.textContent='Belum berhasil. Coba kirim lagi.';
+    scheduleReconnect();
+  }
+  async function connect() {
+    if (connecting || (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN))) return;
+    connecting = true;
+    clearTimeout(reconnectTimer); ready=false; updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Menyambungkan...');
+    let r;
+    try { r = await fetch(`${backendUrl}/api/auth/ws-ticket`,{method:'POST',headers:authHeaders}); }
+    catch (err) { connecting=false; throw err; }
+    if (r.status === 404) { connecting=false; throw new Error('Akses BRAINY tidak valid'); }
+    if (!r.ok) { connecting=false; throw new Error('Tidak bisa membuka workspace'); }
+    const {ticket} = await r.json();
+    const wsBackend = new URL(backendUrl);
+    const proto = wsBackend.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${wsBackend.host}/api/ws?ticket=${encodeURIComponent(ticket)}`);
+
+    ws.onmessage = (m) => {
+      let frame; try { frame=JSON.parse(m.data); } catch { return; }
+      if (frame.method === 'event') return event(frame.params || {});
+      if (frame.id && pending.has(frame.id)) {
+        const p=pending.get(frame.id); pending.delete(frame.id);
+        frame.error ? p.reject(new Error(frame.error.message || 'Request gagal')) : p.resolve(frame.result);
+      }
+    };
+    ws.onclose = () => {
+      ws=null; connecting=false; ready=false;
+      for (const [id,p] of pending) { pending.delete(id); p.reject(new Error('Koneksi terputus')); }
+      updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Menyambungkan ulang...');
+      scheduleReconnect();
+    };
+    ws.onerror = () => setStatus('Koneksi terganggu');
+  }
+  function updateSend() { send.disabled = !input.value.trim() || busy || !!queuedText; }
+  function autoGrow() { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; }
+  input.addEventListener('input',()=>{ autoGrow(); updateSend(); });
+  input.addEventListener('keydown',(e)=>{
+    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); $('#composer').requestSubmit(); }
+  });
+  $('#composer').addEventListener('submit',async(e)=>{
+    e.preventDefault();
+    const text=input.value.trim();
+    if (!text || busy || queuedText) return;
+    addMessage('user',text); input.value=''; autoGrow();
+    if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
+      queuedText=text; updateSend();
+      setStatus('Pesan tersimpan · menyambungkan ulang...');
+      connect().catch(fail);
+      return;
+    }
+    updateSend();
+    try { await rpc('prompt.submit',{session_id:sid,text}); }
+    catch(err) {
+      if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
+        queuedText=text; updateSend();
+        setStatus('Pesan tersimpan · menyambungkan ulang...');
+        connect().catch(fail);
+      } else fail(err);
+    }
+  });
+  document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{
+    input.value=b.dataset.prompt; autoGrow(); updateSend(); input.focus();
+  });
+  $('#newBtn').onclick = async() => {
+    if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
+    localStorage.removeItem('brainy_session'); location.reload();
+  };
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+  connect().catch(fail);
+  setInterval(refreshAccountUsage, 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
