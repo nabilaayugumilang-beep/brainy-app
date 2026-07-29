@@ -29,6 +29,13 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /serviceWorker\.register\('\.\/sw\.js'/);
 });
 
+test('mobile app fills the true phone viewport without desktop overflow', () => {
+  assert.match(html, /\.app \{[^}]*width:100%;[^}]*min-width:0;[^}]*overflow:hidden;/s);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.app \{[^}]*width:100dvw;[^}]*height:100dvh;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.message \{[^}]*grid-template-columns:1fr;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.prompt-chip \{[^}]*width:100%;[^}]*min-height:48px;/);
+});
+
 test('app discovers the latest rotating backend without storing its access key', () => {
   const config = JSON.parse(fs.readFileSync('backend.json', 'utf8'));
   assert.match(config.backend, /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/);
