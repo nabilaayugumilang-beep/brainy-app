@@ -2,6 +2,7 @@
   "name": "BRAINY Desk",
   "short_name": "BRAINY",
   "description": "Workspace pribadi Abila",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

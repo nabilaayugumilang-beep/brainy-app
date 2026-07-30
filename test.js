@@ -57,7 +57,9 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   const manifest = JSON.parse(fs.readFileSync('manifest.webmanifest', 'utf8'));
   const sw = fs.readFileSync('sw.js', 'utf8');
   assert.equal(manifest.display, 'standalone');
-  assert.equal('start_url' in manifest, false, 'installer must preserve the private activation query from the current page');
+  assert.equal(manifest.start_url, './');
+  assert.match(html, /start_url:location\.href/);
+  assert.match(html, /data:application\/manifest\+json/);
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));

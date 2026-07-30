@@ -219,6 +219,21 @@
   let backendUrl = (queryBackend || localStorage.getItem('brainy_backend') || location.origin).replace(/\/$/, '');
   const accessKey = queryAccess || localStorage.getItem('brainy_access') || '';
   const authHeaders = { 'x-brainy-key': accessKey };
+  function personalizeInstallManifest() {
+    if (!queryAccess) return;
+    const manifest = {
+      name:'BRAINY Desk', short_name:'BRAINY', description:'Workspace pribadi Abila',
+      start_url:location.href, scope:new URL('./',location.href).href, display:'standalone',
+      orientation:'any', background_color:'#f6f5f2', theme_color:'#f6f5f2',
+      icons:[
+        {src:new URL('./icons/brainy-192.png',location.href).href,sizes:'192x192',type:'image/png',purpose:'any maskable'},
+        {src:new URL('./icons/brainy-512.png',location.href).href,sizes:'512x512',type:'image/png',purpose:'any maskable'}
+      ]
+    };
+    const link = document.querySelector('link[rel="manifest"]');
+    link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+  }
+  personalizeInstallManifest();
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
   let currentAssistant = null, currentText = '', reconnectTimer = null;
   let queuedText = '', queuedImage = null, selectedImage = null, imagePreparing = false, connecting = false;
