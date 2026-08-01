@@ -41,7 +41,7 @@
     body { font:14px/1.55 'JetBrains Mono',ui-monospace,'SFMono-Regular',Consolas,monospace; letter-spacing:-.005em; }
     button,textarea { font:inherit; }
     button { color:inherit; }
-    .app { width:100%; min-width:0; overflow:hidden; height:100svh; display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:var(--panel); border-inline:1px solid var(--line); }
+    .app { width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:var(--panel); border-inline:1px solid var(--line); }
     .topbar, header, main, footer { width:100%; min-width:0; }
     .topbar { background:var(--panel); border-bottom:1px solid var(--line); }
     header { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:color-mix(in srgb,var(--panel) 94%,transparent); }
@@ -201,8 +201,17 @@
   </div>
   <div class="toast" id="toast"></div>
 
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 (() => {
+  const telegram = window.Telegram;
+  if (telegram && telegram.WebApp) {
+    telegram.WebApp.ready();
+    telegram.WebApp.expand();
+    const syncTelegramViewport = () => document.documentElement.style.setProperty('--tg-height', `${telegram.WebApp.viewportStableHeight || telegram.WebApp.viewportHeight}px`);
+    syncTelegramViewport();
+    telegram.WebApp.onEvent('viewportChanged', syncTelegramViewport);
+  }
   const $ = (s) => document.querySelector(s);
   const thread = $('#thread'), empty = $('#empty'), input = $('#input'), send = $('#send');
   const imageInput = $('#imageInput'), attachmentPreview = $('#attachmentPreview');

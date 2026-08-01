@@ -45,6 +45,12 @@ test('mobile composer can preview and securely attach a camera or gallery photo'
   assert.match(html, /className = 'chat-image'/);
 });
 
+test('Telegram Mini App expands to the full chat viewport', () => {
+  assert.match(html, /https:\/\/telegram\.org\/js\/telegram-web-app\.js/);
+  assert.match(html, /telegram\.WebApp\.ready\(\)/);
+  assert.match(html, /telegram\.WebApp\.expand\(\)/);
+});
+
 test('app discovers the latest rotating backend without storing its access key', () => {
   const config = JSON.parse(fs.readFileSync('backend.json', 'utf8'));
   assert.match(config.backend, /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/);
