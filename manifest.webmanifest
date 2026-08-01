@@ -1,7 +1,7 @@
 {
   "name": "BRAINY Desk",
   "short_name": "BRAINY",
-  "description": "Workspace pribadi Abila",
+  "description": "Workspace pribadi Ila",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
