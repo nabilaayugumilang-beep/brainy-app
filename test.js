@@ -34,7 +34,9 @@ test('mobile app fills the true phone viewport without desktop overflow', () => 
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.app \{[^}]*width:100dvw;[^}]*height:100dvh;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.message \{[^}]*grid-template-columns:1fr;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.prompt-chip \{[^}]*width:100%;[^}]*min-height:48px;/);
-  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:13px;/);
+  assert.match(html, /body \{ font:10px\/1\.55/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:10px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.speaker \{[^}]*font-size:9px;/);
 });
 
 test('mobile composer can preview and securely attach a camera or gallery photo', () => {
