@@ -34,6 +34,7 @@ test('mobile app fills the true phone viewport without desktop overflow', () => 
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.app \{[^}]*width:100dvw;[^}]*height:100dvh;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.message \{[^}]*grid-template-columns:1fr;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.prompt-chip \{[^}]*width:100%;[^}]*min-height:48px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:13px;/);
 });
 
 test('mobile composer can preview and securely attach a camera or gallery photo', () => {
@@ -49,6 +50,13 @@ test('Telegram Mini App expands to the full chat viewport', () => {
   assert.match(html, /https:\/\/telegram\.org\/js\/telegram-web-app\.js/);
   assert.match(html, /telegram\.WebApp\.ready\(\)/);
   assert.match(html, /telegram\.WebApp\.expand\(\)/);
+});
+
+test('standalone app can recover access with a one-time activation code', () => {
+  assert.match(html, /id="activationPanel"/);
+  assert.match(html, /id="activationCode"/);
+  assert.match(html, /\/api\/auth\/activate/);
+  assert.match(html, /localStorage\.setItem\('brainy_access',\s*accessKey\)/);
 });
 
 test('app discovers the latest rotating backend without storing its access key', () => {

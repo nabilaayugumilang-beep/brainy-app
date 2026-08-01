@@ -73,7 +73,7 @@
     .message { display:grid; grid-template-columns:72px minmax(0,1fr); gap:14px; padding:22px 0; border-bottom:1px solid var(--line); }
     .speaker { color:var(--muted); font-size:12px; font-weight:600; padding-top:2px; }
     .message.user .content { display:inline-block; justify-self:start; padding:10px 13px; background:var(--user); border-radius:10px; }
-    .content { white-space:pre-wrap; overflow-wrap:anywhere; font-size:15px; }
+    .content { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; }
     .chat-image { display:block; width:min(320px,100%); max-height:360px; margin-bottom:8px; border-radius:12px; object-fit:cover; }
     .content.pending { color:var(--muted); }
     .work-note { margin-top:10px; font-size:12px; color:var(--muted); }
@@ -96,6 +96,15 @@
     .send { height:36px; min-width:64px; border:0; border-radius:9px; padding:0 14px; background:var(--accent); color:var(--accentText); font-weight:600; cursor:pointer; }
     .send:disabled { opacity:.42; cursor:default; }
     .footnote { width:min(720px,100%); margin:6px auto 0; color:var(--muted); font-size:11px; text-align:center; }
+    .activation-panel { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px; background:color-mix(in srgb,var(--page) 94%,transparent); backdrop-filter:blur(10px); }
+    .activation-panel[hidden] { display:none; }
+    .activation-card { width:min(360px,100%); padding:24px; border:1px solid var(--line); border-radius:18px; background:var(--panel); box-shadow:0 16px 60px rgba(35,30,24,.14); }
+    .activation-card h2 { margin:0 0 8px; font-size:20px; }
+    .activation-card p { margin:0 0 16px; color:var(--muted); font-size:12px; }
+    .activation-form { display:grid; gap:10px; }
+    .activation-input { width:100%; height:48px; border:1px solid var(--line); border-radius:12px; padding:0 14px; background:var(--panel); color:var(--text); text-transform:uppercase; letter-spacing:.08em; font:16px 'JetBrains Mono',monospace; }
+    .activation-submit { height:46px; border:0; border-radius:12px; background:var(--accent); color:var(--accentText); font-weight:700; cursor:pointer; }
+    .activation-error { min-height:18px; margin:0 !important; color:var(--danger) !important; }
     .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:12px; display:none; z-index:5; }
     @media (max-width:640px) {
       .app { width:100dvw; height:100dvh; max-width:none; border:0; }
@@ -120,7 +129,7 @@
       .message.user .content { max-width:88%; justify-self:end; }
       .speaker { font-size:10px; }
       .message.user .speaker { text-align:right; }
-      .content { font-size:14px; line-height:1.6; }
+      .content { font-size:13px; line-height:1.6; }
       footer { padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
       .attachment-preview { width:100%; }
       .composer { width:100%; min-width:0; min-height:54px; border-radius:18px; padding:5px; gap:6px; box-shadow:0 4px 20px rgba(35,30,24,.08); }
@@ -200,6 +209,17 @@
     </footer>
   </div>
   <div class="toast" id="toast"></div>
+  <section class="activation-panel" id="activationPanel" hidden>
+    <div class="activation-card">
+      <h2>Aktifkan BRAINY</h2>
+      <p>Masukkan kode pribadi sekali saja. Setelah itu aplikasi akan mengingat perangkat ini.</p>
+      <form class="activation-form" id="activationForm">
+        <input class="activation-input" id="activationCode" maxlength="12" autocomplete="one-time-code" autocapitalize="characters" placeholder="KODE AKTIVASI" required>
+        <button class="activation-submit" id="activationSubmit" type="submit">Aktifkan</button>
+        <p class="activation-error" id="activationError"></p>
+      </form>
+    </div>
+  </section>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
@@ -226,8 +246,19 @@
   if (queryBackend) localStorage.setItem('brainy_backend', queryBackend);
   if (queryAccess) localStorage.setItem('brainy_access', queryAccess);
   let backendUrl = (queryBackend || localStorage.getItem('brainy_backend') || location.origin).replace(/\/$/, '');
-  const accessKey = queryAccess || localStorage.getItem('brainy_access') || '';
-  const authHeaders = { 'x-brainy-key': accessKey };
+  let accessKey = queryAccess || localStorage.getItem('brainy_access') || '';
+  const authHeaders = {};
+  function setAccessKey(value) {
+    accessKey = String(value || '');
+    if (accessKey) {
+      authHeaders['x-brainy-key'] = accessKey;
+      localStorage.setItem('brainy_access', accessKey);
+    } else {
+      delete authHeaders['x-brainy-key'];
+      localStorage.removeItem('brainy_access');
+    }
+  }
+  setAccessKey(accessKey);
   function personalizeInstallManifest() {
     if (!queryAccess) return;
     const manifest = {
@@ -262,6 +293,37 @@
     } catch { /* keep last known backend */ }
     return backendUrl;
   }
+
+  function showActivation(message='') {
+    const panel = $('#activationPanel');
+    $('#activationError').textContent = message;
+    panel.hidden = false;
+    setStatus('Perlu aktivasi');
+    setTimeout(() => $('#activationCode').focus(), 50);
+  }
+  $('#activationForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const code = $('#activationCode').value.trim().toUpperCase();
+    if (!code) return;
+    const button = $('#activationSubmit');
+    button.disabled = true; button.textContent = 'Memeriksa...'; $('#activationError').textContent = '';
+    try {
+      await refreshBackend();
+      const response = await fetch(`${backendUrl}/api/auth/activate`, {
+        method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({code})
+      });
+      if (!response.ok) throw new Error(response.status === 429 ? 'Terlalu banyak percobaan. Tunggu sebentar.' : 'Kode belum cocok. Coba periksa lagi.');
+      const data = await response.json();
+      setAccessKey(data.access);
+      $('#activationPanel').hidden = true;
+      $('#activationCode').value = '';
+      connect().catch(fail);
+    } catch (error) {
+      $('#activationError').textContent = error.message || 'Aktivasi belum berhasil.';
+    } finally {
+      button.disabled = false; button.textContent = 'Aktifkan';
+    }
+  });
 
   const themeOrder = ['auto','light','dark'];
   let theme = localStorage.getItem('brainy_theme') || 'auto';
@@ -544,7 +606,7 @@
     if (type === 'error') { fail(new Error(payload.message || 'Terjadi kendala')); }
   }
   function scheduleReconnect() {
-    if (ready) return;
+    if (ready || !accessKey) return;
     clearTimeout(reconnectTimer);
     reconnectTimer=setTimeout(()=>connect().catch(fail),1500);
   }
@@ -560,7 +622,9 @@
     let r;
     try { r = await fetch(`${backendUrl}/api/auth/ws-ticket`,{method:'POST',headers:authHeaders}); }
     catch (err) { connecting=false; await refreshBackend(); throw err; }
-    if (r.status === 404) { connecting=false; throw new Error('Akses BRAINY tidak valid'); }
+    if (r.status === 404) {
+      connecting=false; setAccessKey(''); showActivation('Akses perangkat ini perlu diaktifkan lagi.'); return;
+    }
     if (!r.ok) { connecting=false; throw new Error('Tidak bisa membuka workspace'); }
     const {ticket} = await r.json();
     const wsBackend = new URL(backendUrl);
@@ -638,7 +702,7 @@
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }
-  refreshBackend().finally(() => connect().catch(fail));
+  refreshBackend().finally(() => accessKey ? connect().catch(fail) : showActivation());
   setInterval(refreshAccountUsage, 5 * 60 * 1000);
 })();
 </script>
