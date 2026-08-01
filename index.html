@@ -2,7 +2,7 @@
 <html lang="id" data-theme="auto">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f6f5f2">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -65,7 +65,7 @@
     main { overflow:auto; scroll-behavior:smooth; background:var(--panel); }
     .thread { width:min(720px,100%); margin:0 auto; padding:28px 24px 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
-    .empty h1 { margin:0; font-size:clamp(27px,5vw,38px); line-height:1.1; letter-spacing:-.035em; font-weight:600; }
+    .empty h1 { margin:0; font-size:10px; line-height:1.1; letter-spacing:-.01em; font-weight:600; }
     .empty p { margin:0 0 12px; color:var(--muted); font-size:10px; }
     .prompts { display:flex; flex-wrap:wrap; gap:8px; }
     .prompt-chip { border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:var(--panel); cursor:pointer; box-shadow:var(--shadow); }
@@ -91,7 +91,7 @@
     .composer { width:min(720px,100%); margin:0 auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:end; padding:8px; border:1px solid var(--line); border-radius:14px; background:var(--panel); box-shadow:0 6px 30px rgba(35,30,24,.08); }
     .attach-btn { width:36px; height:36px; border:0; border-radius:9px; background:var(--soft); color:var(--text); cursor:pointer; font-size:20px; line-height:1; }
     .file-input { display:none; }
-    textarea { resize:none; max-height:140px; min-height:34px; padding:6px 0; border:0; outline:0; background:transparent; color:var(--text); }
+    textarea { resize:none; max-height:140px; min-height:34px; padding:6px 0; border:0; outline:0; background:transparent; color:var(--text); font-size:10px; }
     textarea::placeholder { color:var(--muted); }
     .send { height:36px; min-width:64px; border:0; border-radius:9px; padding:0 14px; background:var(--accent); color:var(--accentText); font-weight:600; cursor:pointer; }
     .send:disabled { opacity:.42; cursor:default; }
@@ -99,10 +99,10 @@
     .activation-panel { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px; background:color-mix(in srgb,var(--page) 94%,transparent); backdrop-filter:blur(10px); }
     .activation-panel[hidden] { display:none; }
     .activation-card { width:min(360px,100%); padding:24px; border:1px solid var(--line); border-radius:18px; background:var(--panel); box-shadow:0 16px 60px rgba(35,30,24,.14); }
-    .activation-card h2 { margin:0 0 8px; font-size:20px; }
+    .activation-card h2 { margin:0 0 8px; font-size:10px; }
     .activation-card p { margin:0 0 16px; color:var(--muted); font-size:10px; }
     .activation-form { display:grid; gap:10px; }
-    .activation-input { width:100%; height:48px; border:1px solid var(--line); border-radius:12px; padding:0 14px; background:var(--panel); color:var(--text); text-transform:uppercase; letter-spacing:.08em; font:16px 'JetBrains Mono',monospace; }
+    .activation-input { width:100%; height:48px; border:1px solid var(--line); border-radius:12px; padding:0 14px; background:var(--panel); color:var(--text); text-transform:uppercase; letter-spacing:.08em; font:10px 'JetBrains Mono',monospace; }
     .activation-submit { height:46px; border:0; border-radius:12px; background:var(--accent); color:var(--accentText); font-weight:700; cursor:pointer; }
     .activation-error { min-height:18px; margin:0 !important; color:var(--danger) !important; }
     .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:10px; display:none; z-index:5; }
@@ -121,7 +121,7 @@
       .info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
       .thread { width:100%; min-width:0; padding:18px 16px 32px; }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
-      .empty h1 { font-size:30px; }
+      .empty h1 { font-size:10px; }
       .empty p { margin-bottom:18px; font-size:10px; line-height:1.5; }
       .prompts { width:100%; display:grid; grid-template-columns:1fr; gap:9px; }
       .prompt-chip { width:100%; min-height:48px; border-radius:14px; padding:12px 15px; text-align:left; box-shadow:none; }
@@ -134,7 +134,7 @@
       .attachment-preview { width:100%; }
       .composer { width:100%; min-width:0; min-height:54px; border-radius:18px; padding:5px; gap:6px; box-shadow:0 4px 20px rgba(35,30,24,.08); }
       .attach-btn { width:44px; height:44px; border-radius:14px; }
-      textarea { min-width:0; min-height:42px; padding:10px 0 7px; font-size:16px; }
+      textarea { min-width:0; min-height:42px; padding:10px 0 7px; font-size:10px; }
       .send { min-width:64px; height:44px; border-radius:14px; }
       .footnote { display:none; }
       .toast { width:calc(100% - 32px); bottom:calc(88px + env(safe-area-inset-bottom)); text-align:center; }

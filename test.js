@@ -37,6 +37,8 @@ test('mobile app fills the true phone viewport without desktop overflow', () => 
   assert.match(html, /body \{ font:10px\/1\.55/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:10px;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.speaker \{[^}]*font-size:9px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.empty h1 \{[^}]*font-size:10px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*textarea \{[^}]*font-size:10px;/);
 });
 
 test('mobile composer can preview and securely attach a camera or gallery photo', () => {
