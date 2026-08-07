@@ -56,6 +56,26 @@ test('Telegram Mini App expands to the full chat viewport', () => {
   assert.match(html, /telegram\.WebApp\.expand\(\)/);
 });
 
+test('history sidebar lists and resumes only BRAINY web conversations', () => {
+  assert.match(html, /id="historyPanel"/);
+  assert.match(html, /id="historyList"/);
+  assert.match(html, /id="historyBtn"/);
+  assert.match(html, /rpc\('session\.list',\{limit:50\}\)/);
+  assert.match(html, /filter\(item => item\.source === 'brainy-web'/);
+  assert.match(html, /rpc\('session\.resume',\{session_id:item\.id,cols:100,source:'brainy-web'\}\)/);
+  assert.match(html, /localStorage\.setItem\('brainy_session',\s*sessionKey\)/);
+  assert.match(html, /historyList\.replaceChildren\(\)/);
+  assert.match(html, /historyTitle\.textContent/);
+  assert.doesNotMatch(html, /session\.delete/);
+});
+
+test('history sidebar becomes a closable drawer on narrow screens', () => {
+  assert.match(html, /@media \(max-width:900px\)[\s\S]*\.history-panel \{[^}]*position:fixed;[^}]*transform:translateX\(-105%\);/);
+  assert.match(html, /\.history-panel\.open \{ transform:translateX\(0\); \}/);
+  assert.match(html, /id="historyBackdrop"/);
+  assert.match(html, /function toggleHistory\(open\)/);
+});
+
 test('standalone app can recover access with a one-time activation code', () => {
   assert.match(html, /id="activationPanel"/);
   assert.match(html, /id="activationCode"/);
@@ -81,7 +101,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v4/);
+  assert.match(sw, /brainy-shell-v5/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });

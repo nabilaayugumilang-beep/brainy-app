@@ -41,6 +41,22 @@
     body { font:12px/1.55 'JetBrains Mono',ui-monospace,'SFMono-Regular',Consolas,monospace; letter-spacing:-.005em; }
     button,textarea { font:inherit; }
     button { color:inherit; }
+    .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:260px minmax(0,920px); justify-content:center; background:var(--page); }
+    .history-panel { min-width:0; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto auto minmax(0,1fr); border-left:1px solid var(--line); border-right:1px solid var(--line); background:var(--page); z-index:12; }
+    .history-head { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); }
+    .history-heading { font-size:12px; font-weight:600; }
+    .history-close { width:34px; height:34px; border:0; border-radius:8px; background:transparent; cursor:pointer; display:none; }
+    .history-new { margin:12px 12px 8px; min-height:40px; border:1px solid var(--line); border-radius:10px; background:var(--panel); cursor:pointer; text-align:left; padding:9px 11px; font-weight:600; }
+    .history-new:hover, .history-item:hover { background:var(--soft); }
+    .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
+    .history-state { padding:18px 10px; color:var(--muted); font-size:11px; line-height:1.5; }
+    .history-item { width:100%; display:block; margin:2px 0; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .history-item.active { background:var(--soft); }
+    .history-title { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; font-weight:600; }
+    .history-preview { display:block; margin-top:3px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:11px; }
+    .history-date { display:block; margin-top:4px; color:var(--muted); font-size:11px; }
+    .history-toggle { display:none; }
+    .history-backdrop { display:none; }
     .app { width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:var(--panel); border-inline:1px solid var(--line); }
     .topbar, header, main, footer { width:100%; min-width:0; }
     .topbar { background:var(--panel); border-bottom:1px solid var(--line); }
@@ -106,6 +122,15 @@
     .activation-submit { height:46px; border:0; border-radius:12px; background:var(--accent); color:var(--accentText); font-weight:700; cursor:pointer; }
     .activation-error { min-height:18px; margin:0 !important; color:var(--danger) !important; }
     .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:12px; display:none; z-index:5; }
+    @media (max-width:900px) {
+      .workspace-shell { display:block; }
+      .history-panel { position:fixed; inset:0 auto 0 0; width:min(290px,86vw); transform:translateX(-105%); transition:transform .18s ease; box-shadow:10px 0 34px rgba(35,30,24,.16); }
+      .history-panel.open { transform:translateX(0); }
+      .history-close, .history-toggle { display:inline-grid; place-items:center; }
+      .history-backdrop { position:fixed; inset:0; z-index:11; display:block; border:0; background:rgba(25,24,22,.32); opacity:0; pointer-events:none; transition:opacity .18s ease; }
+      .history-backdrop.open { opacity:1; pointer-events:auto; }
+      .app { max-width:none; }
+    }
     @media (max-width:640px) {
       .app { width:100dvw; height:100dvh; max-width:none; border:0; }
       header { min-height:64px; padding:calc(10px + env(safe-area-inset-top)) 14px 10px; }
@@ -142,7 +167,19 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="workspace-shell">
+    <aside class="history-panel" id="historyPanel" aria-label="History percakapan">
+      <div class="history-head">
+        <span class="history-heading">History</span>
+        <button class="history-close" id="historyClose" type="button" aria-label="Tutup history">×</button>
+      </div>
+      <button class="history-new" id="historyNew" type="button">＋ Percakapan baru</button>
+      <div class="history-list" id="historyList" aria-live="polite">
+        <p class="history-state">Memuat history...</p>
+      </div>
+    </aside>
+    <button class="history-backdrop" id="historyBackdrop" type="button" aria-label="Tutup history"></button>
+    <div class="app">
     <div class="topbar">
       <header>
         <div class="brand">
@@ -150,6 +187,7 @@
           <div><div class="title">BRAINY Desk</div><div class="connection" id="status">Menyambungkan...</div></div>
         </div>
         <div class="head-actions">
+          <button class="icon-btn history-toggle" id="historyBtn" type="button" title="Buka history" aria-label="Buka history" aria-expanded="false">☰</button>
           <button class="icon-btn" id="themeBtn" type="button" title="Ganti tema">◐</button>
           <button class="icon-btn" id="newBtn" type="button" title="Percakapan baru">Baru</button>
         </div>
@@ -207,6 +245,7 @@
       </form>
       <div class="footnote">Workspace pribadi Ila</div>
     </footer>
+    </div>
   </div>
   <div class="toast" id="toast"></div>
   <section class="activation-panel" id="activationPanel" hidden>
@@ -233,7 +272,9 @@
     telegram.WebApp.onEvent('viewportChanged', syncTelegramViewport);
   }
   const $ = (s) => document.querySelector(s);
-  const thread = $('#thread'), empty = $('#empty'), input = $('#input'), send = $('#send');
+  const thread = $('#thread'), input = $('#input'), send = $('#send');
+  let empty = $('#empty');
+  const historyPanel = $('#historyPanel'), historyList = $('#historyList'), historyBackdrop = $('#historyBackdrop');
   const imageInput = $('#imageInput'), attachmentPreview = $('#attachmentPreview');
   const attachmentThumb = $('#attachmentThumb'), attachmentName = $('#attachmentName');
   const statusEl = $('#status'), scroller = $('#scroller'), toast = $('#toast');
@@ -277,6 +318,7 @@
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
   let currentAssistant = null, currentText = '', reconnectTimer = null;
   let queuedText = '', queuedImage = null, selectedImage = null, imagePreparing = false, connecting = false;
+  let historyLoading = false;
   const MAX_IMAGE_DIMENSION = 1600;
   let historyRendered = false;
   let runtimeInfo = {}, latestUsage = {};
@@ -526,6 +568,108 @@
       setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error('Waktu tunggu habis')); } }, 120000);
     });
   }
+  function toggleHistory(open) {
+    const shouldOpen = typeof open === 'boolean' ? open : !historyPanel.classList.contains('open');
+    historyPanel.classList.toggle('open', shouldOpen);
+    historyBackdrop.classList.toggle('open', shouldOpen);
+    $('#historyBtn').setAttribute('aria-expanded', String(shouldOpen));
+  }
+  function historyDate(value) {
+    const number = Number(value || 0);
+    if (!number) return '';
+    const date = new Date(number < 1000000000000 ? number * 1000 : number);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('id-ID',{day:'numeric',month:'short',year:'numeric'}).format(date);
+  }
+  function historyName(item) {
+    const title = String(item.title || '').trim();
+    const preview = String(item.preview || '').replace(/\s+/g,' ').trim();
+    if (title && title !== 'BRAINY Desk') return title;
+    return preview.slice(0,72) || 'Percakapan baru';
+  }
+  function renderHistorySessions(items) {
+    historyList.replaceChildren();
+    if (!items.length) {
+      const state = document.createElement('p'); state.className = 'history-state';
+      state.textContent = 'Belum ada percakapan tersimpan.'; historyList.append(state); return;
+    }
+    items.forEach(item => {
+      const button = document.createElement('button'); button.type = 'button';
+      button.className = 'history-item' + (item.id === sessionKey ? ' active' : '');
+      if (item.id === sessionKey) button.setAttribute('aria-current','true');
+      const historyTitle = document.createElement('span'); historyTitle.className = 'history-title';
+      historyTitle.textContent = historyName(item);
+      const preview = document.createElement('span'); preview.className = 'history-preview';
+      preview.textContent = String(item.preview || '').replace(/\s+/g,' ').trim() || `${Number(item.message_count || 0)} pesan`;
+      const date = document.createElement('span'); date.className = 'history-date';
+      date.textContent = historyDate(item.started_at);
+      button.append(historyTitle,preview,date);
+      button.addEventListener('click',() => openHistorySession(item));
+      historyList.append(button);
+    });
+  }
+  async function loadSessionHistory() {
+    try {
+      const result = await rpc('session.list',{limit:50});
+      const items = (result.sessions || [])
+        .filter(item => item.source === 'brainy-web' && Number(item.message_count || 0) > 0);
+      renderHistorySessions(items);
+    } catch {
+      historyList.replaceChildren();
+      const state = document.createElement('p'); state.className = 'history-state';
+      state.textContent = 'History belum bisa dimuat.'; historyList.append(state);
+    }
+  }
+  function bindPromptButtons(root=document) {
+    root.querySelectorAll('[data-prompt]').forEach(button => {
+      button.onclick = () => { input.value=button.dataset.prompt; autoGrow(); updateSend(); input.focus(); };
+    });
+  }
+  function renderEmptyState() {
+    empty = document.createElement('section'); empty.className = 'empty'; empty.id = 'empty';
+    const heading = document.createElement('h1'); heading.textContent = 'STARTS HERE';
+    const copy = document.createElement('p'); copy.textContent = 'Plans, drafts, decisions, and follow-ups.';
+    const prompts = document.createElement('div'); prompts.className = 'prompts';
+    [
+      ['Bantu susun prioritas aku hari ini','Plan today'],
+      ['Bantu review draft ini: ','Review a draft'],
+      ['Tolong cari informasi tentang ','Research a topic']
+    ].forEach(([prompt,label]) => {
+      const button = document.createElement('button'); button.type='button'; button.className='prompt-chip';
+      button.dataset.prompt=prompt; button.textContent=label; prompts.append(button);
+    });
+    empty.append(heading,copy,prompts); thread.append(empty); bindPromptButtons(empty);
+  }
+  function replaceThread(messages=[]) {
+    thread.replaceChildren(); empty = null; currentAssistant = null; currentText = '';
+    const visible = (messages || []).filter(message => (message.role === 'user' || message.role === 'assistant') && message.text);
+    if (visible.length) renderHistory(visible); else renderEmptyState();
+    scroller.scrollTop = 0;
+  }
+  async function openHistorySession(item) {
+    if (!item || !item.id || historyLoading || item.id === sessionKey) { toggleHistory(false); return; }
+    if (busy && !confirm('BRAINY masih mengerjakan. Buka percakapan lain?')) return;
+    historyLoading = true; updateSend(); setStatus('Membuka history...');
+    try {
+      const result = await rpc('session.resume',{session_id:item.id,cols:100,source:'brainy-web'});
+      sid = result.session_id;
+      sessionKey = result.stored_session_id || result.session_key || result.resumed || item.id;
+      localStorage.setItem('brainy_session', sessionKey);
+      input.value=''; clearAttachment(); autoGrow();
+      latestUsage={}; runtimeInfo={}; replaceThread(result.messages); historyRendered=true;
+      ready=true; busy=!!result.running; applyRuntime(result.info || {});
+      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      toggleHistory(false); await loadSessionHistory();
+      setTimeout(refreshUsage,250); refreshAccountUsage();
+    } catch (error) {
+      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      showToast(error.message || 'History belum bisa dibuka');
+    } finally { historyLoading=false; updateSend(); }
+  }
+  function startNewSession() {
+    if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
+    localStorage.removeItem('brainy_session'); location.reload();
+  }
   async function submitPrompt(text,image) {
     if (image && !image.attached) {
       await rpc('image.attach_bytes',{session_id:sid,content_base64:image.base64,filename:image.name});
@@ -567,6 +711,7 @@
     setTimeout(refreshUsage, 1200);
     refreshAccountUsage();
     flushQueuedMessage();
+    loadSessionHistory();
   }
   function event(ev) {
     const type = ev.type, payload = ev.payload || {};
@@ -588,7 +733,7 @@
       const finalText = payload.text || currentText || 'Selesai.';
       currentAssistant.textContent = finalText; currentAssistant.classList.remove('pending');
       currentAssistant=null; currentText=''; busy=false; setStatus('Siap'); updateSend(); scrollBottom();
-      setTimeout(refreshUsage,250); return;
+      setTimeout(refreshUsage,250); setTimeout(loadSessionHistory,500); return;
     }
     if (type === 'tool.start' || type === 'tool.progress' || type === 'tool.generating') {
       setStatus('Sedang mengerjakan...'); return;
@@ -662,7 +807,7 @@
       setStatus(ready ? 'Siap' : 'Koneksi terganggu');
     } finally { imagePreparing = false; updateSend(); }
   });
-  function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing; }
+  function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing || historyLoading; }
   function autoGrow() { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; }
   input.addEventListener('input',()=>{ autoGrow(); updateSend(); });
   input.addEventListener('keydown',(e)=>{
@@ -692,13 +837,13 @@
       } else fail(err);
     }
   });
-  document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{
-    input.value=b.dataset.prompt; autoGrow(); updateSend(); input.focus();
-  });
-  $('#newBtn').onclick = async() => {
-    if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
-    localStorage.removeItem('brainy_session'); location.reload();
-  };
+  bindPromptButtons();
+  $('#historyBtn').onclick = () => toggleHistory(true);
+  $('#historyClose').onclick = () => toggleHistory(false);
+  historyBackdrop.onclick = () => toggleHistory(false);
+  $('#historyNew').onclick = startNewSession;
+  $('#newBtn').onclick = startNewSession;
+  document.addEventListener('keydown',event => { if (event.key === 'Escape') toggleHistory(false); });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }
