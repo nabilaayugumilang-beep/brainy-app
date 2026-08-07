@@ -34,11 +34,11 @@ test('mobile app fills the true phone viewport without desktop overflow', () => 
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.app \{[^}]*width:100dvw;[^}]*height:100dvh;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.message \{[^}]*grid-template-columns:1fr;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.prompt-chip \{[^}]*width:100%;[^}]*min-height:48px;/);
-  assert.match(html, /body \{ font:10px\/1\.55/);
-  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:10px;/);
-  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.speaker \{[^}]*font-size:9px;/);
-  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.empty h1 \{[^}]*font-size:10px;/);
-  assert.match(html, /@media \(max-width:640px\)[\s\S]*textarea \{[^}]*font-size:10px;/);
+  assert.match(html, /body \{ font:11px\/1\.55/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:11px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.speaker \{[^}]*font-size:10px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.empty h1 \{[^}]*font-size:11px;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*textarea \{[^}]*font-size:11px;/);
 });
 
 test('mobile composer can preview and securely attach a camera or gallery photo', () => {
@@ -81,6 +81,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
+  assert.match(sw, /brainy-shell-v3/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
