@@ -50,11 +50,15 @@
     .history-new:hover, .history-item:hover { background:var(--soft); }
     .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
     .history-state { padding:18px 10px; color:var(--muted); font-size:11px; line-height:1.5; }
-    .history-item { width:100%; display:block; margin:2px 0; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .history-item { width:100%; display:block; margin:2px 0; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; pointer-events:auto; }
+    .history-item[aria-busy="true"] { cursor:wait; opacity:.72; }
     .history-item.active { background:var(--soft); }
     .history-title { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; font-weight:600; }
     .history-preview { display:block; margin-top:3px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:11px; }
-    .history-date { display:block; margin-top:4px; color:var(--muted); font-size:11px; }
+    .history-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; }
+    .history-date { color:var(--muted); font-size:11px; }
+    .history-action { color:var(--accent); font-size:11px; font-weight:600; white-space:nowrap; }
+    .history-item.active .history-action { color:var(--muted); }
     .history-toggle { display:none; }
     .history-backdrop { display:none; }
     .app { width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:var(--panel); border-inline:1px solid var(--line); }
@@ -121,7 +125,7 @@
     .activation-input { width:100%; height:48px; border:1px solid var(--line); border-radius:12px; padding:0 14px; background:var(--panel); color:var(--text); text-transform:uppercase; letter-spacing:.08em; font:12px 'JetBrains Mono',monospace; }
     .activation-submit { height:46px; border:0; border-radius:12px; background:var(--accent); color:var(--accentText); font-weight:700; cursor:pointer; }
     .activation-error { min-height:18px; margin:0 !important; color:var(--danger) !important; }
-    .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:12px; display:none; z-index:5; }
+    .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:12px; display:none; z-index:30; }
     @media (max-width:900px) {
       .workspace-shell { display:block; }
       .history-panel { position:fixed; inset:0 auto 0 0; width:min(290px,86vw); transform:translateX(-105%); transition:transform .18s ease; box-shadow:10px 0 34px rgba(35,30,24,.16); }
@@ -601,10 +605,13 @@
       historyTitle.textContent = historyName(item);
       const preview = document.createElement('span'); preview.className = 'history-preview';
       preview.textContent = String(item.preview || '').replace(/\s+/g,' ').trim() || `${Number(item.message_count || 0)} pesan`;
+      const meta = document.createElement('span'); meta.className = 'history-meta';
       const date = document.createElement('span'); date.className = 'history-date';
       date.textContent = historyDate(item.started_at);
-      button.append(historyTitle,preview,date);
-      button.addEventListener('click',() => openHistorySession(item));
+      const historyAction = document.createElement('span'); historyAction.className = 'history-action';
+      historyAction.textContent = item.id === sessionKey ? 'Sedang dibuka' : 'Buka →';
+      meta.append(date,historyAction); button.append(historyTitle,preview,meta);
+      button.addEventListener('click',() => openHistorySession(item,button));
       historyList.append(button);
     });
   }
@@ -646,10 +653,17 @@
     if (visible.length) renderHistory(visible); else renderEmptyState();
     scroller.scrollTop = 0;
   }
-  async function openHistorySession(item) {
-    if (!item || !item.id || historyLoading || item.id === sessionKey) { toggleHistory(false); return; }
+  async function openHistorySession(item,button) {
+    if (!item || !item.id || historyLoading) return;
+    if (item.id === sessionKey) {
+      showToast('Percakapan ini sudah aktif');
+      if (matchMedia('(max-width:900px)').matches) toggleHistory(false);
+      return;
+    }
     if (busy && !confirm('BRAINY masih mengerjakan. Buka percakapan lain?')) return;
-    historyLoading = true; updateSend(); setStatus('Membuka history...');
+    historyLoading = true; button.setAttribute('aria-busy','true'); button.disabled=true;
+    const action = button.querySelector('.history-action'); if (action) action.textContent='Membuka...';
+    updateSend(); setStatus('Membuka history...');
     try {
       const result = await rpc('session.resume',{session_id:item.id,cols:100,source:'brainy-web'});
       sid = result.session_id;
@@ -664,7 +678,11 @@
     } catch (error) {
       setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
       showToast(error.message || 'History belum bisa dibuka');
-    } finally { historyLoading=false; updateSend(); }
+    } finally {
+      historyLoading=false; button.removeAttribute('aria-busy'); button.disabled=false;
+      if (button.isConnected && action) action.textContent='Buka →';
+      updateSend();
+    }
   }
   function startNewSession() {
     if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
