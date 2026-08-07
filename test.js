@@ -60,7 +60,7 @@ test('history sidebar lists and resumes only BRAINY web conversations', () => {
   assert.match(html, /id="historyPanel"/);
   assert.match(html, /id="historyList"/);
   assert.match(html, /id="historyBtn"/);
-  assert.match(html, /rpc\('session\.list',\{limit:50\}\)/);
+  assert.match(html, /rpc\('session\.list',\{limit:200\}\)/);
   assert.match(html, /filter\(item => item\.source === 'brainy-web'/);
   assert.match(html, /rpc\('session\.resume',\{session_id:item\.id,cols:100,source:'brainy-web'\}\)/);
   assert.match(html, /localStorage\.setItem\('brainy_session',\s*sessionKey\)/);
@@ -101,7 +101,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v5/);
+  assert.match(sw, /brainy-shell-v6/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });

@@ -610,7 +610,7 @@
   }
   async function loadSessionHistory() {
     try {
-      const result = await rpc('session.list',{limit:50});
+      const result = await rpc('session.list',{limit:200});
       const items = (result.sessions || [])
         .filter(item => item.source === 'brainy-web' && Number(item.message_count || 0) > 0);
       renderHistorySessions(items);
