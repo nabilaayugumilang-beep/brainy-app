@@ -97,6 +97,15 @@ test('standalone app can recover access with a one-time activation code', () => 
   assert.match(html, /localStorage\.setItem\('brainy_access',\s*accessKey\)/);
 });
 
+test('scrollbars follow the active light, dark, or automatic theme', () => {
+  assert.match(html, /:root \{[\s\S]*--scroll-track:#f6f5f2;[^}]*--scroll-thumb:#c8c3ba;[^}]*--scroll-thumb-hover:#a9a39a;/);
+  assert.match(html, /:root\[data-theme="dark"\] \{[\s\S]*--scroll-track:#23211e;[^}]*--scroll-thumb:#4e4943;[^}]*--scroll-thumb-hover:#6a645c;/);
+  assert.match(html, /:root:not\(\[data-theme="light"\]\) \{[\s\S]*--scroll-track:#23211e;[^}]*--scroll-thumb:#4e4943;[^}]*--scroll-thumb-hover:#6a645c;/);
+  assert.match(html, /scrollbar-color:var\(--scroll-thumb\) var\(--scroll-track\)/);
+  assert.match(html, /\*::-webkit-scrollbar-track \{ background:var\(--scroll-track\); \}/);
+  assert.match(html, /\*::-webkit-scrollbar-thumb \{[^}]*background:var\(--scroll-thumb\);/);
+});
+
 test('app discovers the latest rotating backend without storing its access key', () => {
   const config = JSON.parse(fs.readFileSync('backend.json', 'utf8'));
   assert.match(config.backend, /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/);
@@ -115,7 +124,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v8/);
+  assert.match(sw, /brainy-shell-v9/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
