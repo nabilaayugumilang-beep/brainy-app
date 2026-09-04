@@ -43,10 +43,13 @@
       }
     }
     * { box-sizing:border-box; scrollbar-width:thin; scrollbar-color:var(--scroll-thumb) var(--scroll-track); }
-    *::-webkit-scrollbar { width:10px; height:10px; }
+    *::-webkit-scrollbar { width:10px; height:10px; background:var(--scroll-track); }
     *::-webkit-scrollbar-track { background:var(--scroll-track); }
+    *::-webkit-scrollbar-track-piece { background:var(--scroll-track); }
     *::-webkit-scrollbar-thumb { background:var(--scroll-thumb); border:2px solid var(--scroll-track); border-radius:999px; }
     *::-webkit-scrollbar-thumb:hover { background:var(--scroll-thumb-hover); }
+    *::-webkit-scrollbar-corner { background:var(--scroll-track); }
+    *::-webkit-scrollbar-button { width:0; height:0; display:none; background:var(--scroll-track); }
     html,body { margin:0; width:100%; height:100%; overflow:hidden; background:var(--page); color:var(--text); }
     body { font:12px/1.55 'JetBrains Mono',ui-monospace,'SFMono-Regular',Consolas,monospace; letter-spacing:-.005em; }
     button,textarea { font:inherit; }

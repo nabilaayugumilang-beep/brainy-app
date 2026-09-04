@@ -102,8 +102,12 @@ test('scrollbars follow the active light, dark, or automatic theme', () => {
   assert.match(html, /:root\[data-theme="dark"\] \{[\s\S]*--scroll-track:#23211e;[^}]*--scroll-thumb:#4e4943;[^}]*--scroll-thumb-hover:#6a645c;/);
   assert.match(html, /:root:not\(\[data-theme="light"\]\) \{[\s\S]*--scroll-track:#23211e;[^}]*--scroll-thumb:#4e4943;[^}]*--scroll-thumb-hover:#6a645c;/);
   assert.match(html, /scrollbar-color:var\(--scroll-thumb\) var\(--scroll-track\)/);
+  assert.match(html, /\*::-webkit-scrollbar \{[^}]*background:var\(--scroll-track\);/);
   assert.match(html, /\*::-webkit-scrollbar-track \{ background:var\(--scroll-track\); \}/);
+  assert.match(html, /\*::-webkit-scrollbar-track-piece \{ background:var\(--scroll-track\); \}/);
   assert.match(html, /\*::-webkit-scrollbar-thumb \{[^}]*background:var\(--scroll-thumb\);/);
+  assert.match(html, /\*::-webkit-scrollbar-corner \{ background:var\(--scroll-track\); \}/);
+  assert.match(html, /\*::-webkit-scrollbar-button \{[^}]*display:none;/);
 });
 
 test('app discovers the latest rotating backend without storing its access key', () => {
@@ -124,7 +128,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v9/);
+  assert.match(sw, /brainy-shell-v10/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
