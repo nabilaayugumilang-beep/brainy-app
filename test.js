@@ -79,6 +79,17 @@ test('history sidebar becomes a closable drawer on narrow screens', () => {
   assert.match(html, /function toggleHistory\(open\)/);
 });
 
+test('history can be hidden and reopened on desktop with its state remembered', () => {
+  assert.match(html, /\.workspace-shell\.history-open \{[^}]*grid-template-columns:260px minmax\(0,920px\);/);
+  assert.match(html, /\.workspace-shell:not\(\.history-open\) \.history-panel \{[^}]*display:none;/);
+  assert.match(html, /\.history-close, \.history-toggle \{[^}]*display:inline-grid;/);
+  assert.match(html, /const HISTORY_OPEN_KEY = 'brainy_history_open'/);
+  assert.match(html, /localStorage\.getItem\(HISTORY_OPEN_KEY\) === 'true'/);
+  assert.match(html, /localStorage\.setItem\(HISTORY_OPEN_KEY, String\(shouldOpen\)\)/);
+  assert.match(html, /workspaceShell\.classList\.toggle\('history-open', shouldOpen\)/);
+  assert.match(html, /historyPanel\.setAttribute\('aria-hidden', String\(!shouldOpen\)\)/);
+});
+
 test('standalone app can recover access with a one-time activation code', () => {
   assert.match(html, /id="activationPanel"/);
   assert.match(html, /id="activationCode"/);
@@ -104,7 +115,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v7/);
+  assert.match(sw, /brainy-shell-v8/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
