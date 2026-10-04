@@ -1,8 +1,9 @@
-const CACHE = 'brainy-shell-v12';
+const CACHE = 'brainy-shell-v13';
 const SHELL = [
   './',
   './index.html',
   './session-actions.js',
+  './project-store.js',
   './manifest.webmanifest',
   './backend.json',
   './icons/brainy-192.png',

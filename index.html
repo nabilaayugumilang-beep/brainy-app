@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="id" data-theme="auto">
+<html lang="en" data-theme="auto">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f6f5f2">
+  <meta name="theme-color" content="#f5f7ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -21,25 +21,28 @@
     }
     :root {
       color-scheme:light;
-      --page:#f6f5f2; --panel:#ffffff; --text:#292724; --muted:#77716a;
-      --line:#dedbd5; --soft:#ebe8e2; --accent:#6c5c49; --accentText:#ffffff;
-      --user:#e9e5de; --danger:#9a4238; --shadow:0 1px 2px rgba(35,30,24,.04);
-      --scroll-track:#f6f5f2; --scroll-thumb:#c8c3ba; --scroll-thumb-hover:#a9a39a;
+      --electric:#1717ff; --electric-soft:#e9edff; --glow:rgba(23,23,255,.18);
+      --page:#f5f7ff; --panel:#ffffff; --text:#0b1020; --muted:#64708a;
+      --line:#dce3f5; --soft:#eef2ff; --accent:var(--electric); --accentText:#ffffff;
+      --user:#1717ff; --danger:#c8334a; --shadow:0 10px 34px rgba(26,39,93,.08);
+      --scroll-track:#f5f7ff; --scroll-thumb:#bdc9ea; --scroll-thumb-hover:#8da0d3;
     }
     :root[data-theme="dark"] {
       color-scheme:dark;
-      --page:#191816; --panel:#23211e; --text:#eeeae3; --muted:#aaa39a;
-      --line:#3a3732; --soft:#302d29; --accent:#c7b69f; --accentText:#211f1c;
-      --user:#35312c; --danger:#ee9388; --shadow:none;
-      --scroll-track:#23211e; --scroll-thumb:#4e4943; --scroll-thumb-hover:#6a645c;
+      --electric:#7590ff; --electric-soft:#151b3d; --glow:rgba(86,111,255,.3);
+      --page:#060817; --panel:#0d1023; --text:#f4f7ff; --muted:#9aa6c8;
+      --line:#222b50; --soft:#141a36; --accent:var(--electric); --accentText:#071022;
+      --user:#2636a8; --danger:#ff8593; --shadow:0 14px 44px rgba(0,0,0,.28);
+      --scroll-track:#080b19; --scroll-thumb:#2a3767; --scroll-thumb-hover:#43558f;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         color-scheme:dark;
-        --page:#191816; --panel:#23211e; --text:#eeeae3; --muted:#aaa39a;
-        --line:#3a3732; --soft:#302d29; --accent:#c7b69f; --accentText:#211f1c;
-        --user:#35312c; --danger:#ee9388; --shadow:none;
-        --scroll-track:#23211e; --scroll-thumb:#4e4943; --scroll-thumb-hover:#6a645c;
+        --electric:#7590ff; --electric-soft:#151b3d; --glow:rgba(86,111,255,.3);
+        --page:#060817; --panel:#0d1023; --text:#f4f7ff; --muted:#9aa6c8;
+        --line:#222b50; --soft:#141a36; --accent:var(--electric); --accentText:#071022;
+        --user:#2636a8; --danger:#ff8593; --shadow:0 14px 44px rgba(0,0,0,.28);
+        --scroll-track:#080b19; --scroll-thumb:#2a3767; --scroll-thumb-hover:#43558f;
       }
     }
     * { box-sizing:border-box; scrollbar-width:thin; scrollbar-color:var(--scroll-thumb) var(--scroll-track); }
@@ -50,20 +53,46 @@
     *::-webkit-scrollbar-thumb:hover { background:var(--scroll-thumb-hover); }
     *::-webkit-scrollbar-corner { background:var(--scroll-track); }
     *::-webkit-scrollbar-button { width:0; height:0; display:none; background:var(--scroll-track); }
-    html,body { margin:0; width:100%; height:100%; overflow:hidden; background:var(--page); color:var(--text); }
-    body { font:12px/1.55 'JetBrains Mono',ui-monospace,'SFMono-Regular',Consolas,monospace; letter-spacing:-.005em; }
-    button,textarea { font:inherit; }
+    html,body { margin:0; width:100%; height:100%; overflow:hidden; color:var(--text); }
+    body { font:13px/1.55 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:-.01em; background:radial-gradient(circle at 50% -20%,var(--electric-soft) 0,transparent 46%),var(--page); }
+    button,textarea,input,select { font:inherit; }
     button { color:inherit; }
-    .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:minmax(0,920px); justify-content:center; background:var(--page); }
+    .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:minmax(0,920px); justify-content:center; background-image:linear-gradient(color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px); background-size:32px 32px; }
     .workspace-shell.history-open { grid-template-columns:260px minmax(0,920px); }
     .workspace-shell:not(.history-open) .history-panel { display:none; }
-    .history-panel { min-width:0; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto auto minmax(0,1fr); border-left:1px solid var(--line); border-right:1px solid var(--line); background:var(--page); z-index:12; }
+    .history-panel { min-width:0; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto auto auto minmax(0,1fr); border-left:1px solid var(--line); border-right:1px solid var(--line); background:color-mix(in srgb,var(--panel) 92%,transparent); backdrop-filter:blur(18px); z-index:12; }
     .history-head { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); }
     .history-heading { font-size:12px; font-weight:600; }
     .history-close { width:34px; height:34px; border:0; border-radius:8px; background:transparent; cursor:pointer; display:inline-grid; place-items:center; }
-    .history-new { margin:12px 12px 8px; min-height:40px; border:1px solid var(--line); border-radius:10px; background:var(--panel); cursor:pointer; text-align:left; padding:9px 11px; font-weight:600; }
+    .history-new { margin:12px 12px 8px; min-height:42px; border:1px solid color-mix(in srgb,var(--electric) 38%,var(--line)); border-radius:11px; background:var(--electric-soft); color:var(--accent); cursor:pointer; text-align:left; padding:9px 11px; font-weight:700; box-shadow:0 8px 24px var(--glow); }
     .history-new:hover, .history-item:hover { background:var(--soft); }
+    .projects-section { margin:0 8px 6px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .projects-head { display:flex; align-items:center; gap:4px; }
+    .projects-toggle { flex:1; min-width:0; min-height:36px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px; border:0; border-radius:8px; background:transparent; cursor:pointer; text-align:left; font-weight:600; }
+    .projects-toggle:hover, .project-add:hover, .project-filter:hover, .project-action:hover { background:var(--soft); }
+    .projects-count { color:var(--muted); font-size:11px; font-weight:400; }
+    .project-add, .project-action { flex:none; width:36px; height:36px; border:0; border-radius:8px; background:transparent; cursor:pointer; }
+    .project-list { max-height:30vh; overflow:auto; padding-top:2px; }
+    .project-list[hidden] { display:none; }
+    .project-row { display:flex; align-items:center; gap:2px; }
+    .project-filter { flex:1; min-width:0; min-height:38px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 8px; border:0; border-radius:8px; background:transparent; cursor:pointer; text-align:left; }
+    .project-filter.active { background:var(--electric-soft); color:var(--accent); font-weight:700; box-shadow:inset 2px 0 0 var(--electric); }
+    .project-name { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .project-chat-count { flex:none; color:var(--muted); font-size:11px; }
     .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
+    .history-list-heading { padding:8px 10px 4px; color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+    .history-controls { flex:none; display:flex; align-items:center; gap:4px; }
+    .history-project-select { width:74px; min-height:44px; border:1px solid transparent; border-radius:10px; padding:0 6px; background:transparent; color:var(--accent); cursor:pointer; font-size:10px; }
+    .history-project-select:hover, .history-project-select:focus { border-color:var(--line); background:var(--soft); outline:none; }
+    .project-modal { position:fixed; inset:0; z-index:31; display:grid; place-items:center; padding:20px; background:rgba(25,24,22,.42); }
+    .project-modal[hidden] { display:none; }
+    .project-card { width:min(380px,100%); padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--panel); box-shadow:0 18px 60px rgba(35,30,24,.2); }
+    .project-card h2 { margin:0 0 6px; font-size:13px; }
+    .project-card p { margin:0 0 14px; color:var(--muted); font-size:11px; }
+    .project-input { width:100%; height:46px; border:1px solid var(--line); border-radius:11px; padding:0 12px; background:var(--panel); color:var(--text); font:inherit; }
+    .project-modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+    .project-modal-actions button { min-height:40px; padding:0 14px; border:1px solid var(--line); border-radius:9px; background:var(--panel); cursor:pointer; }
+    .project-modal-actions .primary { border-color:var(--accent); background:var(--accent); color:var(--accentText); }
     .history-state { padding:18px 10px; color:var(--muted); font-size:11px; line-height:1.5; }
     .history-item { width:100%; display:block; margin:2px 0; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; pointer-events:auto; }
     .history-row { display:flex; gap:6px; align-items:stretch; margin:2px 0; }
@@ -82,17 +111,17 @@
     .history-item.active .history-action { color:var(--muted); }
     .history-toggle { display:inline-grid; place-items:center; }
     .history-backdrop { display:none; }
-    .app { width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:var(--panel); border-inline:1px solid var(--line); }
+    .app { width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:color-mix(in srgb,var(--panel) 96%,transparent); border-inline:1px solid var(--line); box-shadow:0 0 80px var(--glow); }
     .topbar, header, main, footer { width:100%; min-width:0; }
-    .topbar { background:var(--panel); border-bottom:1px solid var(--line); }
-    header { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:color-mix(in srgb,var(--panel) 94%,transparent); }
+    .topbar { background:color-mix(in srgb,var(--panel) 86%,transparent); border-bottom:1px solid var(--line); backdrop-filter:blur(18px); }
+    header { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:transparent; }
     .brand { display:flex; align-items:center; gap:10px; min-width:0; }
-    .mark { width:28px; height:28px; border:1px solid var(--line); border-radius:8px; display:grid; place-items:center; font-weight:600; background:var(--soft); }
-    .title { font-size:12px; font-weight:600; line-height:1.2; }
-    .connection { color:var(--muted); font-size:11px; white-space:nowrap; }
+    .mark { width:30px; height:30px; border:1px solid color-mix(in srgb,var(--electric) 60%,white); border-radius:9px; display:grid; place-items:center; color:white; font:700 13px 'JetBrains Mono',monospace; background:linear-gradient(145deg,#4242ff,var(--electric)); box-shadow:0 0 22px var(--glow); }
+    .title { font:700 12px/1.2 'JetBrains Mono',monospace; letter-spacing:.02em; }
+    .connection { color:var(--muted); font:10px 'JetBrains Mono',monospace; white-space:nowrap; text-transform:uppercase; letter-spacing:.04em; }
     .head-actions { display:flex; gap:6px; }
-    .icon-btn { min-width:34px; height:34px; border:1px solid var(--line); background:var(--panel); border-radius:8px; cursor:pointer; padding:0 9px; }
-    .icon-btn:hover { background:var(--soft); }
+    .icon-btn { min-width:34px; height:34px; border:1px solid var(--line); background:color-mix(in srgb,var(--panel) 88%,transparent); border-radius:9px; cursor:pointer; padding:0 9px; transition:.16s ease; }
+    .icon-btn:hover { border-color:var(--accent); background:var(--electric-soft); color:var(--accent); box-shadow:0 0 18px var(--glow); }
     .meta-bar { width:100%; min-height:38px; display:flex; align-items:center; gap:16px; padding:8px 18px; border:0; border-top:1px solid var(--line); background:var(--panel); color:var(--muted); font-size:11px; text-align:left; cursor:pointer; overflow:auto; }
     .meta-bar:hover { background:var(--soft); }
     .meta-item { white-space:nowrap; }
@@ -106,14 +135,14 @@
     main { overflow:auto; scroll-behavior:smooth; background:var(--panel); }
     .thread { width:min(720px,100%); margin:0 auto; padding:28px 24px 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
-    .empty h1 { margin:0; font-size:12px; line-height:1.1; letter-spacing:-.01em; font-weight:600; }
+    .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
     .empty p { margin:0 0 12px; color:var(--muted); font-size:12px; }
     .prompts { display:flex; flex-wrap:wrap; gap:8px; }
     .prompt-chip { border:1px solid var(--line); border-radius:999px; padding:8px 12px; background:var(--panel); cursor:pointer; box-shadow:var(--shadow); }
-    .prompt-chip:hover { background:var(--soft); }
+    .prompt-chip:hover { border-color:var(--accent); background:var(--electric-soft); color:var(--accent); transform:translateY(-1px); }
     .message { display:grid; grid-template-columns:72px minmax(0,1fr); gap:14px; padding:22px 0; border-bottom:1px solid var(--line); }
-    .speaker { color:var(--muted); font-size:11px; font-weight:600; padding-top:2px; }
-    .message.user .content { display:inline-block; justify-self:start; padding:10px 13px; background:var(--user); border-radius:10px; }
+    .speaker { color:var(--accent); font:700 10px 'JetBrains Mono',monospace; letter-spacing:.05em; padding-top:2px; }
+    .message.user .content { display:inline-block; justify-self:start; padding:10px 13px; background:linear-gradient(135deg,var(--user),color-mix(in srgb,var(--user) 72%,#748cff)); color:#fff; border-radius:12px 12px 12px 4px; box-shadow:0 8px 24px var(--glow); }
     .content { white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; }
     .chat-image { display:block; width:min(320px,100%); max-height:360px; margin-bottom:8px; border-radius:12px; object-fit:cover; }
     .content.pending { color:var(--muted); }
@@ -129,12 +158,12 @@
     .attachment-preview img { width:52px; height:52px; border-radius:9px; object-fit:cover; }
     .attachment-name { min-width:0; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:11px; }
     .remove-attachment { width:34px; height:34px; border:0; border-radius:9px; background:var(--panel); cursor:pointer; }
-    .composer { width:min(720px,100%); margin:0 auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:end; padding:8px; border:1px solid var(--line); border-radius:14px; background:var(--panel); box-shadow:0 6px 30px rgba(35,30,24,.08); }
+    .composer { width:min(720px,100%); margin:0 auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:end; padding:8px; border:1px solid color-mix(in srgb,var(--electric) 22%,var(--line)); border-radius:16px; background:var(--panel); box-shadow:0 8px 34px var(--glow); }
     .attach-btn { width:36px; height:36px; border:0; border-radius:9px; background:var(--soft); color:var(--text); cursor:pointer; font-size:20px; line-height:1; }
     .file-input { display:none; }
     textarea { resize:none; max-height:140px; min-height:34px; padding:6px 0; border:0; outline:0; background:transparent; color:var(--text); font-size:12px; }
     textarea::placeholder { color:var(--muted); }
-    .send { height:36px; min-width:64px; border:0; border-radius:9px; padding:0 14px; background:var(--accent); color:var(--accentText); font-weight:600; cursor:pointer; }
+    .send { height:36px; min-width:64px; border:0; border-radius:9px; padding:0 14px; background:linear-gradient(135deg,#4242ff,var(--electric)); color:#fff; font-weight:700; cursor:pointer; box-shadow:0 6px 18px var(--glow); }
     .send:disabled { opacity:.42; cursor:default; }
     .footnote { width:min(720px,100%); margin:6px auto 0; color:var(--muted); font-size:11px; text-align:center; }
     .activation-panel { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px; background:color-mix(in srgb,var(--page) 94%,transparent); backdrop-filter:blur(10px); }
@@ -172,19 +201,21 @@
       .info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
       .thread { width:100%; min-width:0; padding:18px 16px 32px; }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
-      .empty h1 { font-size:12px; }
+      .empty h1 { font-size:clamp(28px,10vw,38px); }
       .empty p { margin-bottom:18px; font-size:12px; line-height:1.5; }
       .prompts { width:100%; display:grid; grid-template-columns:1fr; gap:9px; }
       .prompt-chip { width:100%; min-height:48px; border-radius:14px; padding:12px 15px; text-align:left; box-shadow:none; }
       .message { grid-template-columns:1fr; gap:6px; padding:16px 0; }
       .message.user .content { max-width:88%; justify-self:end; }
-      .history-delete { min-width:58px; min-height:44px; }
+      .history-delete, .project-add, .project-action { min-width:44px; min-height:44px; }
+      .history-project-select { min-height:44px; }
+      .project-card { padding:18px; border-radius:15px; }
       .speaker { font-size:11px; }
       .message.user .speaker { text-align:right; }
       .content { font-size:12px; line-height:1.6; }
       footer { padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
       .attachment-preview { width:100%; }
-      .composer { width:100%; min-width:0; min-height:54px; border-radius:18px; padding:5px; gap:6px; box-shadow:0 4px 20px rgba(35,30,24,.08); }
+      .composer { width:100%; min-width:0; min-height:54px; border-radius:18px; padding:5px; gap:6px; box-shadow:0 6px 26px var(--glow); }
       .attach-btn { width:44px; height:44px; border-radius:14px; }
       textarea { min-width:0; min-height:42px; padding:10px 0 7px; font-size:12px; }
       .send { min-width:64px; height:44px; border-radius:14px; }
@@ -195,28 +226,37 @@
 </head>
 <body>
   <div class="workspace-shell">
-    <aside class="history-panel" id="historyPanel" aria-label="History percakapan">
+    <aside class="history-panel" id="historyPanel" aria-label="Conversation history">
       <div class="history-head">
         <span class="history-heading">History</span>
-        <button class="history-close" id="historyClose" type="button" aria-label="Tutup history">×</button>
+        <button class="history-close" id="historyClose" type="button" aria-label="Close history">×</button>
       </div>
-      <button class="history-new" id="historyNew" type="button">＋ Percakapan baru</button>
+      <button class="history-new" id="historyNew" type="button">＋ New conversation</button>
+      <section class="projects-section" id="projectsSection" aria-label="Projects">
+        <div class="projects-head">
+          <button class="projects-toggle" id="projectsToggle" type="button" aria-expanded="true">
+            <span>Projects</span><span class="projects-count" id="projectsCount">0</span>
+          </button>
+          <button class="project-add" id="addProjectBtn" type="button" aria-label="Add project" title="Add project">＋</button>
+        </div>
+        <div class="project-list" id="projectList"></div>
+      </section>
       <div class="history-list" id="historyList" aria-live="polite">
-        <p class="history-state">Memuat history...</p>
+        <p class="history-state">Loading history...</p>
       </div>
     </aside>
-    <button class="history-backdrop" id="historyBackdrop" type="button" aria-label="Tutup history"></button>
+    <button class="history-backdrop" id="historyBackdrop" type="button" aria-label="Close history"></button>
     <div class="app">
     <div class="topbar">
       <header>
         <div class="brand">
           <div class="mark">B</div>
-          <div><div class="title">BRAINY Desk</div><div class="connection" id="status">Menyambungkan...</div></div>
+          <div><div class="title">BRAINY Desk</div><div class="connection" id="status">Connecting...</div></div>
         </div>
         <div class="head-actions">
-          <button class="icon-btn history-toggle" id="historyBtn" type="button" title="Buka history" aria-label="Buka history" aria-expanded="false">☰</button>
-          <button class="icon-btn" id="themeBtn" type="button" title="Ganti tema">◐</button>
-          <button class="icon-btn" id="newBtn" type="button" title="Percakapan baru">Baru</button>
+          <button class="icon-btn history-toggle" id="historyBtn" type="button" title="Open history" aria-label="Open history" aria-expanded="false">☰</button>
+          <button class="icon-btn" id="themeBtn" type="button" title="Theme: System">◐</button>
+          <button class="icon-btn" id="newBtn" type="button" title="New conversation">New</button>
         </div>
       </header>
       <button class="meta-bar" id="metaBar" type="button" aria-expanded="false">
@@ -250,9 +290,9 @@
           <h1>STARTS HERE</h1>
           <p>Plans, drafts, decisions, and follow-ups.</p>
           <div class="prompts">
-            <button class="prompt-chip" data-prompt="Bantu susun prioritas aku hari ini">Plan today</button>
-            <button class="prompt-chip" data-prompt="Bantu review draft ini: ">Review a draft</button>
-            <button class="prompt-chip" data-prompt="Tolong cari informasi tentang ">Research a topic</button>
+            <button class="prompt-chip" data-prompt="Help me prioritize my day">Plan today</button>
+            <button class="prompt-chip" data-prompt="Help me review this draft: ">Review a draft</button>
+            <button class="prompt-chip" data-prompt="Research this topic: ">Research a topic</button>
           </div>
         </section>
       </div>
@@ -260,33 +300,45 @@
 
     <footer>
       <div class="attachment-preview" id="attachmentPreview" hidden>
-        <img id="attachmentThumb" alt="Preview foto">
+        <img id="attachmentThumb" alt="Image preview">
         <span class="attachment-name" id="attachmentName"></span>
-        <button class="remove-attachment" id="removeAttachment" type="button" aria-label="Hapus foto">×</button>
+        <button class="remove-attachment" id="removeAttachment" type="button" aria-label="Remove image">×</button>
       </div>
       <form class="composer" id="composer">
-        <button class="attach-btn" id="attachBtn" type="button" aria-label="Tambah foto" title="Tambah foto">＋</button>
+        <button class="attach-btn" id="attachBtn" type="button" aria-label="Add image" title="Add image">＋</button>
         <input id="imageInput" type="file" accept="image/*" class="file-input">
         <textarea id="input" rows="1" placeholder="What needs to get done?" autocomplete="off"></textarea>
-        <button class="send" id="send" type="submit" disabled>Kirim</button>
+        <button class="send" id="send" type="submit" disabled>Send</button>
       </form>
-      <div class="footnote">Workspace pribadi Ila</div>
+      <div class="footnote">Ila's private workspace</div>
     </footer>
     </div>
   </div>
   <div class="toast" id="toast"></div>
+  <section class="project-modal" id="projectModal" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle" hidden>
+    <form class="project-card" id="projectForm">
+      <h2 id="projectModalTitle">New project</h2>
+      <p id="projectModalCopy">Group related chats and find them faster.</p>
+      <input class="project-input" id="projectNameInput" maxlength="40" autocomplete="off" placeholder="Project name" required>
+      <div class="project-modal-actions">
+        <button id="projectCancel" type="button">Cancel</button>
+        <button class="primary" id="projectSave" type="submit">Create</button>
+      </div>
+    </form>
+  </section>
   <section class="activation-panel" id="activationPanel" hidden>
     <div class="activation-card">
-      <h2>Aktifkan BRAINY</h2>
-      <p>Masukkan kode pribadi sekali saja. Setelah itu aplikasi akan mengingat perangkat ini.</p>
+      <h2>Activate BRAINY</h2>
+      <p>Enter your private code once. This device will remember it securely.</p>
       <form class="activation-form" id="activationForm">
-        <input class="activation-input" id="activationCode" maxlength="12" autocomplete="one-time-code" autocapitalize="characters" placeholder="KODE AKTIVASI" required>
-        <button class="activation-submit" id="activationSubmit" type="submit">Aktifkan</button>
+        <input class="activation-input" id="activationCode" maxlength="12" autocomplete="one-time-code" autocapitalize="characters" placeholder="ACTIVATION CODE" required>
+        <button class="activation-submit" id="activationSubmit" type="submit">Activate</button>
         <p class="activation-error" id="activationError"></p>
       </form>
     </div>
   </section>
 
+<script src="./project-store.js"></script>
 <script src="./session-actions.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
@@ -304,6 +356,8 @@
   let empty = $('#empty');
   const workspaceShell = $('.workspace-shell');
   const historyPanel = $('#historyPanel'), historyList = $('#historyList'), historyBackdrop = $('#historyBackdrop');
+  const historyNew = $('#historyNew'), projectList = $('#projectList'), projectsToggle = $('#projectsToggle');
+  const projectModal = $('#projectModal'), projectNameInput = $('#projectNameInput');
   const HISTORY_OPEN_KEY = 'brainy_history_open';
   const imageInput = $('#imageInput'), attachmentPreview = $('#attachmentPreview');
   const attachmentThumb = $('#attachmentThumb'), attachmentName = $('#attachmentName');
@@ -333,9 +387,9 @@
   function personalizeInstallManifest() {
     if (!queryAccess) return;
     const manifest = {
-      name:'BRAINY Desk', short_name:'BRAINY', description:'Workspace pribadi Ila',
+      name:'BRAINY Desk', short_name:'BRAINY', description:"Ila's private workspace",
       start_url:location.href, scope:new URL('./',location.href).href, display:'standalone',
-      orientation:'any', background_color:'#f6f5f2', theme_color:'#f6f5f2',
+      orientation:'any', background_color:'#f5f7ff', theme_color:'#1717ff',
       icons:[
         {src:new URL('./icons/brainy-192.png',location.href).href,sizes:'192x192',type:'image/png',purpose:'any maskable'},
         {src:new URL('./icons/brainy-512.png',location.href).href,sizes:'512x512',type:'image/png',purpose:'any maskable'}
@@ -349,6 +403,9 @@
   let currentAssistant = null, currentText = '', reconnectTimer = null;
   let queuedText = '', queuedImage = null, selectedImage = null, imagePreparing = false, connecting = false;
   let historyLoading = false;
+  let historyItems = [];
+  let projectState = ProjectStore.load(localStorage);
+  let editingProjectId = null;
   const MAX_IMAGE_DIMENSION = 1600;
   let historyRendered = false;
   let runtimeInfo = {}, latestUsage = {};
@@ -370,7 +427,7 @@
     const panel = $('#activationPanel');
     $('#activationError').textContent = message;
     panel.hidden = false;
-    setStatus('Perlu aktivasi');
+    setStatus('Activation required');
     setTimeout(() => $('#activationCode').focus(), 50);
   }
   $('#activationForm').addEventListener('submit', async (event) => {
@@ -378,22 +435,22 @@
     const code = $('#activationCode').value.trim().toUpperCase();
     if (!code) return;
     const button = $('#activationSubmit');
-    button.disabled = true; button.textContent = 'Memeriksa...'; $('#activationError').textContent = '';
+    button.disabled = true; button.textContent = 'Checking...'; $('#activationError').textContent = '';
     try {
       await refreshBackend();
       const response = await fetch(`${backendUrl}/api/auth/activate`, {
         method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({code})
       });
-      if (!response.ok) throw new Error(response.status === 429 ? 'Terlalu banyak percobaan. Tunggu sebentar.' : 'Kode belum cocok. Coba periksa lagi.');
+      if (!response.ok) throw new Error(response.status === 429 ? 'Too many attempts. Please wait a moment.' : 'That code did not match. Please check it and try again.');
       const data = await response.json();
       setAccessKey(data.access);
       $('#activationPanel').hidden = true;
       $('#activationCode').value = '';
       connect().catch(fail);
     } catch (error) {
-      $('#activationError').textContent = error.message || 'Aktivasi belum berhasil.';
+      $('#activationError').textContent = error.message || 'Activation was not completed.';
     } finally {
-      button.disabled = false; button.textContent = 'Aktifkan';
+      button.disabled = false; button.textContent = 'Activate';
     }
   });
 
@@ -401,7 +458,13 @@
   let theme = localStorage.getItem('brainy_theme') || 'auto';
   function applyTheme() {
     document.documentElement.dataset.theme = theme;
-    $('#themeBtn').title = 'Tema: ' + theme;
+    const labels = {auto:'System',light:'Light',dark:'Dark'};
+    const icons = {auto:'◐',light:'☀',dark:'☾'};
+    const nextTheme = themeOrder[(themeOrder.indexOf(theme) + 1) % themeOrder.length];
+    const button = $('#themeBtn');
+    button.textContent = icons[theme];
+    button.title = `Theme: ${labels[theme]} · Next: ${labels[nextTheme]}`;
+    button.setAttribute('aria-label', button.title);
   }
   applyTheme();
   $('#themeBtn').onclick = () => {
@@ -510,7 +573,7 @@
     return new Promise((resolve,reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error('Foto tidak bisa dibaca'));
+      reader.onerror = () => reject(new Error('The image could not be read'));
       reader.readAsDataURL(fileOrBlob);
     });
   }
@@ -518,12 +581,12 @@
     return new Promise((resolve,reject) => {
       const image = new Image();
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('Format foto belum didukung'));
+      image.onerror = () => reject(new Error('This image format is not supported'));
       image.src = source;
     });
   }
   async function prepareImage(file) {
-    if (!file || !file.type.startsWith('image/')) throw new Error('Pilih file foto');
+    if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file');
     const source = await fileToDataUrl(file);
     const image = await loadImage(source);
     const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight));
@@ -532,7 +595,7 @@
     canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
     canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
     const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/jpeg',.86));
-    if (!blob) throw new Error('Foto tidak bisa disiapkan');
+    if (!blob) throw new Error('The image could not be prepared');
     const preview = await fileToDataUrl(blob);
     const stem = (file.name || 'foto').replace(/\.[^.]+$/,'').replace(/[^a-z0-9_-]+/gi,'_').slice(0,60) || 'foto';
     return {name:`${stem}.jpg`,base64:preview.split(',')[1],preview,attached:false};
@@ -569,7 +632,7 @@
     const body = document.createElement('div'); body.className = 'content' + (pendingState ? ' pending' : '');
     if (imageUrl) {
       const image = document.createElement('img'); image.className = 'chat-image';
-      image.src = imageUrl; image.alt = 'Foto dari Ila'; body.append(image);
+      image.src = imageUrl; image.alt = 'Image from Ila'; body.append(image);
     }
     if (text) body.append(document.createTextNode(text));
     row.append(speaker, body); thread.append(row); scrollBottom();
@@ -579,7 +642,7 @@
     const card = document.createElement('div'); card.className = 'request-card';
     const p = document.createElement('p'); p.textContent = question; card.append(p);
     const actions = document.createElement('div'); actions.className = 'request-actions';
-    (choices || ['Lanjutkan','Batalkan']).forEach((choice, i) => {
+    (choices || ['Continue','Cancel']).forEach((choice, i) => {
       const b = document.createElement('button'); b.type='button'; b.className='small-btn' + (i===0?' primary':'');
       b.textContent=choice; b.onclick=()=>{ card.remove(); onChoice(choice, i); }; actions.append(b);
     });
@@ -592,10 +655,10 @@
   }
   function rpc(method, params={}) {
     return new Promise((resolve,reject) => {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return reject(new Error('Belum tersambung'));
+      if (!ws || ws.readyState !== WebSocket.OPEN) return reject(new Error('Not connected yet'));
       const id = 'b' + (++seq); pending.set(id,{resolve,reject,method});
       ws.send(JSON.stringify({jsonrpc:'2.0',id,method,params}));
-      setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error('Waktu tunggu habis')); } }, 120000);
+      setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error('Request timed out')); } }, 120000);
     });
   }
   function invalidateLiveSession() {
@@ -615,7 +678,7 @@
     localStorage.setItem(HISTORY_OPEN_KEY, String(shouldOpen));
     const historyButton = $('#historyBtn');
     historyButton.setAttribute('aria-expanded', String(shouldOpen));
-    historyButton.title = shouldOpen ? 'Tutup history' : 'Buka history';
+    historyButton.title = shouldOpen ? 'Close history' : 'Open history';
     historyButton.setAttribute('aria-label', historyButton.title);
   }
   function historyDate(value) {
@@ -623,21 +686,113 @@
     if (!number) return '';
     const date = new Date(number < 1000000000000 ? number * 1000 : number);
     if (Number.isNaN(date.getTime())) return '';
-    return new Intl.DateTimeFormat('id-ID',{day:'numeric',month:'short',year:'numeric'}).format(date);
+    return new Intl.DateTimeFormat('en-US',{day:'numeric',month:'short',year:'numeric'}).format(date);
   }
   function historyName(item) {
     const title = String(item.title || '').trim();
     const preview = String(item.preview || '').replace(/\s+/g,' ').trim();
     if (title && title !== 'BRAINY Desk') return title;
-    return preview.slice(0,72) || 'Percakapan baru';
+    return preview.slice(0,72) || 'New conversation';
+  }
+  function persistProjectState(next) {
+    try {
+      projectState = ProjectStore.save(localStorage, next);
+      return true;
+    } catch {
+      showToast('Projects could not be saved on this device');
+      return false;
+    }
+  }
+  function projectChatCount(projectId) {
+    return historyItems.filter(item => ProjectStore.projectForSession(projectState, item.id) === projectId).length;
+  }
+  function projectFilterRow(id, name, count, actions=false) {
+    const row = document.createElement('div'); row.className = 'project-row';
+    const button = document.createElement('button'); button.type = 'button';
+    button.className = 'project-filter' + (projectState.selected === id ? ' active' : '');
+    if (projectState.selected === id) button.setAttribute('aria-current','true');
+    button.setAttribute('aria-label', `Show chats in ${name}`);
+    const label = document.createElement('span'); label.className = 'project-name'; label.textContent = name;
+    const total = document.createElement('span'); total.className = 'project-chat-count'; total.textContent = String(count);
+    button.append(label,total);
+    button.addEventListener('click', () => {
+      if (!persistProjectState(ProjectStore.select(projectState,id))) return;
+      renderHistorySessions(historyItems);
+    });
+    row.append(button);
+    if (actions) {
+      const rename = document.createElement('button'); rename.type = 'button'; rename.className = 'project-action';
+      rename.textContent = '✎'; rename.title = `Rename ${name}`; rename.setAttribute('aria-label', rename.title);
+      rename.addEventListener('click', () => openProjectModal(id));
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'project-action';
+      remove.textContent = '×'; remove.title = `Delete project ${name}`; remove.setAttribute('aria-label', remove.title);
+      remove.addEventListener('click', () => deleteProject(id));
+      row.append(rename,remove);
+    }
+    return row;
+  }
+  function renderProjectList() {
+    projectList.replaceChildren();
+    $('#projectsCount').textContent = String(projectState.projects.length);
+    projectList.hidden = projectState.collapsed;
+    projectsToggle.setAttribute('aria-expanded', String(!projectState.collapsed));
+    projectsToggle.title = projectState.collapsed ? 'Open project list' : 'Close project list';
+    projectList.append(projectFilterRow('all','All chats',historyItems.length));
+    const ungroupedCount = historyItems.filter(item => !ProjectStore.projectForSession(projectState,item.id)).length;
+    projectList.append(projectFilterRow('none','No project',ungroupedCount));
+    projectState.projects.forEach(project => {
+      projectList.append(projectFilterRow(project.id, project.name, projectChatCount(project.id), true));
+    });
+    const activeProject = ProjectStore.projectById(projectState, projectState.selected);
+    historyNew.textContent = activeProject ? `＋ New chat · ${activeProject.name}` : '＋ New conversation';
+  }
+  function openProjectModal(projectId=null) {
+    const project = projectId ? ProjectStore.projectById(projectState,projectId) : null;
+    editingProjectId = project ? project.id : null;
+    $('#projectModalTitle').textContent = project ? 'Rename project' : 'New project';
+    $('#projectModalCopy').textContent = project ? 'The new name will appear on every chat in this project.' : 'Group related chats and find them faster.';
+    $('#projectSave').textContent = project ? 'Save' : 'Create';
+    projectNameInput.value = project ? project.name : '';
+    projectModal.hidden = false;
+    setTimeout(() => { projectNameInput.focus(); projectNameInput.select(); }, 20);
+  }
+  function closeProjectModal() {
+    projectModal.hidden = true;
+    editingProjectId = null;
+    projectNameInput.value = '';
+  }
+  function deleteProject(projectId) {
+    const project = ProjectStore.projectById(projectState,projectId);
+    if (!project) return;
+    if (!confirm(`Delete project "${project.name}" without deleting chats? Its chats will move to No project.`)) return;
+    if (!persistProjectState(ProjectStore.remove(projectState, projectId))) return;
+    renderHistorySessions(historyItems);
+    showToast('Project deleted · chats are still saved');
+  }
+  function filteredHistoryItems(items) {
+    if (projectState.selected === 'all') return items;
+    if (projectState.selected === 'none') return items.filter(item => !ProjectStore.projectForSession(projectState,item.id));
+    return items.filter(item => ProjectStore.projectForSession(projectState,item.id) === projectState.selected);
+  }
+  function selectedProjectLabel() {
+    if (projectState.selected === 'none') return 'No project';
+    const project = ProjectStore.projectById(projectState,projectState.selected);
+    return project ? project.name : 'All chats';
   }
   function renderHistorySessions(items) {
+    historyItems = Array.isArray(items) ? items : [];
     historyList.replaceChildren();
-    if (!items.length) {
+    renderProjectList();
+    const heading = document.createElement('div'); heading.className = 'history-list-heading';
+    heading.textContent = `Chats · ${selectedProjectLabel()}`;
+    historyList.append(heading);
+    const visibleItems = filteredHistoryItems(historyItems);
+    if (!visibleItems.length) {
       const state = document.createElement('p'); state.className = 'history-state';
-      state.textContent = 'Belum ada percakapan tersimpan.'; historyList.append(state); return;
+      state.textContent = historyItems.length ? 'No chats in this section yet.' : 'No saved conversations yet.';
+      historyList.append(state); return;
     }
-    items.forEach(item => {
+    visibleItems.forEach(item => {
       const row = document.createElement('div'); row.className = 'history-row';
       const button = document.createElement('button'); button.type = 'button';
       button.className = 'history-item' + (item.id === sessionKey ? ' active' : '');
@@ -645,32 +800,53 @@
       const historyTitle = document.createElement('span'); historyTitle.className = 'history-title';
       historyTitle.textContent = historyName(item);
       const preview = document.createElement('span'); preview.className = 'history-preview';
-      preview.textContent = String(item.preview || '').replace(/\s+/g,' ').trim() || `${Number(item.message_count || 0)} pesan`;
+      preview.textContent = String(item.preview || '').replace(/\s+/g,' ').trim() || `${Number(item.message_count || 0)} messages`;
       const meta = document.createElement('span'); meta.className = 'history-meta';
       const date = document.createElement('span'); date.className = 'history-date';
       date.textContent = historyDate(item.started_at);
       const historyAction = document.createElement('span'); historyAction.className = 'history-action';
-      historyAction.textContent = item.id === sessionKey ? 'Sedang dibuka' : 'Buka →';
+      historyAction.textContent = item.id === sessionKey ? 'Open now' : 'Open →';
       meta.append(date,historyAction); button.append(historyTitle,preview,meta);
       button.addEventListener('click',() => openHistorySession(item,button));
+      const controls = document.createElement('div'); controls.className = 'history-controls';
+      const projectSelect = document.createElement('select'); projectSelect.className = 'history-project-select';
+      projectSelect.setAttribute('aria-label', `Move ${historyName(item)} to project`);
+      const ungrouped = document.createElement('option'); ungrouped.value = 'none'; ungrouped.textContent = 'No project';
+      projectSelect.append(ungrouped);
+      projectState.projects.forEach(project => {
+        const option = document.createElement('option'); option.value = project.id; option.textContent = project.name;
+        projectSelect.append(option);
+      });
+      projectSelect.value = ProjectStore.projectForSession(projectState,item.id) || 'none';
+      projectSelect.addEventListener('click', event => event.stopPropagation());
+      projectSelect.addEventListener('change', event => {
+        event.stopPropagation();
+        const projectId = projectSelect.value === 'none' ? null : projectSelect.value;
+        const next = ProjectStore.assign(projectState, item.id, projectId);
+        if (!persistProjectState(next)) return;
+        const target = ProjectStore.projectById(projectState,projectId);
+        showToast(target ? `Moved to ${target.name}` : 'Moved to No project');
+        renderHistorySessions(historyItems);
+      });
       const delBtn = document.createElement('button'); delBtn.type = 'button';
       delBtn.className = 'history-delete';
-      delBtn.setAttribute('aria-label', `Hapus history ${historyName(item)}`);
-      delBtn.title = 'Hapus history secara permanen';
-      delBtn.textContent = 'Hapus';
+      delBtn.setAttribute('aria-label', `Delete history ${historyName(item)}`);
+      delBtn.title = 'Delete history permanently';
+      delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', (ev) => { ev.stopPropagation(); deleteHistorySession(item, delBtn, button); });
-      row.append(button, delBtn);
+      controls.append(projectSelect,delBtn);
+      row.append(button,controls);
       historyList.append(row);
     });
   }
   async function deleteHistorySession(item, delBtn, openBtn) {
     if (!item || !item.id || historyLoading) return;
     const isActive = item.id === sessionKey;
-    if (isActive && busy && !confirm('BRAINY masih mengerjakan. Tetap hapus percakapan ini?')) return;
-    if (!confirm(`Hapus history "${historyName(item)}" secara permanen?`)) return;
+    if (isActive && busy && !confirm('BRAINY is still working. Delete this conversation anyway?')) return;
+    if (!confirm(`Permanently delete "${historyName(item)}"?`)) return;
     historyLoading = true; delBtn.setAttribute('aria-busy','true'); delBtn.disabled = true;
     if (openBtn) openBtn.disabled = true;
-    updateSend(); setStatus('Menghapus history...');
+    updateSend(); setStatus('Deleting history...');
     let activeClosed = false;
     let leavingPage = false;
     try {
@@ -684,17 +860,19 @@
       } else {
         await deleteStoredSession();
       }
-      showToast('History dihapus');
+      projectState = ProjectStore.removeSession(projectState,item.id);
+      try { projectState = ProjectStore.save(localStorage,projectState); } catch { /* history deletion still succeeded */ }
+      showToast('History deleted');
       if (isActive) { leavingPage = true; location.reload(); return; }
       await loadSessionHistory();
     } catch (error) {
-      showToast(error.message || 'History belum bisa dihapus');
+      showToast(error.message || 'History could not be deleted');
       if (activeClosed) {
         leavingPage = true;
         location.reload();
         return;
       }
-      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      setStatus(busy ? 'Working...' : 'Ready');
     } finally {
       if (!leavingPage) {
         historyLoading = false; delBtn.removeAttribute('aria-busy'); delBtn.disabled = false;
@@ -712,7 +890,7 @@
     } catch {
       historyList.replaceChildren();
       const state = document.createElement('p'); state.className = 'history-state';
-      state.textContent = 'History belum bisa dimuat.'; historyList.append(state);
+      state.textContent = 'History could not be loaded.'; historyList.append(state);
     }
   }
   function bindPromptButtons(root=document) {
@@ -726,9 +904,9 @@
     const copy = document.createElement('p'); copy.textContent = 'Plans, drafts, decisions, and follow-ups.';
     const prompts = document.createElement('div'); prompts.className = 'prompts';
     [
-      ['Bantu susun prioritas aku hari ini','Plan today'],
-      ['Bantu review draft ini: ','Review a draft'],
-      ['Tolong cari informasi tentang ','Research a topic']
+      ['Help me prioritize my day','Plan today'],
+      ['Help me review this draft: ','Review a draft'],
+      ['Research this topic: ','Research a topic']
     ].forEach(([prompt,label]) => {
       const button = document.createElement('button'); button.type='button'; button.className='prompt-chip';
       button.dataset.prompt=prompt; button.textContent=label; prompts.append(button);
@@ -744,14 +922,14 @@
   async function openHistorySession(item,button) {
     if (!item || !item.id || historyLoading) return;
     if (item.id === sessionKey) {
-      showToast('Percakapan ini sudah aktif');
+      showToast('This conversation is already open');
       toggleHistory(false);
       return;
     }
-    if (busy && !confirm('BRAINY masih mengerjakan. Buka percakapan lain?')) return;
+    if (busy && !confirm('BRAINY is still working. Open another conversation?')) return;
     historyLoading = true; button.setAttribute('aria-busy','true'); button.disabled=true;
-    const action = button.querySelector('.history-action'); if (action) action.textContent='Membuka...';
-    updateSend(); setStatus('Membuka history...');
+    const action = button.querySelector('.history-action'); if (action) action.textContent='Opening...';
+    updateSend(); setStatus('Opening history...');
     let previousClosed = false;
     let recovering = false;
     try {
@@ -766,29 +944,29 @@
       input.value=''; clearAttachment(); autoGrow();
       latestUsage={}; runtimeInfo={}; replaceThread(result.messages); historyRendered=true;
       ready=true; busy=!!result.running; applyRuntime(result.info || {});
-      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      setStatus(busy ? 'Working...' : 'Ready');
       toggleHistory(false); await loadSessionHistory();
       setTimeout(refreshUsage,250); refreshAccountUsage();
     } catch (error) {
-      showToast(error.message || 'History belum bisa dibuka');
+      showToast(error.message || 'History could not be opened');
       if (previousClosed) {
         recovering = true;
         location.reload();
         return;
       }
-      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      setStatus(busy ? 'Working...' : 'Ready');
     } finally {
       if (!recovering) {
         historyLoading=false; button.removeAttribute('aria-busy'); button.disabled=false;
-        if (button.isConnected && action) action.textContent='Buka →';
+        if (button.isConnected && action) action.textContent='Open →';
         updateSend();
       }
     }
   }
   async function startNewSession() {
-    if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
+    if (busy && !confirm('BRAINY is still working. Start a new conversation?')) return;
     if (historyLoading) return;
-    historyLoading = true; updateSend(); setStatus('Membuka percakapan baru...');
+    historyLoading = true; updateSend(); setStatus('Starting a new conversation...');
     try {
       await BrainySessionActions.closeThen(rpc, sid, invalidateLiveSession, () => {
         localStorage.removeItem('brainy_session');
@@ -797,8 +975,8 @@
     } catch (error) {
       historyLoading = false;
       updateSend();
-      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
-      showToast(error.message || 'Percakapan lama belum bisa ditutup');
+      setStatus(busy ? 'Working...' : 'Ready');
+      showToast(error.message || 'The previous conversation could not be closed');
     }
   }
   async function submitPrompt(text,image) {
@@ -821,24 +999,31 @@
       queuedImage = image;
       ready = false;
       updateSend();
-      setStatus('Pesan tersimpan · menyambungkan ulang...');
+      setStatus('Message saved · reconnecting...');
       connect().catch(fail);
     }
   }
   async function startSession() {
     const saved = localStorage.getItem('brainy_session');
     let result;
+    let createdNewSession = false;
     if (saved) {
       try { result = await rpc('session.resume',{session_id:saved,cols:100,source:'brainy-web'}); }
       catch { localStorage.removeItem('brainy_session'); }
     }
-    if (!result) result = await rpc('session.create',{cols:100,source:'brainy-web',title:'BRAINY Desk'});
+    if (!result) {
+      result = await rpc('session.create',{cols:100,source:'brainy-web',title:'BRAINY Desk'});
+      createdNewSession = true;
+    }
     sid = result.session_id; sessionKey = result.stored_session_id || result.session_key || result.resumed || '';
     if (sessionKey) localStorage.setItem('brainy_session', sessionKey);
+    if (createdNewSession && sessionKey && ProjectStore.projectById(projectState,projectState.selected)) {
+      persistProjectState(ProjectStore.assign(projectState, sessionKey, projectState.selected));
+    }
     if (!historyRendered) { renderHistory(result.messages); historyRendered = true; }
     ready = true; busy = !!result.running;
     applyRuntime(result.info || {});
-    setStatus(busy ? 'Sedang mengerjakan...' : 'Siap'); updateSend();
+    setStatus(busy ? 'Working...' : 'Ready'); updateSend();
     setTimeout(refreshUsage, 1200);
     refreshAccountUsage();
     flushQueuedMessage();
@@ -848,10 +1033,10 @@
     const type = ev.type, payload = ev.payload || {};
     if (ev.session_id && ev.session_id !== sid) return;
     if (type === 'gateway.ready') { startSession().catch(fail); return; }
-    if (type === 'session.info') { applyRuntime(payload); if (!busy) setStatus('Siap'); setTimeout(refreshUsage,200); return; }
+    if (type === 'session.info') { applyRuntime(payload); if (!busy) setStatus('Ready'); setTimeout(refreshUsage,200); return; }
     if (type === 'message.start') {
       busy = true; setStatus(`Answering with ${niceName(runtimeInfo.model || latestUsage.model)}...`); updateSend(); currentText='';
-      currentAssistant = addMessage('assistant','Menyiapkan jawaban...',true); return;
+      currentAssistant = addMessage('assistant','Preparing a response...',true); return;
     }
     if (type === 'message.delta') {
       if (!currentAssistant) currentAssistant = addMessage('assistant','',true);
@@ -861,25 +1046,25 @@
     }
     if (type === 'message.complete') {
       if (!currentAssistant) currentAssistant = addMessage('assistant','');
-      const finalText = payload.text || currentText || 'Selesai.';
+      const finalText = payload.text || currentText || 'Done.';
       currentAssistant.textContent = finalText; currentAssistant.classList.remove('pending');
-      currentAssistant=null; currentText=''; busy=false; setStatus('Siap'); updateSend(); scrollBottom();
+      currentAssistant=null; currentText=''; busy=false; setStatus('Ready'); updateSend(); scrollBottom();
       setTimeout(refreshUsage,250); setTimeout(loadSessionHistory,500); return;
     }
     if (type === 'tool.start' || type === 'tool.progress' || type === 'tool.generating') {
-      setStatus('Sedang mengerjakan...'); return;
+      setStatus('Working...'); return;
     }
     if (type === 'clarify.request') {
-      addRequest(payload.question || 'Perlu pilihanmu:', payload.choices, (choice) => {
+      addRequest(payload.question || 'Your input is needed:', payload.choices, (choice) => {
         rpc('clarify.respond',{answer:choice,request_id:payload.request_id}).catch(fail);
       }); return;
     }
     if (type === 'approval.request') {
-      addRequest(payload.description || 'BRAINY perlu izin untuk melanjutkan.', ['Izinkan','Tolak'], (_choice,i) => {
+      addRequest(payload.description || 'BRAINY needs permission to continue.', ['Allow','Deny'], (_choice,i) => {
         rpc('approval.respond',{choice:i===0?'allow_once':'deny',session_id:sid}).catch(fail);
       }); return;
     }
-    if (type === 'error') { fail(new Error(payload.message || 'Terjadi kendala')); }
+    if (type === 'error') { fail(new Error(payload.message || 'Something went wrong')); }
   }
   function scheduleReconnect() {
     if (ready || !accessKey) return;
@@ -887,21 +1072,21 @@
     reconnectTimer=setTimeout(()=>connect().catch(fail),1500);
   }
   function fail(err) {
-    busy=false; updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Koneksi terganggu'); showToast(err.message || String(err));
-    if (currentAssistant && !currentText) currentAssistant.textContent='Belum berhasil. Coba kirim lagi.';
+    busy=false; updateSend(); setStatus(queuedText ? 'Message saved · reconnecting...' : 'Connection interrupted'); showToast(err.message || String(err));
+    if (currentAssistant && !currentText) currentAssistant.textContent='That did not work. Please try again.';
     scheduleReconnect();
   }
   async function connect() {
     if (connecting || (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN))) return;
     connecting = true;
-    clearTimeout(reconnectTimer); ready=false; updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Menyambungkan...');
+    clearTimeout(reconnectTimer); ready=false; updateSend(); setStatus(queuedText ? 'Message saved · reconnecting...' : 'Connecting...');
     let r;
     try { r = await fetch(`${backendUrl}/api/auth/ws-ticket`,{method:'POST',headers:authHeaders}); }
     catch (err) { connecting=false; await refreshBackend(); throw err; }
     if (r.status === 404) {
-      connecting=false; setAccessKey(''); showActivation('Akses perangkat ini perlu diaktifkan lagi.'); return;
+      connecting=false; setAccessKey(''); showActivation('This device needs to be activated again.'); return;
     }
-    if (!r.ok) { connecting=false; throw new Error('Tidak bisa membuka workspace'); }
+    if (!r.ok) { connecting=false; throw new Error('The workspace could not be opened'); }
     const {ticket} = await r.json();
     const wsBackend = new URL(backendUrl);
     const proto = wsBackend.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -912,30 +1097,30 @@
       if (frame.method === 'event') return event(frame.params || {});
       if (frame.id && pending.has(frame.id)) {
         const p=pending.get(frame.id); pending.delete(frame.id);
-        frame.error ? p.reject(new Error(frame.error.message || 'Request gagal')) : p.resolve(frame.result);
+        frame.error ? p.reject(new Error(frame.error.message || 'Request failed')) : p.resolve(frame.result);
       }
     };
     ws.onclose = () => {
       ws=null; connecting=false; ready=false;
-      for (const [id,p] of pending) { pending.delete(id); p.reject(new Error('Koneksi terputus')); }
-      updateSend(); setStatus(queuedText ? 'Pesan tersimpan · menyambungkan ulang...' : 'Menyambungkan ulang...');
+      for (const [id,p] of pending) { pending.delete(id); p.reject(new Error('Connection lost')); }
+      updateSend(); setStatus(queuedText ? 'Message saved · reconnecting...' : 'Reconnecting...');
       scheduleReconnect();
     };
-    ws.onerror = () => setStatus('Koneksi terganggu');
+    ws.onerror = () => setStatus('Connection interrupted');
   }
   $('#attachBtn').onclick = () => imageInput.click();
   $('#removeAttachment').onclick = clearAttachment;
   imageInput.addEventListener('change',async() => {
     const file = imageInput.files && imageInput.files[0];
     if (!file) return;
-    imagePreparing = true; updateSend(); setStatus('Menyiapkan foto...');
+    imagePreparing = true; updateSend(); setStatus('Preparing image...');
     try {
       selectedImage = await prepareImage(file);
       renderAttachment();
-      setStatus(ready ? 'Foto siap dikirim' : 'Foto siap · menyambungkan...');
+      setStatus(ready ? 'Image ready to send' : 'Image ready · connecting...');
     } catch (err) {
-      clearAttachment(); showToast(err.message || 'Foto tidak bisa dibuka');
-      setStatus(ready ? 'Siap' : 'Koneksi terganggu');
+      clearAttachment(); showToast(err.message || 'The image could not be opened');
+      setStatus(ready ? 'Ready' : 'Connection interrupted');
     } finally { imagePreparing = false; updateSend(); }
   });
   function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing || historyLoading; }
@@ -949,12 +1134,12 @@
     const text=input.value.trim();
     const image=selectedImage;
     if ((!text && !image) || busy || queuedText || imagePreparing) return;
-    const promptText = text || 'Tolong analisis foto ini.';
-    addMessage('user',text || 'Foto',false,image ? image.preview : '');
+    const promptText = text || 'Please analyze this image.';
+    addMessage('user',text || 'Image',false,image ? image.preview : '');
     input.value=''; selectedImage=null; imageInput.value=''; renderAttachment(); autoGrow();
     if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
       queuedText=promptText; queuedImage=image; updateSend();
-      setStatus('Pesan tersimpan · menyambungkan ulang...');
+      setStatus('Message saved · reconnecting...');
       connect().catch(fail);
       return;
     }
@@ -963,19 +1148,46 @@
     catch(err) {
       if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
         queuedText=promptText; queuedImage=image; updateSend();
-        setStatus('Pesan tersimpan · menyambungkan ulang...');
+        setStatus('Message saved · reconnecting...');
         connect().catch(fail);
       } else fail(err);
     }
   });
   bindPromptButtons();
+  renderProjectList();
   toggleHistory(localStorage.getItem(HISTORY_OPEN_KEY) === 'true');
   $('#historyBtn').onclick = () => toggleHistory();
   $('#historyClose').onclick = () => toggleHistory(false);
   historyBackdrop.onclick = () => toggleHistory(false);
-  $('#historyNew').onclick = startNewSession;
+  historyNew.onclick = startNewSession;
   $('#newBtn').onclick = startNewSession;
-  document.addEventListener('keydown',event => { if (event.key === 'Escape') toggleHistory(false); });
+  projectsToggle.onclick = () => {
+    if (!persistProjectState(ProjectStore.setCollapsed(projectState,!projectState.collapsed))) return;
+    renderProjectList();
+  };
+  $('#addProjectBtn').onclick = () => openProjectModal();
+  $('#projectCancel').onclick = closeProjectModal;
+  projectModal.addEventListener('click', event => { if (event.target === projectModal) closeProjectModal(); });
+  $('#projectForm').addEventListener('submit', event => {
+    event.preventDefault();
+    try {
+      const next = editingProjectId
+        ? ProjectStore.rename(projectState,editingProjectId,projectNameInput.value)
+        : ProjectStore.create(projectState,projectNameInput.value);
+      if (!persistProjectState(next)) return;
+      const message = editingProjectId ? 'Project renamed' : 'Project created';
+      closeProjectModal();
+      renderHistorySessions(historyItems);
+      showToast(message);
+    } catch (error) {
+      showToast(error.message || 'Project could not be saved');
+      projectNameInput.focus();
+    }
+  });
+  document.addEventListener('keydown',event => {
+    if (event.key !== 'Escape') return;
+    if (!projectModal.hidden) closeProjectModal(); else toggleHistory(false);
+  });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }

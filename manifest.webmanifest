@@ -1,13 +1,13 @@
 {
   "name": "BRAINY Desk",
   "short_name": "BRAINY",
-  "description": "Workspace pribadi Ila",
+  "description": "Ila's private AI workspace",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f6f5f2",
-  "theme_color": "#6c5c49",
+  "background_color": "#f5f7ff",
+  "theme_color": "#1717ff",
   "icons": [
     {"src": "./icons/brainy-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
     {"src": "./icons/brainy-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
