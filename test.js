@@ -171,6 +171,10 @@ test('assistant messages render Markdown after completion and when history is re
   assert.match(html, /<script src="\.\/markdown-renderer\.js"><\/script>/);
   assert.match(html, /if \(role === 'assistant' && !pendingState\) MarkdownRenderer\.render\(body, text\)/);
   assert.match(html, /MarkdownRenderer\.render\(currentAssistant, finalText\)/);
+  assert.match(html, /MarkdownRenderer\.render\(currentAssistant, currentText\)/);
+  assert.match(html, /updateViaCache:'none'/);
+  assert.match(html, /registration\.update\(\)/);
+  assert.match(html, /controllerchange/);
   assert.match(html, /\.markdown-table-wrap/);
   assert.match(html, /\.content table/);
 });
@@ -215,7 +219,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=18'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -406,7 +410,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v17/);
+  assert.match(sw, /brainy-shell-v18/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);

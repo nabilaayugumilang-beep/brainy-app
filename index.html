@@ -1186,7 +1186,7 @@
     if (type === 'message.delta') {
       if (!currentAssistant) currentAssistant = addMessage('assistant','',true);
       const delta = payload.text || '';
-      currentText += delta; currentAssistant.textContent = currentText;
+      currentText += delta; MarkdownRenderer.render(currentAssistant, currentText);
       currentAssistant.classList.remove('pending'); scrollBottom(); return;
     }
     if (type === 'message.complete') {
@@ -1420,7 +1420,17 @@
     else toggleHistory(false);
   });
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    let reloadingForUpdate = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloadingForUpdate) return;
+      reloadingForUpdate = true;
+      location.reload();
+    });
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js?v=18',{updateViaCache:'none'})
+        .then((registration) => registration.update())
+        .catch(() => {});
+    });
   }
   refreshBackend().finally(() => accessKey ? connect().catch(fail) : showActivation());
   setInterval(refreshAccountUsage, 5 * 60 * 1000);
