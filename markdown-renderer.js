@@ -139,6 +139,12 @@
     });
   }
 
+  function tableClass(columnCount) {
+    return Number(columnCount) === 2
+      ? 'markdown-table markdown-table--two-column'
+      : 'markdown-table markdown-table--multi-column';
+  }
+
   function render(container, markdown) {
     if (!container || !container.ownerDocument) return;
     const documentRef = container.ownerDocument;
@@ -153,7 +159,7 @@
       }
       if (block.type === 'table') {
         const wrap = documentRef.createElement('div'); wrap.className = 'markdown-table-wrap';
-        const table = documentRef.createElement('table');
+        const table = documentRef.createElement('table'); table.className = tableClass(block.headers.length);
         const thead = documentRef.createElement('thead'); const headRow = documentRef.createElement('tr');
         block.headers.forEach((tokens) => { const th = documentRef.createElement('th'); appendInline(th, tokens, documentRef); headRow.append(th); });
         thead.append(headRow); table.append(thead);
@@ -174,5 +180,5 @@
     container.replaceChildren(fragment);
   }
 
-  return { parse, parseInline, render, safeUrl };
+  return { parse, parseInline, render, safeUrl, tableClass };
 });

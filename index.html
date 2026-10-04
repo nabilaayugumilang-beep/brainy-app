@@ -178,7 +178,12 @@
     .content pre code { padding:0; background:transparent; }
     .content a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
     .markdown-table-wrap { width:100%; min-width:0; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; contain:inline-size; margin:0 0 10px; border:1px solid var(--line); border-radius:10px; }
-    .content table { font-family:inherit; font-size:12px; -webkit-text-size-adjust:100%; text-size-adjust:100%; width:max-content; min-width:100%; border-collapse:collapse; white-space:normal; }
+    .content table { font-family:inherit; font-size:12px; -webkit-text-size-adjust:100%; text-size-adjust:100%; border-collapse:collapse; white-space:normal; }
+    .content table.markdown-table--two-column { width:100%; min-width:100%; table-layout:fixed; }
+    .markdown-table--two-column th:first-child, .markdown-table--two-column td:first-child { width:30%; }
+    .markdown-table--two-column th, .markdown-table--two-column td { overflow-wrap:anywhere; word-break:normal; }
+    .content table.markdown-table--multi-column { width:max-content; min-width:100%; }
+    .markdown-table--multi-column th, .markdown-table--multi-column td { min-width:120px; max-width:220px; overflow-wrap:anywhere; }
     .content th, .content td { font-family:inherit; font-size:12px; line-height:1.5; padding:8px 10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
     .content th { background:var(--soft); color:var(--accent); font-weight:700; }
     .content tr:last-child td { border-bottom:0; }
@@ -1436,7 +1441,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=22',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=23',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

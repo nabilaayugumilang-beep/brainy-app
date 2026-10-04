@@ -188,6 +188,14 @@ test('assistant typography keeps Markdown headings compact and consistent', () =
   assert.match(html, /\.content p, \.content li, \.content blockquote \{ font-size:inherit; \}/);
 });
 
+test('two-column tables wrap into a phone-width reading layout', () => {
+  assert.equal(MarkdownRenderer.tableClass(2), 'markdown-table markdown-table--two-column');
+  assert.equal(MarkdownRenderer.tableClass(3), 'markdown-table markdown-table--multi-column');
+  assert.match(html, /\.content table\.markdown-table--two-column \{[^}]*width:100%;[^}]*min-width:100%;[^}]*table-layout:fixed;/);
+  assert.match(html, /\.markdown-table--two-column th:first-child, \.markdown-table--two-column td:first-child \{ width:30%; \}/);
+  assert.match(html, /\.markdown-table--multi-column th, \.markdown-table--multi-column td \{[^}]*max-width:220px;[^}]*overflow-wrap:anywhere;/);
+});
+
 test('mobile Safari cannot auto-enlarge text inside wide Markdown tables', () => {
   assert.match(html, /html,body \{[^}]*-webkit-text-size-adjust:100%;[^}]*text-size-adjust:100%;/);
   assert.match(html, /\.content table \{[^}]*font-family:inherit;[^}]*font-size:12px;[^}]*-webkit-text-size-adjust:100%;[^}]*text-size-adjust:100%;/);
@@ -247,7 +255,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=22'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=23'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -438,7 +446,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v22/);
+  assert.match(sw, /brainy-shell-v23/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);
