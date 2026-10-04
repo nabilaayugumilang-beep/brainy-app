@@ -66,6 +66,12 @@
     .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
     .history-state { padding:18px 10px; color:var(--muted); font-size:11px; line-height:1.5; }
     .history-item { width:100%; display:block; margin:2px 0; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; pointer-events:auto; }
+    .history-row { display:flex; gap:6px; align-items:stretch; margin:2px 0; }
+    .history-row .history-item { flex:1; min-width:0; margin:0; }
+    .history-delete { flex:none; min-width:54px; min-height:44px; padding:0 8px; align-self:center; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--danger); cursor:pointer; font-size:11px; font-weight:600; line-height:1; }
+    .history-delete:hover { background:var(--soft); color:var(--danger); }
+    .history-delete[aria-busy="true"] { cursor:wait; opacity:.72; }
+    .history-delete:disabled { opacity:.5; cursor:default; }
     .history-item[aria-busy="true"] { cursor:wait; opacity:.72; }
     .history-item.active { background:var(--soft); }
     .history-title { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; font-weight:600; }
@@ -172,6 +178,7 @@
       .prompt-chip { width:100%; min-height:48px; border-radius:14px; padding:12px 15px; text-align:left; box-shadow:none; }
       .message { grid-template-columns:1fr; gap:6px; padding:16px 0; }
       .message.user .content { max-width:88%; justify-self:end; }
+      .history-delete { min-width:58px; min-height:44px; }
       .speaker { font-size:11px; }
       .message.user .speaker { text-align:right; }
       .content { font-size:12px; line-height:1.6; }
@@ -623,6 +630,7 @@
       state.textContent = 'Belum ada percakapan tersimpan.'; historyList.append(state); return;
     }
     items.forEach(item => {
+      const row = document.createElement('div'); row.className = 'history-row';
       const button = document.createElement('button'); button.type = 'button';
       button.className = 'history-item' + (item.id === sessionKey ? ' active' : '');
       if (item.id === sessionKey) button.setAttribute('aria-current','true');
@@ -637,8 +645,38 @@
       historyAction.textContent = item.id === sessionKey ? 'Sedang dibuka' : 'Buka →';
       meta.append(date,historyAction); button.append(historyTitle,preview,meta);
       button.addEventListener('click',() => openHistorySession(item,button));
-      historyList.append(button);
+      const delBtn = document.createElement('button'); delBtn.type = 'button';
+      delBtn.className = 'history-delete';
+      delBtn.setAttribute('aria-label', `Hapus history ${historyName(item)}`);
+      delBtn.title = 'Hapus history secara permanen';
+      delBtn.textContent = 'Hapus';
+      delBtn.addEventListener('click', (ev) => { ev.stopPropagation(); deleteHistorySession(item, delBtn, button); });
+      row.append(button, delBtn);
+      historyList.append(row);
     });
+  }
+  async function deleteHistorySession(item, delBtn, openBtn) {
+    if (!item || !item.id || historyLoading) return;
+    const isActive = item.id === sessionKey;
+    if (isActive && busy && !confirm('BRAINY masih mengerjakan. Tetap hapus percakapan ini?')) return;
+    if (!confirm(`Hapus history "${historyName(item)}" secara permanen?`)) return;
+    historyLoading = true; delBtn.setAttribute('aria-busy','true'); delBtn.disabled = true;
+    if (openBtn) openBtn.disabled = true;
+    updateSend(); setStatus('Menghapus history...');
+    try {
+      if (isActive && sid) { try { await rpc('session.close',{session_id:sid}); } catch {} }
+      await rpc('session.delete',{session_id:item.id});
+      showToast('History dihapus');
+      if (isActive) { localStorage.removeItem('brainy_session'); location.reload(); return; }
+      await loadSessionHistory();
+    } catch (error) {
+      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      showToast(error.message || 'History belum bisa dihapus');
+    } finally {
+      historyLoading = false; delBtn.removeAttribute('aria-busy'); delBtn.disabled = false;
+      if (openBtn && openBtn.isConnected) openBtn.disabled = false;
+      updateSend();
+    }
   }
   async function loadSessionHistory() {
     try {
@@ -690,6 +728,7 @@
     const action = button.querySelector('.history-action'); if (action) action.textContent='Membuka...';
     updateSend(); setStatus('Membuka history...');
     try {
+      if (sid) { try { await rpc('session.close',{session_id:sid}); } catch {} }
       const result = await rpc('session.resume',{session_id:item.id,cols:100,source:'brainy-web'});
       sid = result.session_id;
       sessionKey = result.stored_session_id || result.session_key || result.resumed || item.id;
@@ -709,9 +748,13 @@
       updateSend();
     }
   }
-  function startNewSession() {
+  async function startNewSession() {
     if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
-    localStorage.removeItem('brainy_session'); location.reload();
+    if (historyLoading) return;
+    historyLoading = true; updateSend(); setStatus('Membuka percakapan baru...');
+    if (sid) { try { await rpc('session.close',{session_id:sid}); } catch {} }
+    localStorage.removeItem('brainy_session');
+    location.reload();
   }
   async function submitPrompt(text,image) {
     if (image && !image.attached) {

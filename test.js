@@ -69,7 +69,19 @@ test('history sidebar lists and resumes only BRAINY web conversations', () => {
   assert.match(html, /historyAction\.textContent = item\.id === sessionKey \? 'Sedang dibuka' : 'Buka →'/);
   assert.match(html, /showToast\('Percakapan ini sudah aktif'\)/);
   assert.match(html, /button\.setAttribute\('aria-busy','true'\)/);
-  assert.doesNotMatch(html, /session\.delete/);
+});
+
+test('history offers confirmed permanent deletion for inactive and active conversations', () => {
+  assert.match(html, /className = 'history-delete'/);
+  assert.match(html, /delBtn\.textContent = 'Hapus'/);
+  assert.match(html, /aria-label.*Hapus/);
+  assert.match(html, /confirm\(`Hapus history/);
+  assert.match(html, /rpc\('session\.delete',\{session_id:item\.id\}\)/);
+  assert.match(html, /rpc\('session\.close',\{session_id:sid\}\)/);
+  assert.match(html, /localStorage\.removeItem\('brainy_session'\)/);
+  assert.match(html, /showToast\('History dihapus'\)/);
+  assert.match(html, /isActive && busy/);
+  assert.match(html, /async function startNewSession\(\)[\s\S]*try \{ await rpc\('session\.close',\{session_id:sid\}\); \} catch \{\}/);
 });
 
 test('history sidebar becomes a closable drawer on narrow screens', () => {
@@ -128,7 +140,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v10/);
+  assert.match(sw, /brainy-shell-v11/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
