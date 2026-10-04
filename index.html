@@ -60,12 +60,16 @@
     .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:minmax(0,920px); justify-content:center; background-image:linear-gradient(color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px); background-size:32px 32px; }
     .workspace-shell.history-open { grid-template-columns:260px minmax(0,920px); }
     .workspace-shell:not(.history-open) .history-panel { display:none; }
-    .history-panel { min-width:0; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto auto auto minmax(0,1fr); border-left:1px solid var(--line); border-right:1px solid var(--line); background:color-mix(in srgb,var(--panel) 92%,transparent); backdrop-filter:blur(18px); z-index:12; }
+    .history-panel { min-width:0; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto auto auto auto minmax(0,1fr); border-left:1px solid var(--line); border-right:1px solid var(--line); background:color-mix(in srgb,var(--panel) 92%,transparent); backdrop-filter:blur(18px); z-index:12; }
     .history-head { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); }
     .history-heading { font-size:12px; font-weight:600; }
     .history-close { width:34px; height:34px; border:0; border-radius:8px; background:transparent; cursor:pointer; display:inline-grid; place-items:center; }
     .history-new { margin:12px 12px 8px; min-height:42px; border:1px solid color-mix(in srgb,var(--electric) 38%,var(--line)); border-radius:11px; background:var(--electric-soft); color:var(--accent); cursor:pointer; text-align:left; padding:9px 11px; font-weight:700; box-shadow:0 8px 24px var(--glow); }
     .history-new:hover, .history-item:hover { background:var(--soft); }
+    .history-search-wrap { position:relative; margin:0 12px 8px; }
+    .history-search { width:100%; height:38px; padding:0 34px 0 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--text); outline:none; }
+    .history-search:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
+    .history-search-mark { position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
     .projects-section { margin:0 8px 6px; padding-bottom:8px; border-bottom:1px solid var(--line); }
     .projects-head { display:flex; align-items:center; gap:4px; }
     .projects-toggle { flex:1; min-width:0; min-height:36px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px; border:0; border-radius:8px; background:transparent; cursor:pointer; text-align:left; font-weight:600; }
@@ -86,15 +90,22 @@
     .project-chat-count { flex:none; color:var(--muted); font-size:11px; }
     .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
     .history-list-heading { padding:8px 10px 4px; color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
-    .history-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px; padding:0 8px 8px; }
-    .history-project-select { width:100%; min-width:0; min-height:38px; border:1px solid var(--line); border-radius:9px; padding:0 8px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; }
+    .history-controls { display:grid; grid-template-columns:minmax(0,1fr) auto auto auto; align-items:center; gap:4px; padding:0 8px 8px; }
+    .history-project-select { grid-column:1/-1; width:100%; min-width:0; min-height:38px; border:1px solid var(--line); border-radius:9px; padding:0 8px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; }
     .history-project-select:hover, .history-project-select:focus { border-color:var(--line); background:var(--soft); outline:none; }
+    .history-control { min-width:38px; min-height:38px; padding:0 8px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--muted); cursor:pointer; font-size:12px; font-weight:600; }
+    .history-control:hover { background:var(--soft); color:var(--accent); }
+    .history-pin { grid-column:2; }
     .project-modal { position:fixed; inset:0; z-index:31; display:grid; place-items:center; padding:20px; background:rgba(25,24,22,.42); }
     .project-modal[hidden] { display:none; }
-    .project-card { width:min(380px,100%); padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--panel); box-shadow:0 18px 60px rgba(35,30,24,.2); }
+    .project-card { width:min(480px,100%); max-height:min(720px,90svh); overflow:auto; padding:20px; border:1px solid var(--line); border-radius:16px; background:var(--panel); box-shadow:0 18px 60px rgba(35,30,24,.2); }
     .project-card h2 { margin:0 0 6px; font-size:13px; }
     .project-card p { margin:0 0 14px; color:var(--muted); font-size:11px; }
     .project-input { width:100%; height:46px; border:1px solid var(--line); border-radius:11px; padding:0 12px; background:var(--panel); color:var(--text); font:inherit; }
+    .project-field { display:block; margin-top:12px; color:var(--muted); font-size:11px; font-weight:600; }
+    .project-field .project-input { margin-top:5px; color:var(--text); font-weight:400; }
+    textarea.project-input { height:auto; min-height:82px; resize:vertical; padding:11px 12px; line-height:1.5; }
+    .project-help { display:block; margin-top:4px; color:var(--muted); font-size:10px; font-weight:400; }
     .project-modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
     .project-modal-actions button { min-height:40px; padding:0 14px; border:1px solid var(--line); border-radius:9px; background:var(--panel); cursor:pointer; }
     .project-modal-actions .primary { border-color:var(--accent); background:var(--accent); color:var(--accentText); }
@@ -159,6 +170,17 @@
     .small-btn { border:1px solid var(--line); border-radius:7px; background:var(--panel); padding:7px 10px; cursor:pointer; }
     .small-btn.primary { background:var(--accent); color:var(--accentText); border-color:var(--accent); }
     footer { border-top:1px solid var(--line); background:var(--panel); padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+    .composer-context { width:min(720px,100%); min-height:0; margin:0 auto 7px; }
+    .composer-context:empty { display:none; }
+    .active-project-chip { max-width:100%; min-height:30px; display:inline-flex; align-items:center; gap:7px; padding:4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--electric-soft); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
+    .active-project-chip[hidden] { display:none; }
+    .active-project-chip span { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .command-palette { width:min(720px,100%); max-height:240px; overflow:auto; margin:0 auto 7px; padding:6px; border:1px solid var(--line); border-radius:13px; background:var(--panel); box-shadow:0 14px 40px var(--glow); }
+    .command-palette[hidden] { display:none; }
+    .command-option { width:100%; min-height:42px; display:flex; align-items:center; gap:10px; padding:7px 9px; border:0; border-radius:9px; background:transparent; color:var(--text); cursor:pointer; text-align:left; }
+    .command-option:hover, .command-option.active { background:var(--electric-soft); color:var(--accent); }
+    .command-name { flex:none; min-width:92px; font-weight:700; }
+    .command-label { color:var(--muted); font-size:11px; }
     .attachment-preview { width:min(720px,100%); margin:0 auto 8px; display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
     .attachment-preview[hidden] { display:none; }
     .attachment-preview img { width:52px; height:52px; border-radius:9px; object-fit:cover; }
@@ -238,6 +260,10 @@
         <button class="history-close" id="historyClose" type="button" aria-label="Close history">×</button>
       </div>
       <button class="history-new" id="historyNew" type="button">＋ New conversation</button>
+      <label class="history-search-wrap">
+        <span class="history-search-mark" aria-hidden="true">⌕</span>
+        <input class="history-search" id="historySearch" type="search" placeholder="Search chats" autocomplete="off" aria-label="Search chats">
+      </label>
       <section class="projects-section" id="projectsSection" aria-label="Projects">
         <div class="projects-head">
           <button class="projects-toggle" id="projectsToggle" type="button" aria-expanded="true">
@@ -305,6 +331,10 @@
     </main>
 
     <footer>
+      <div class="command-palette" id="commandPalette" role="listbox" aria-label="Slash commands" hidden></div>
+      <div class="composer-context" id="composerContext">
+        <button class="active-project-chip" id="activeProjectChip" type="button" hidden><span id="activeProjectName"></span><b aria-hidden="true">✎</b></button>
+      </div>
       <div class="attachment-preview" id="attachmentPreview" hidden>
         <img id="attachmentThumb" alt="Image preview">
         <span class="attachment-name" id="attachmentName"></span>
@@ -325,10 +355,30 @@
     <form class="project-card" id="projectForm">
       <h2 id="projectModalTitle">New project</h2>
       <p id="projectModalCopy">Group related chats and find them faster.</p>
-      <input class="project-input" id="projectNameInput" maxlength="40" autocomplete="off" placeholder="Project name" required>
+      <label class="project-field">Name
+        <input class="project-input" id="projectNameInput" maxlength="40" autocomplete="off" placeholder="Project name" required>
+      </label>
+      <label class="project-field">Description
+        <textarea class="project-input" id="projectDescriptionInput" maxlength="160" rows="2" placeholder="What belongs in this project?"></textarea>
+      </label>
+      <label class="project-field">Instructions
+        <textarea class="project-input" id="projectInstructionsInput" maxlength="1200" rows="5" placeholder="How should BRAINY work in new chats here?"></textarea>
+        <span class="project-help">Applied once as context to the first message of each new project chat.</span>
+      </label>
       <div class="project-modal-actions">
         <button id="projectCancel" type="button">Cancel</button>
         <button class="primary" id="projectSave" type="submit">Create</button>
+      </div>
+    </form>
+  </section>
+  <section class="project-modal" id="chatModal" role="dialog" aria-modal="true" aria-labelledby="chatModalTitle" hidden>
+    <form class="project-card" id="chatForm">
+      <h2 id="chatModalTitle">Rename chat</h2>
+      <p>This name is saved on this device. The conversation itself stays unchanged.</p>
+      <input class="project-input" id="chatNameInput" maxlength="80" autocomplete="off" placeholder="Chat name" required>
+      <div class="project-modal-actions">
+        <button id="chatCancel" type="button">Cancel</button>
+        <button class="primary" type="submit">Save</button>
       </div>
     </form>
   </section>
@@ -346,6 +396,7 @@
 
 <script src="./project-store.js"></script>
 <script src="./session-actions.js"></script>
+<script src="./command-palette.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 (() => {
@@ -359,11 +410,16 @@
   }
   const $ = (s) => document.querySelector(s);
   const thread = $('#thread'), input = $('#input'), send = $('#send');
+  const commandPalette = $('#commandPalette');
   let empty = $('#empty');
   const workspaceShell = $('.workspace-shell');
   const historyPanel = $('#historyPanel'), historyList = $('#historyList'), historyBackdrop = $('#historyBackdrop');
+  const historySearch = $('#historySearch');
   const historyNew = $('#historyNew'), projectList = $('#projectList'), projectsToggle = $('#projectsToggle');
   const projectModal = $('#projectModal'), projectNameInput = $('#projectNameInput');
+  const projectDescriptionInput = $('#projectDescriptionInput'), projectInstructionsInput = $('#projectInstructionsInput');
+  const activeProjectChip = $('#activeProjectChip'), activeProjectName = $('#activeProjectName');
+  const chatModal = $('#chatModal'), chatNameInput = $('#chatNameInput');
   const HISTORY_OPEN_KEY = 'brainy_history_open';
   const imageInput = $('#imageInput'), attachmentPreview = $('#attachmentPreview');
   const attachmentThumb = $('#attachmentThumb'), attachmentName = $('#attachmentName');
@@ -410,8 +466,13 @@
   let queuedText = '', queuedImage = null, selectedImage = null, imagePreparing = false, connecting = false;
   let historyLoading = false;
   let historyItems = [];
+  let historySearchQuery = '';
   let projectState = ProjectStore.load(localStorage);
   let editingProjectId = null;
+  let editingChatId = null;
+  let projectContextPending = false;
+  let slashMatches = [];
+  let slashIndex = 0;
   const MAX_IMAGE_DIMENSION = 1600;
   let historyRendered = false;
   let runtimeInfo = {}, latestUsage = {};
@@ -655,8 +716,11 @@
     card.append(actions); thread.append(card); scrollBottom();
   }
   function renderHistory(messages) {
-    (messages || []).forEach(m => {
-      if ((m.role === 'user' || m.role === 'assistant') && m.text) addMessage(m.role, m.text);
+    (messages || []).forEach(message => {
+      if ((message.role === 'user' || message.role === 'assistant') && message.text) {
+        const text = message.role === 'user' ? ProjectStore.stripProjectContext(message.text) : message.text;
+        addMessage(message.role, text);
+      }
     });
   }
   function rpc(method, params={}) {
@@ -696,7 +760,7 @@
   }
   function historyName(item) {
     const title = String(item.title || '').trim();
-    const preview = String(item.preview || '').replace(/\s+/g,' ').trim();
+    const preview = ProjectStore.stripProjectContext(item.preview).replace(/\s+/g,' ').trim();
     if (title && title !== 'BRAINY Desk') return title;
     return preview.slice(0,72) || 'New conversation';
   }
@@ -737,6 +801,13 @@
     }
     return row;
   }
+  function renderActiveProjectChip() {
+    const projectId = sessionKey ? ProjectStore.projectForSession(projectState, sessionKey) : null;
+    const project = ProjectStore.projectById(projectState, projectId);
+    activeProjectChip.hidden = !project;
+    activeProjectName.textContent = project ? `Project · ${project.name}` : '';
+    activeProjectChip.title = project ? `Edit ${project.name}` : '';
+  }
   function renderProjectList() {
     projectList.replaceChildren();
     $('#projectsCount').textContent = String(projectState.projects.length);
@@ -755,14 +826,17 @@
     });
     const activeProject = ProjectStore.projectById(projectState, projectState.selected);
     historyNew.textContent = activeProject ? `＋ New chat · ${activeProject.name}` : '＋ New conversation';
+    renderActiveProjectChip();
   }
   function openProjectModal(projectId=null) {
     const project = projectId ? ProjectStore.projectById(projectState,projectId) : null;
     editingProjectId = project ? project.id : null;
-    $('#projectModalTitle').textContent = project ? 'Rename project' : 'New project';
-    $('#projectModalCopy').textContent = project ? 'The new name will appear on every chat in this project.' : 'Group related chats and find them faster.';
+    $('#projectModalTitle').textContent = project ? 'Edit project' : 'New project';
+    $('#projectModalCopy').textContent = project ? 'Update its name, description, and guidance for new chats.' : 'Group related chats and add optional guidance.';
     $('#projectSave').textContent = project ? 'Save' : 'Create';
     projectNameInput.value = project ? project.name : '';
+    projectDescriptionInput.value = project ? project.description : '';
+    projectInstructionsInput.value = project ? project.instructions : '';
     projectModal.hidden = false;
     setTimeout(() => { projectNameInput.focus(); projectNameInput.select(); }, 20);
   }
@@ -770,6 +844,8 @@
     projectModal.hidden = true;
     editingProjectId = null;
     projectNameInput.value = '';
+    projectDescriptionInput.value = '';
+    projectInstructionsInput.value = '';
   }
   function deleteProject(projectId) {
     const project = ProjectStore.projectById(projectState,projectId);
@@ -789,6 +865,17 @@
     const project = ProjectStore.projectById(projectState,projectState.selected);
     return project ? project.name : 'All chats';
   }
+  function openChatModal(item) {
+    editingChatId = item.id;
+    chatNameInput.value = ProjectStore.sessionTitle(projectState, item.id, historyName(item));
+    chatModal.hidden = false;
+    setTimeout(() => { chatNameInput.focus(); chatNameInput.select(); }, 20);
+  }
+  function closeChatModal() {
+    chatModal.hidden = true;
+    editingChatId = null;
+    chatNameInput.value = '';
+  }
   function renderHistorySessions(items) {
     historyItems = Array.isArray(items) ? items : [];
     historyList.replaceChildren();
@@ -796,10 +883,15 @@
     const heading = document.createElement('div'); heading.className = 'history-list-heading';
     heading.textContent = `Chats · ${selectedProjectLabel()}`;
     historyList.append(heading);
-    const visibleItems = filteredHistoryItems(historyItems);
+    const visibleItems = ProjectStore.sortSessions(
+      projectState,
+      ProjectStore.filterSessions(projectState, filteredHistoryItems(historyItems), historySearchQuery)
+    );
     if (!visibleItems.length) {
       const state = document.createElement('p'); state.className = 'history-state';
-      state.textContent = historyItems.length ? 'No chats in this section yet.' : 'No saved conversations yet.';
+      state.textContent = historySearchQuery
+        ? 'No chats match this search.'
+        : (historyItems.length ? 'No chats in this section yet.' : 'No saved conversations yet.');
       historyList.append(state); return;
     }
     visibleItems.forEach(item => {
@@ -808,9 +900,11 @@
       button.className = 'history-item' + (item.id === sessionKey ? ' active' : '');
       if (item.id === sessionKey) button.setAttribute('aria-current','true');
       const historyTitle = document.createElement('span'); historyTitle.className = 'history-title';
-      historyTitle.textContent = historyName(item);
+      const displayTitle = ProjectStore.sessionTitle(projectState, item.id, historyName(item));
+      const pinned = ProjectStore.isPinned(projectState, item.id);
+      historyTitle.textContent = `${pinned ? '★ ' : ''}${displayTitle}`;
       const preview = document.createElement('span'); preview.className = 'history-preview';
-      preview.textContent = String(item.preview || '').replace(/\s+/g,' ').trim() || `${Number(item.message_count || 0)} messages`;
+      preview.textContent = ProjectStore.stripProjectContext(item.preview).replace(/\s+/g,' ').trim() || `${Number(item.message_count || 0)} messages`;
       const meta = document.createElement('span'); meta.className = 'history-meta';
       const date = document.createElement('span'); date.className = 'history-date';
       date.textContent = historyDate(item.started_at);
@@ -820,7 +914,7 @@
       button.addEventListener('click',() => openHistorySession(item,button));
       const controls = document.createElement('div'); controls.className = 'history-controls';
       const projectSelect = document.createElement('select'); projectSelect.className = 'history-project-select';
-      projectSelect.setAttribute('aria-label', `Move ${historyName(item)} to project`);
+      projectSelect.setAttribute('aria-label', `Move ${displayTitle} to project`);
       const ungrouped = document.createElement('option'); ungrouped.value = 'none'; ungrouped.textContent = 'No project';
       projectSelect.append(ungrouped);
       projectState.projects.forEach(project => {
@@ -838,13 +932,28 @@
         showToast(target ? `Moved to ${target.name}` : 'Moved to No project');
         renderHistorySessions(historyItems);
       });
+      const pinBtn = document.createElement('button'); pinBtn.type = 'button';
+      pinBtn.className = 'history-control history-pin';
+      pinBtn.textContent = pinned ? '★' : '☆';
+      pinBtn.title = pinned ? `Unpin ${displayTitle}` : `Pin ${displayTitle}`;
+      pinBtn.setAttribute('aria-label', pinBtn.title);
+      pinBtn.setAttribute('aria-pressed', String(pinned));
+      pinBtn.addEventListener('click', event => {
+        event.stopPropagation();
+        if (!persistProjectState(ProjectStore.setPinned(projectState, item.id, !pinned))) return;
+        renderHistorySessions(historyItems);
+      });
+      const renameBtn = document.createElement('button'); renameBtn.type = 'button';
+      renameBtn.className = 'history-control history-rename'; renameBtn.textContent = '✎';
+      renameBtn.title = `Rename ${displayTitle}`; renameBtn.setAttribute('aria-label', renameBtn.title);
+      renameBtn.addEventListener('click', event => { event.stopPropagation(); openChatModal(item); });
       const delBtn = document.createElement('button'); delBtn.type = 'button';
-      delBtn.className = 'history-delete';
-      delBtn.setAttribute('aria-label', `Delete history ${historyName(item)}`);
+      delBtn.className = 'history-delete history-control';
+      delBtn.setAttribute('aria-label', `Delete history ${displayTitle}`);
       delBtn.title = 'Delete history permanently';
       delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', (ev) => { ev.stopPropagation(); deleteHistorySession(item, delBtn, button); });
-      controls.append(projectSelect,delBtn);
+      controls.append(projectSelect,pinBtn,renameBtn,delBtn);
       row.append(button,controls);
       historyList.append(row);
     });
@@ -953,6 +1062,10 @@
       localStorage.setItem('brainy_session', sessionKey);
       input.value=''; clearAttachment(); autoGrow();
       latestUsage={}; runtimeInfo={}; replaceThread(result.messages); historyRendered=true;
+      const activeProject = ProjectStore.projectById(projectState, ProjectStore.projectForSession(projectState, sessionKey));
+      const visibleMessages = (result.messages || []).filter(message => (message.role === 'user' || message.role === 'assistant') && message.text);
+      projectContextPending = Boolean(!visibleMessages.length && activeProject && (activeProject.description || activeProject.instructions));
+      renderActiveProjectChip();
       ready=true; busy=!!result.running; applyRuntime(result.info || {});
       setStatus(busy ? 'Working...' : 'Ready');
       toggleHistory(false); await loadSessionHistory();
@@ -1003,7 +1116,7 @@
     queuedText = '';
     queuedImage = null;
     updateSend();
-    try { await submitPrompt(text,image); }
+    try { await submitPrompt(text,image); projectContextPending=false; }
     catch (err) {
       queuedText = text;
       queuedImage = image;
@@ -1030,6 +1143,10 @@
     if (createdNewSession && sessionKey && ProjectStore.projectById(projectState,projectState.selected)) {
       persistProjectState(ProjectStore.assign(projectState, sessionKey, projectState.selected));
     }
+    const activeProject = ProjectStore.projectById(projectState, ProjectStore.projectForSession(projectState, sessionKey));
+    const visibleMessages = (result.messages || []).filter(message => (message.role === 'user' || message.role === 'assistant') && message.text);
+    projectContextPending = Boolean(!visibleMessages.length && activeProject && (activeProject.description || activeProject.instructions));
+    renderActiveProjectChip();
     if (!historyRendered) { renderHistory(result.messages); historyRendered = true; }
     ready = true; busy = !!result.running;
     applyRuntime(result.info || {});
@@ -1133,10 +1250,65 @@
       setStatus(ready ? 'Ready' : 'Connection interrupted');
     } finally { imagePreparing = false; updateSend(); }
   });
+  function closeSlashPalette() {
+    slashMatches = [];
+    slashIndex = 0;
+    commandPalette.hidden = true;
+    commandPalette.replaceChildren();
+    input.removeAttribute('aria-activedescendant');
+  }
+  function chooseSlashCommand(command) {
+    if (!command) return;
+    closeSlashPalette();
+    if (command.prompt) {
+      input.value = command.prompt;
+      autoGrow(); updateSend(); input.focus();
+      return;
+    }
+    input.value = ''; autoGrow(); updateSend();
+    if (command.action === 'new') { startNewSession(); return; }
+    if (command.action === 'project') {
+      const projectId = ProjectStore.projectForSession(projectState, sessionKey);
+      if (projectId) openProjectModal(projectId);
+      else { toggleHistory(true); showToast('Choose a project or create one first'); }
+    }
+  }
+  function renderSlashPalette() {
+    slashMatches = CommandPalette.match(input.value);
+    if (!slashMatches.length) { closeSlashPalette(); return; }
+    slashIndex = Math.min(slashIndex, slashMatches.length - 1);
+    commandPalette.replaceChildren();
+    slashMatches.forEach((command,index) => {
+      const button = document.createElement('button'); button.type = 'button';
+      button.className = 'command-option' + (index === slashIndex ? ' active' : '');
+      button.id = `slash-command-${index}`; button.setAttribute('role','option');
+      button.setAttribute('aria-selected', String(index === slashIndex));
+      const name = document.createElement('span'); name.className = 'command-name'; name.textContent = `/${command.name}`;
+      const label = document.createElement('span'); label.className = 'command-label'; label.textContent = command.label;
+      button.append(name,label);
+      button.addEventListener('pointerdown', event => event.preventDefault());
+      button.addEventListener('click', () => chooseSlashCommand(command));
+      commandPalette.append(button);
+    });
+    commandPalette.hidden = false;
+    input.setAttribute('aria-activedescendant', `slash-command-${slashIndex}`);
+  }
   function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing || historyLoading; }
   function autoGrow() { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; }
-  input.addEventListener('input',()=>{ autoGrow(); updateSend(); });
+  input.addEventListener('input',()=>{ slashIndex=0; autoGrow(); updateSend(); renderSlashPalette(); });
   input.addEventListener('keydown',(e)=>{
+    if (!commandPalette.hidden && e.key === 'ArrowDown') {
+      e.preventDefault(); slashIndex = (slashIndex + 1) % slashMatches.length; renderSlashPalette(); return;
+    }
+    if (!commandPalette.hidden && e.key === 'ArrowUp') {
+      e.preventDefault(); slashIndex = (slashIndex - 1 + slashMatches.length) % slashMatches.length; renderSlashPalette(); return;
+    }
+    if (!commandPalette.hidden && e.key === 'Escape') {
+      e.preventDefault(); e.stopPropagation(); closeSlashPalette(); return;
+    }
+    if (!commandPalette.hidden && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); chooseSlashCommand(slashMatches[slashIndex]); return;
+    }
     if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); $('#composer').requestSubmit(); }
   });
   $('#composer').addEventListener('submit',async(e)=>{
@@ -1145,19 +1317,22 @@
     const image=selectedImage;
     if ((!text && !image) || busy || queuedText || imagePreparing) return;
     const promptText = text || 'Please analyze this image.';
+    const submittedPrompt = projectContextPending
+      ? ProjectStore.applyProjectContext(projectState, sessionKey, promptText)
+      : promptText;
     addMessage('user',text || 'Image',false,image ? image.preview : '');
     input.value=''; selectedImage=null; imageInput.value=''; renderAttachment(); autoGrow();
     if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
-      queuedText=promptText; queuedImage=image; updateSend();
+      queuedText=submittedPrompt; queuedImage=image; updateSend();
       setStatus('Message saved · reconnecting...');
       connect().catch(fail);
       return;
     }
     updateSend();
-    try { await submitPrompt(promptText,image); }
+    try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
     catch(err) {
       if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
-        queuedText=promptText; queuedImage=image; updateSend();
+        queuedText=submittedPrompt; queuedImage=image; updateSend();
         setStatus('Message saved · reconnecting...');
         connect().catch(fail);
       } else fail(err);
@@ -1169,6 +1344,10 @@
   $('#historyBtn').onclick = () => toggleHistory();
   $('#historyClose').onclick = () => toggleHistory(false);
   historyBackdrop.onclick = () => toggleHistory(false);
+  historySearch.addEventListener('input', () => {
+    historySearchQuery = historySearch.value.trim();
+    renderHistorySessions(historyItems);
+  });
   historyNew.onclick = startNewSession;
   $('#newBtn').onclick = startNewSession;
   projectsToggle.onclick = () => {
@@ -1176,19 +1355,42 @@
     renderProjectList();
   };
   $('#addProjectBtn').onclick = () => openProjectModal();
+  activeProjectChip.onclick = () => {
+    const projectId = ProjectStore.projectForSession(projectState, sessionKey);
+    if (projectId) openProjectModal(projectId);
+  };
   $('#projectCancel').onclick = closeProjectModal;
   projectModal.addEventListener('click', event => { if (event.target === projectModal) closeProjectModal(); });
+  $('#chatCancel').onclick = closeChatModal;
+  chatModal.addEventListener('click', event => { if (event.target === chatModal) closeChatModal(); });
+  $('#chatForm').addEventListener('submit', event => {
+    event.preventDefault();
+    try {
+      if (!persistProjectState(ProjectStore.renameSession(projectState, editingChatId, chatNameInput.value))) return;
+      closeChatModal();
+      renderHistorySessions(historyItems);
+      showToast('Chat renamed');
+    } catch (error) {
+      showToast(error.message || 'Chat could not be renamed');
+      chatNameInput.focus();
+    }
+  });
   $('#projectForm').addEventListener('submit', event => {
     event.preventDefault();
     try {
-      const next = editingProjectId
+      const wasEditing = Boolean(editingProjectId);
+      let next = wasEditing
         ? ProjectStore.rename(projectState,editingProjectId,projectNameInput.value)
         : ProjectStore.create(projectState,projectNameInput.value);
+      const projectId = wasEditing ? editingProjectId : next.selected;
+      next = ProjectStore.updateDetails(next, projectId, {
+        description: projectDescriptionInput.value,
+        instructions: projectInstructionsInput.value
+      });
       if (!persistProjectState(next)) return;
-      const message = editingProjectId ? 'Project renamed' : 'Project created';
       closeProjectModal();
       renderHistorySessions(historyItems);
-      showToast(message);
+      showToast(wasEditing ? 'Project updated' : 'Project created');
     } catch (error) {
       showToast(error.message || 'Project could not be saved');
       projectNameInput.focus();
@@ -1196,7 +1398,9 @@
   });
   document.addEventListener('keydown',event => {
     if (event.key !== 'Escape') return;
-    if (!projectModal.hidden) closeProjectModal(); else toggleHistory(false);
+    if (!chatModal.hidden) closeChatModal();
+    else if (!projectModal.hidden) closeProjectModal();
+    else toggleHistory(false);
   });
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { closeThen } = require('./session-actions.js');
 const ProjectStore = require('./project-store.js');
+const CommandPalette = require('./command-palette.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -68,9 +69,80 @@ test('project store renames safely and rejects blank names', () => {
   assert.throws(() => ProjectStore.rename(state, 'p_work', '   '), /Project name/);
 });
 
+test('project store saves a clean description and instructions for each project', () => {
+  let state = ProjectStore.create(ProjectStore.empty(), 'Work', 'p_work', 100);
+  state = ProjectStore.updateDetails(state, 'p_work', {
+    description: '  Weekly   planning hub  ',
+    instructions: 'Use concise English.\nSeparate facts from assumptions.'
+  });
+  assert.equal(state.projects[0].description, 'Weekly planning hub');
+  assert.equal(state.projects[0].instructions, 'Use concise English.\nSeparate facts from assumptions.');
+  assert.throws(() => ProjectStore.updateDetails(state, 'missing', {}), /Project not found/);
+});
+
 test('project store recovers from corrupt local storage', () => {
   const storage = { getItem: () => '{broken', setItem: () => {} };
   assert.deepEqual(ProjectStore.load(storage), ProjectStore.empty());
+});
+
+test('chat rename metadata overrides the backend title and can be cleared', () => {
+  let state = ProjectStore.renameSession(ProjectStore.empty(), 'chat-1', '  Hiring   plan  ');
+  assert.equal(ProjectStore.sessionTitle(state, 'chat-1', 'Backend title'), 'Hiring plan');
+  state = ProjectStore.renameSession(state, 'chat-1', '');
+  assert.equal(ProjectStore.sessionTitle(state, 'chat-1', 'Backend title'), 'Backend title');
+});
+
+test('pinned chats sort first without disturbing the order inside each group', () => {
+  let state = ProjectStore.setPinned(ProjectStore.empty(), 'chat-2', true);
+  state = ProjectStore.setPinned(state, 'chat-3', true);
+  const items = [{id:'chat-1'},{id:'chat-2'},{id:'chat-3'},{id:'chat-4'}];
+  assert.equal(ProjectStore.isPinned(state, 'chat-2'), true);
+  assert.deepEqual(ProjectStore.sortSessions(state, items).map(item => item.id), ['chat-2','chat-3','chat-1','chat-4']);
+  state = ProjectStore.setPinned(state, 'chat-2', false);
+  assert.equal(ProjectStore.isPinned(state, 'chat-2'), false);
+});
+
+test('chat search matches custom titles and previews case-insensitively', () => {
+  let state = ProjectStore.renameSession(ProjectStore.empty(), 'chat-1', 'Hiring Plan');
+  const items = [
+    {id:'chat-1', title:'BRAINY Desk', preview:'Draft the role profile'},
+    {id:'chat-2', title:'Budget', preview:'Quarterly forecast review'}
+  ];
+  assert.deepEqual(ProjectStore.filterSessions(state, items, 'hiring').map(item => item.id), ['chat-1']);
+  assert.deepEqual(ProjectStore.filterSessions(state, items, 'FORECAST').map(item => item.id), ['chat-2']);
+  assert.equal(ProjectStore.filterSessions(state, items, 'missing').length, 0);
+});
+
+test('project context wraps the first request and strips back to the exact user text', () => {
+  let state = ProjectStore.create(ProjectStore.empty(), 'People & OD', 'p_od', 100);
+  state = ProjectStore.updateDetails(state, 'p_od', {
+    description:'Workforce planning',
+    instructions:'Separate known, uncertain, and assumed information.'
+  });
+  state = ProjectStore.assign(state, 'chat-1', 'p_od');
+  const wrapped = ProjectStore.applyProjectContext(state, 'chat-1', 'Compare these options.');
+  assert.match(wrapped, /BRAINY_PROJECT_CONTEXT/);
+  assert.match(wrapped, /People & OD/);
+  assert.match(wrapped, /Separate known, uncertain/);
+  assert.equal(ProjectStore.stripProjectContext(wrapped), 'Compare these options.');
+  assert.equal(ProjectStore.applyProjectContext(state, 'chat-2', 'Plain request'), 'Plain request');
+});
+
+test('slash command palette filters commands and exposes prompt or action behavior', () => {
+  assert.deepEqual(CommandPalette.match('/res').map(command => command.name), ['research']);
+  assert.equal(CommandPalette.match('normal text').length, 0);
+  assert.equal(CommandPalette.get('draft').prompt, 'Draft this for me: ');
+  assert.equal(CommandPalette.get('new').action, 'new');
+  assert.equal(CommandPalette.get('project').action, 'project');
+});
+
+test('slash command palette is keyboard accessible from the composer', () => {
+  assert.match(html, /src="\.\/command-palette\.js"/);
+  assert.match(html, /id="commandPalette"/);
+  assert.match(html, /CommandPalette\.match\(input\.value\)/);
+  assert.match(html, /e\.key === 'ArrowDown'/);
+  assert.match(html, /e\.key === 'ArrowUp'/);
+  assert.match(html, /chooseSlashCommand\(slashMatches\[slashIndex\]\)/);
 });
 
 test('bridge keeps all backend calls on the dynamic tunnel', () => {
@@ -125,6 +197,13 @@ test('Telegram Mini App expands to the full chat viewport', () => {
   assert.match(html, /telegram\.WebApp\.expand\(\)/);
 });
 
+test('history search filters the selected project by title or preview', () => {
+  assert.match(html, /id="historySearch"/);
+  assert.match(html, /historySearch\.addEventListener\('input'/);
+  assert.match(html, /ProjectStore\.filterSessions\(projectState, filteredHistoryItems\(historyItems\), historySearchQuery\)/);
+  assert.match(html, /No chats match this search\./);
+});
+
 test('history sidebar lists and resumes only BRAINY web conversations', () => {
   assert.match(html, /id="historyPanel"/);
   assert.match(html, /id="historyList"/);
@@ -140,8 +219,17 @@ test('history sidebar lists and resumes only BRAINY web conversations', () => {
   assert.match(html, /button\.setAttribute\('aria-busy','true'\)/);
 });
 
+test('history offers local rename and pin controls without mutating backend sessions', () => {
+  assert.match(html, /id="chatModal"/);
+  assert.match(html, /id="chatNameInput"/);
+  assert.match(html, /ProjectStore\.sessionTitle\(projectState, item\.id, historyName\(item\)\)/);
+  assert.match(html, /ProjectStore\.setPinned\(projectState, item\.id, !pinned\)/);
+  assert.match(html, /ProjectStore\.renameSession\(projectState, editingChatId, chatNameInput\.value\)/);
+  assert.doesNotMatch(html, /rpc\('session\.rename'/);
+});
+
 test('history offers confirmed permanent deletion for inactive and active conversations', () => {
-  assert.match(html, /className = 'history-delete'/);
+  assert.match(html, /className = 'history-delete history-control'/);
   assert.match(html, /delBtn\.textContent = 'Delete'/);
   assert.match(html, /aria-label.*Delete/);
   assert.match(html, /confirm\(`Permanently delete/);
@@ -152,6 +240,16 @@ test('history offers confirmed permanent deletion for inactive and active conver
   assert.match(html, /BrainySessionActions\.closeThen/);
   assert.match(html, /function invalidateLiveSession\(\)/);
   assert.match(html, /if \(ev\.session_id && ev\.session_id !== sid\) return;/);
+});
+
+test('projects expose details, active context, and first-message instructions', () => {
+  assert.match(html, /id="projectDescriptionInput"/);
+  assert.match(html, /id="projectInstructionsInput"/);
+  assert.match(html, /id="activeProjectChip"/);
+  assert.match(html, /ProjectStore\.updateDetails\(/);
+  assert.match(html, /function renderActiveProjectChip\(\)/);
+  assert.match(html, /ProjectStore\.applyProjectContext\(projectState, sessionKey, promptText\)/);
+  assert.match(html, /ProjectStore\.stripProjectContext\(message\.text\)/);
 });
 
 test('projects categorize chats without changing or deleting backend sessions', () => {
@@ -176,7 +274,7 @@ test('No project is rendered as a nested All chats subfilter', () => {
 
 test('history preview keeps the full card width and wraps without clipping', () => {
   assert.match(html, /\.history-row \{[^}]*display:grid;[^}]*grid-template-columns:minmax\(0,1fr\);/);
-  assert.match(html, /\.history-controls \{[^}]*grid-template-columns:minmax\(0,1fr\) auto;/);
+  assert.match(html, /\.history-controls \{[^}]*grid-template-columns:minmax\(0,1fr\) auto auto auto;/);
   assert.match(html, /\.history-project-select \{[^}]*width:100%;/);
   assert.match(html, /\.history-preview \{[^}]*display:block;[^}]*white-space:normal;[^}]*overflow-wrap:anywhere;/);
   assert.doesNotMatch(html, /\.history-preview \{[^}]*line-clamp/);
@@ -260,9 +358,10 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v14/);
+  assert.match(sw, /brainy-shell-v15/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
+  assert.match(sw, /command-palette\.js/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
