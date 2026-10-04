@@ -287,6 +287,7 @@
     </div>
   </section>
 
+<script src="./session-actions.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 (() => {
@@ -597,6 +598,13 @@
       setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error('Waktu tunggu habis')); } }, 120000);
     });
   }
+  function invalidateLiveSession() {
+    ready = false;
+    busy = false;
+    sid = '';
+    currentAssistant = null;
+    currentText = '';
+  }
   function toggleHistory(open) {
     const shouldOpen = typeof open === 'boolean' ? open : !historyPanel.classList.contains('open');
     workspaceShell.classList.toggle('history-open', shouldOpen);
@@ -663,19 +671,36 @@
     historyLoading = true; delBtn.setAttribute('aria-busy','true'); delBtn.disabled = true;
     if (openBtn) openBtn.disabled = true;
     updateSend(); setStatus('Menghapus history...');
+    let activeClosed = false;
+    let leavingPage = false;
     try {
-      if (isActive && sid) { try { await rpc('session.close',{session_id:sid}); } catch {} }
-      await rpc('session.delete',{session_id:item.id});
+      const deleteStoredSession = () => rpc('session.delete',{session_id:item.id});
+      if (isActive && sid) {
+        await BrainySessionActions.closeThen(rpc, sid, () => {
+          activeClosed = true;
+          invalidateLiveSession();
+          localStorage.removeItem('brainy_session');
+        }, deleteStoredSession);
+      } else {
+        await deleteStoredSession();
+      }
       showToast('History dihapus');
-      if (isActive) { localStorage.removeItem('brainy_session'); location.reload(); return; }
+      if (isActive) { leavingPage = true; location.reload(); return; }
       await loadSessionHistory();
     } catch (error) {
-      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
       showToast(error.message || 'History belum bisa dihapus');
+      if (activeClosed) {
+        leavingPage = true;
+        location.reload();
+        return;
+      }
+      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
     } finally {
-      historyLoading = false; delBtn.removeAttribute('aria-busy'); delBtn.disabled = false;
-      if (openBtn && openBtn.isConnected) openBtn.disabled = false;
-      updateSend();
+      if (!leavingPage) {
+        historyLoading = false; delBtn.removeAttribute('aria-busy'); delBtn.disabled = false;
+        if (openBtn && openBtn.isConnected) openBtn.disabled = false;
+        updateSend();
+      }
     }
   }
   async function loadSessionHistory() {
@@ -727,9 +752,14 @@
     historyLoading = true; button.setAttribute('aria-busy','true'); button.disabled=true;
     const action = button.querySelector('.history-action'); if (action) action.textContent='Membuka...';
     updateSend(); setStatus('Membuka history...');
+    let previousClosed = false;
+    let recovering = false;
     try {
-      if (sid) { try { await rpc('session.close',{session_id:sid}); } catch {} }
-      const result = await rpc('session.resume',{session_id:item.id,cols:100,source:'brainy-web'});
+      const resumeSelectedSession = () => rpc('session.resume',{session_id:item.id,cols:100,source:'brainy-web'});
+      const result = await BrainySessionActions.closeThen(rpc, sid, () => {
+        previousClosed = true;
+        invalidateLiveSession();
+      }, resumeSelectedSession);
       sid = result.session_id;
       sessionKey = result.stored_session_id || result.session_key || result.resumed || item.id;
       localStorage.setItem('brainy_session', sessionKey);
@@ -740,21 +770,36 @@
       toggleHistory(false); await loadSessionHistory();
       setTimeout(refreshUsage,250); refreshAccountUsage();
     } catch (error) {
-      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
       showToast(error.message || 'History belum bisa dibuka');
+      if (previousClosed) {
+        recovering = true;
+        location.reload();
+        return;
+      }
+      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
     } finally {
-      historyLoading=false; button.removeAttribute('aria-busy'); button.disabled=false;
-      if (button.isConnected && action) action.textContent='Buka →';
-      updateSend();
+      if (!recovering) {
+        historyLoading=false; button.removeAttribute('aria-busy'); button.disabled=false;
+        if (button.isConnected && action) action.textContent='Buka →';
+        updateSend();
+      }
     }
   }
   async function startNewSession() {
     if (busy && !confirm('BRAINY masih mengerjakan. Mulai percakapan baru?')) return;
     if (historyLoading) return;
     historyLoading = true; updateSend(); setStatus('Membuka percakapan baru...');
-    if (sid) { try { await rpc('session.close',{session_id:sid}); } catch {} }
-    localStorage.removeItem('brainy_session');
-    location.reload();
+    try {
+      await BrainySessionActions.closeThen(rpc, sid, invalidateLiveSession, () => {
+        localStorage.removeItem('brainy_session');
+        location.reload();
+      });
+    } catch (error) {
+      historyLoading = false;
+      updateSend();
+      setStatus(busy ? 'Sedang mengerjakan...' : 'Siap');
+      showToast(error.message || 'Percakapan lama belum bisa ditutup');
+    }
   }
   async function submitPrompt(text,image) {
     if (image && !image.attached) {
@@ -801,7 +846,7 @@
   }
   function event(ev) {
     const type = ev.type, payload = ev.payload || {};
-    if (ev.session_id && sid && ev.session_id !== sid) return;
+    if (ev.session_id && ev.session_id !== sid) return;
     if (type === 'gateway.ready') { startSession().catch(fail); return; }
     if (type === 'session.info') { applyRuntime(payload); if (!busy) setStatus('Siap'); setTimeout(refreshUsage,200); return; }
     if (type === 'message.start') {

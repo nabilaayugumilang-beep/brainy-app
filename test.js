@@ -1,8 +1,39 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { closeThen } = require('./session-actions.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
+
+test('closeThen blocks the next operation when closing fails', async () => {
+  const calls = [];
+  const rpc = async (method) => {
+    calls.push(method);
+    if (method === 'session.close') throw new Error('close failed');
+  };
+  let invalidated = false;
+  let nextRan = false;
+  await assert.rejects(
+    closeThen(rpc, 'live-1', () => { invalidated = true; }, async () => { nextRan = true; }),
+    /close failed/
+  );
+  assert.deepEqual(calls, ['session.close']);
+  assert.equal(invalidated, false);
+  assert.equal(nextRan, false);
+});
+
+test('closeThen closes and invalidates before running the next operation', async () => {
+  const order = [];
+  const rpc = async (method) => { order.push(method); };
+  const result = await closeThen(
+    rpc,
+    'live-1',
+    () => { order.push('invalidated'); },
+    async () => { order.push('next'); return 'done'; }
+  );
+  assert.deepEqual(order, ['session.close', 'invalidated', 'next']);
+  assert.equal(result, 'done');
+});
 
 test('bridge keeps all backend calls on the dynamic tunnel', () => {
   assert.match(html, /let backendUrl/);
@@ -77,11 +108,12 @@ test('history offers confirmed permanent deletion for inactive and active conver
   assert.match(html, /aria-label.*Hapus/);
   assert.match(html, /confirm\(`Hapus history/);
   assert.match(html, /rpc\('session\.delete',\{session_id:item\.id\}\)/);
-  assert.match(html, /rpc\('session\.close',\{session_id:sid\}\)/);
   assert.match(html, /localStorage\.removeItem\('brainy_session'\)/);
   assert.match(html, /showToast\('History dihapus'\)/);
   assert.match(html, /isActive && busy/);
-  assert.match(html, /async function startNewSession\(\)[\s\S]*try \{ await rpc\('session\.close',\{session_id:sid\}\); \} catch \{\}/);
+  assert.match(html, /BrainySessionActions\.closeThen/);
+  assert.match(html, /function invalidateLiveSession\(\)/);
+  assert.match(html, /if \(ev\.session_id && ev\.session_id !== sid\) return;/);
 });
 
 test('history sidebar becomes a closable drawer on narrow screens', () => {
@@ -140,7 +172,8 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v11/);
+  assert.match(sw, /brainy-shell-v12/);
+  assert.match(sw, /session-actions\.js/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });
