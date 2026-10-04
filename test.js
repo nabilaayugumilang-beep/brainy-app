@@ -179,6 +179,13 @@ test('assistant messages render Markdown after completion and when history is re
   assert.match(html, /\.content table/);
 });
 
+test('wide Markdown tables scroll inside their own wrapper without shifting the chat', () => {
+  assert.match(html, /main \{[^}]*overflow-y:auto;[^}]*overflow-x:hidden;/);
+  assert.match(html, /\.message \{[^}]*min-width:0;[^}]*max-width:100%;/);
+  assert.match(html, /\.content \{[^}]*min-width:0;[^}]*max-width:100%;/);
+  assert.match(html, /\.markdown-table-wrap \{[^}]*width:100%;[^}]*overflow-x:auto;[^}]*overscroll-behavior-inline:contain;/);
+});
+
 test('slash command palette filters commands and exposes prompt or action behavior', () => {
   assert.deepEqual(CommandPalette.match('/res').map(command => command.name), ['research']);
   assert.equal(CommandPalette.match('normal text').length, 0);
@@ -225,7 +232,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=19'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=20'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -416,7 +423,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v19/);
+  assert.match(sw, /brainy-shell-v20/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);
