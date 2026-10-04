@@ -54,7 +54,7 @@
     *::-webkit-scrollbar-corner { background:var(--scroll-track); }
     *::-webkit-scrollbar-button { width:0; height:0; display:none; background:var(--scroll-track); }
     html,body { margin:0; width:100%; height:100%; overflow:hidden; color:var(--text); }
-    body { font:13px/1.55 Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; letter-spacing:-.01em; background:radial-gradient(circle at 50% -20%,var(--electric-soft) 0,transparent 46%),var(--page); }
+    body { font:13px/1.55 'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:-.01em; background:radial-gradient(circle at 50% -20%,var(--electric-soft) 0,transparent 46%),var(--page); }
     button,textarea,input,select { font:inherit; }
     button { color:inherit; }
     .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:minmax(0,920px); justify-content:center; background-image:linear-gradient(color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px); background-size:32px 32px; }
@@ -74,6 +74,11 @@
     .project-add, .project-action { flex:none; width:36px; height:36px; border:0; border-radius:8px; background:transparent; cursor:pointer; }
     .project-list { max-height:30vh; overflow:auto; padding-top:2px; }
     .project-list[hidden] { display:none; }
+    .project-overview { margin-bottom:4px; }
+    .project-subgroup { position:relative; margin:0 0 5px 14px; padding-left:10px; border-left:1px solid var(--line); }
+    .project-subgroup::before { content:''; position:absolute; left:0; top:18px; width:7px; border-top:1px solid var(--line); }
+    .project-subgroup .project-filter { min-height:34px; color:var(--muted); font-size:11px; }
+    .project-subgroup .project-filter.active { color:var(--accent); }
     .project-row { display:flex; align-items:center; gap:2px; }
     .project-filter { flex:1; min-width:0; min-height:38px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 8px; border:0; border-radius:8px; background:transparent; cursor:pointer; text-align:left; }
     .project-filter.active { background:var(--electric-soft); color:var(--accent); font-weight:700; box-shadow:inset 2px 0 0 var(--electric); }
@@ -81,8 +86,8 @@
     .project-chat-count { flex:none; color:var(--muted); font-size:11px; }
     .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
     .history-list-heading { padding:8px 10px 4px; color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
-    .history-controls { flex:none; display:flex; align-items:center; gap:4px; }
-    .history-project-select { width:74px; min-height:44px; border:1px solid transparent; border-radius:10px; padding:0 6px; background:transparent; color:var(--accent); cursor:pointer; font-size:10px; }
+    .history-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px; padding:0 8px 8px; }
+    .history-project-select { width:100%; min-width:0; min-height:38px; border:1px solid var(--line); border-radius:9px; padding:0 8px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; }
     .history-project-select:hover, .history-project-select:focus { border-color:var(--line); background:var(--soft); outline:none; }
     .project-modal { position:fixed; inset:0; z-index:31; display:grid; place-items:center; padding:20px; background:rgba(25,24,22,.42); }
     .project-modal[hidden] { display:none; }
@@ -95,16 +100,17 @@
     .project-modal-actions .primary { border-color:var(--accent); background:var(--accent); color:var(--accentText); }
     .history-state { padding:18px 10px; color:var(--muted); font-size:11px; line-height:1.5; }
     .history-item { width:100%; display:block; margin:2px 0; padding:10px; border:0; border-radius:10px; background:transparent; color:var(--text); text-align:left; cursor:pointer; pointer-events:auto; }
-    .history-row { display:flex; gap:6px; align-items:stretch; margin:2px 0; }
-    .history-row .history-item { flex:1; min-width:0; margin:0; }
-    .history-delete { flex:none; min-width:54px; min-height:44px; padding:0 8px; align-self:center; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--danger); cursor:pointer; font-size:11px; font-weight:600; line-height:1; }
+    .history-row { display:grid; grid-template-columns:minmax(0,1fr); margin:3px 0; border:1px solid transparent; border-radius:11px; }
+    .history-row:hover, .history-row:focus-within { border-color:var(--line); background:color-mix(in srgb,var(--soft) 48%,transparent); }
+    .history-row .history-item { min-width:0; margin:0; }
+    .history-delete { min-width:54px; min-height:38px; padding:0 8px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--danger); cursor:pointer; font-size:11px; font-weight:600; line-height:1; }
     .history-delete:hover { background:var(--soft); color:var(--danger); }
     .history-delete[aria-busy="true"] { cursor:wait; opacity:.72; }
     .history-delete:disabled { opacity:.5; cursor:default; }
     .history-item[aria-busy="true"] { cursor:wait; opacity:.72; }
     .history-item.active { background:var(--soft); }
     .history-title { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; font-weight:600; }
-    .history-preview { display:block; margin-top:3px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:11px; }
+    .history-preview { display:block; margin-top:3px; white-space:normal; overflow-wrap:anywhere; color:var(--muted); font-size:11px; line-height:1.45; }
     .history-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px; }
     .history-date { color:var(--muted); font-size:11px; }
     .history-action { color:var(--accent); font-size:11px; font-weight:600; white-space:nowrap; }
@@ -737,9 +743,13 @@
     projectList.hidden = projectState.collapsed;
     projectsToggle.setAttribute('aria-expanded', String(!projectState.collapsed));
     projectsToggle.title = projectState.collapsed ? 'Open project list' : 'Close project list';
-    projectList.append(projectFilterRow('all','All chats',historyItems.length));
+    const overview = document.createElement('div'); overview.className = 'project-overview';
+    overview.append(projectFilterRow('all','All chats',historyItems.length));
     const ungroupedCount = historyItems.filter(item => !ProjectStore.projectForSession(projectState,item.id)).length;
-    projectList.append(projectFilterRow('none','No project',ungroupedCount));
+    const subgroup = document.createElement('div'); subgroup.className = 'project-subgroup';
+    subgroup.append(projectFilterRow('none','No project',ungroupedCount));
+    overview.append(subgroup);
+    projectList.append(overview);
     projectState.projects.forEach(project => {
       projectList.append(projectFilterRow(project.id, project.name, projectChatCount(project.id), true));
     });

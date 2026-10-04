@@ -166,6 +166,22 @@ test('projects categorize chats without changing or deleting backend sessions', 
   assert.doesNotMatch(html, /innerHTML\s*=.*project/i);
 });
 
+test('No project is rendered as a nested All chats subfilter', () => {
+  assert.match(html, /className = 'project-overview'/);
+  assert.match(html, /className = 'project-subgroup'/);
+  assert.match(html, /overview\.append\(projectFilterRow\('all','All chats'/);
+  assert.match(html, /subgroup\.append\(projectFilterRow\('none','No project'/);
+  assert.match(html, /project-list[\s\S]*\.project-subgroup/);
+});
+
+test('history preview keeps the full card width and wraps without clipping', () => {
+  assert.match(html, /\.history-row \{[^}]*display:grid;[^}]*grid-template-columns:minmax\(0,1fr\);/);
+  assert.match(html, /\.history-controls \{[^}]*grid-template-columns:minmax\(0,1fr\) auto;/);
+  assert.match(html, /\.history-project-select \{[^}]*width:100%;/);
+  assert.match(html, /\.history-preview \{[^}]*display:block;[^}]*white-space:normal;[^}]*overflow-wrap:anywhere;/);
+  assert.doesNotMatch(html, /\.history-preview \{[^}]*line-clamp/);
+});
+
 test('interface is English-first with system, light, and dark themes', () => {
   assert.match(html, /<html lang="en" data-theme="auto">/);
   assert.match(html, /const themeOrder = \['auto','light','dark'\]/);
@@ -181,6 +197,11 @@ test('visual system uses Hermes-inspired electric blue in light and dark modes',
   assert.match(html, /:root\[data-theme="dark"\]/);
   assert.match(html, /radial-gradient\(/);
   assert.match(html, /box-shadow:.*var\(--glow\)/);
+});
+
+test('the approved Hermes interface uses the previous JetBrains Mono font throughout', () => {
+  assert.match(html, /body \{[^}]*font:13px\/1\.55 'JetBrains Mono',/);
+  assert.doesNotMatch(html, /body \{[^}]*\bInter,/);
 });
 
 test('history sidebar becomes a closable drawer on narrow screens', () => {
@@ -239,7 +260,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v13/);
+  assert.match(sw, /brainy-shell-v14/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /index\.html/);
