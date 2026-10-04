@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { closeThen } = require('./session-actions.js');
 const ProjectStore = require('./project-store.js');
 const CommandPalette = require('./command-palette.js');
+const MarkdownRenderer = require('./markdown-renderer.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -148,6 +149,30 @@ test('offline first message is contextualized only when the queued prompt is sen
   assert.equal(preparations.length, 2);
   assert.match(html, /queuedText=promptText/);
   assert.doesNotMatch(html, /queuedText=submittedPrompt/);
+});
+
+test('assistant markdown parser recognizes rich text without treating raw HTML as markup', () => {
+  const blocks = MarkdownRenderer.parse('A **bold** and *italic* answer with `code`.\n\n<script>alert(1)</script>');
+  assert.equal(blocks[0].type, 'paragraph');
+  assert.deepEqual(blocks[0].inline.map((token) => token.type), ['text', 'strong', 'text', 'emphasis', 'text', 'code', 'text']);
+  assert.equal(blocks[1].type, 'paragraph');
+  assert.equal(blocks[1].inline[0].value, '<script>alert(1)</script>');
+});
+
+test('assistant markdown parser recognizes pipe tables', () => {
+  const blocks = MarkdownRenderer.parse('| Name | Status |\n| --- | --- |\n| BRAINY | Live |');
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].type, 'table');
+  assert.deepEqual(blocks[0].headers.map((cell) => cell[0].value), ['Name', 'Status']);
+  assert.deepEqual(blocks[0].rows[0].map((cell) => cell[0].value), ['BRAINY', 'Live']);
+});
+
+test('assistant messages render Markdown after completion and when history is restored', () => {
+  assert.match(html, /<script src="\.\/markdown-renderer\.js"><\/script>/);
+  assert.match(html, /if \(role === 'assistant' && !pendingState\) MarkdownRenderer\.render\(body, text\)/);
+  assert.match(html, /MarkdownRenderer\.render\(currentAssistant, finalText\)/);
+  assert.match(html, /\.markdown-table-wrap/);
+  assert.match(html, /\.content table/);
 });
 
 test('slash command palette filters commands and exposes prompt or action behavior', () => {
@@ -381,10 +406,11 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v16/);
+  assert.match(sw, /brainy-shell-v17/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);
+  assert.match(sw, /markdown-renderer\.js/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
 });

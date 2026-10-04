@@ -161,6 +161,21 @@
     .speaker { color:var(--accent); font:700 10px 'JetBrains Mono',monospace; letter-spacing:.05em; padding-top:2px; }
     .message.user .content { display:inline-block; justify-self:start; padding:10px 13px; background:linear-gradient(135deg,var(--user),color-mix(in srgb,var(--user) 72%,#748cff)); color:#fff; border-radius:12px 12px 12px 4px; box-shadow:0 8px 24px var(--glow); }
     .content { white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; }
+    .content > :first-child { margin-top:0; }
+    .content > :last-child { margin-bottom:0; }
+    .content p, .content ul, .content ol, .content blockquote, .content pre { margin:0 0 10px; }
+    .content ul, .content ol { padding-left:22px; }
+    .content blockquote { padding-left:12px; border-left:3px solid var(--accent); color:var(--muted); }
+    .content code { padding:1px 4px; border-radius:5px; background:var(--soft); font-family:inherit; }
+    .content pre { max-width:100%; overflow:auto; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--soft); white-space:pre; }
+    .content pre code { padding:0; background:transparent; }
+    .content a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
+    .markdown-table-wrap { max-width:100%; overflow-x:auto; margin:0 0 10px; border:1px solid var(--line); border-radius:10px; }
+    .content table { width:max-content; min-width:100%; border-collapse:collapse; white-space:normal; }
+    .content th, .content td { padding:8px 10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    .content th { background:var(--soft); color:var(--accent); font-weight:700; }
+    .content tr:last-child td { border-bottom:0; }
+    .content th:last-child, .content td:last-child { border-right:0; }
     .chat-image { display:block; width:min(320px,100%); max-height:360px; margin-bottom:8px; border-radius:12px; object-fit:cover; }
     .content.pending { color:var(--muted); }
     .work-note { margin-top:10px; font-size:11px; color:var(--muted); }
@@ -397,6 +412,7 @@
 <script src="./project-store.js"></script>
 <script src="./session-actions.js"></script>
 <script src="./command-palette.js"></script>
+<script src="./markdown-renderer.js"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
 (() => {
@@ -701,7 +717,10 @@
       const image = document.createElement('img'); image.className = 'chat-image';
       image.src = imageUrl; image.alt = 'Image from Ila'; body.append(image);
     }
-    if (text) body.append(document.createTextNode(text));
+    if (text) {
+      if (role === 'assistant' && !pendingState) MarkdownRenderer.render(body, text);
+      else body.append(document.createTextNode(text));
+    }
     row.append(speaker, body); thread.append(row); scrollBottom();
     return body;
   }
@@ -1173,7 +1192,7 @@
     if (type === 'message.complete') {
       if (!currentAssistant) currentAssistant = addMessage('assistant','');
       const finalText = payload.text || currentText || 'Done.';
-      currentAssistant.textContent = finalText; currentAssistant.classList.remove('pending');
+      MarkdownRenderer.render(currentAssistant, finalText); currentAssistant.classList.remove('pending');
       currentAssistant=null; currentText=''; busy=false; setStatus('Ready'); updateSend(); scrollBottom();
       setTimeout(refreshUsage,250); setTimeout(loadSessionHistory,500); return;
     }
