@@ -240,11 +240,16 @@
     return lines.join('\n');
   }
 
+  function prepareFirstPrompt(state, sessionId, text, firstMessagePending) {
+    const request = String(text || '');
+    return firstMessagePending ? applyProjectContext(state, sessionId, request) : request;
+  }
+
   function stripProjectContext(text) {
     const value = String(text || '');
     if (!value.startsWith(CONTEXT_OPEN)) return value;
     const marker = `${CONTEXT_CLOSE}\n\n`;
-    const end = value.lastIndexOf(marker);
+    const end = value.indexOf(marker);
     return end === -1 ? value : value.slice(end + marker.length);
   }
 
@@ -291,6 +296,7 @@
     sortSessions,
     filterSessions,
     applyProjectContext,
+    prepareFirstPrompt,
     stripProjectContext,
     sessionTitle,
     select,

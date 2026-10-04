@@ -125,7 +125,29 @@ test('project context wraps the first request and strips back to the exact user 
   assert.match(wrapped, /People & OD/);
   assert.match(wrapped, /Separate known, uncertain/);
   assert.equal(ProjectStore.stripProjectContext(wrapped), 'Compare these options.');
+  const markerLikePrompt = 'Keep this literal marker: [[/BRAINY_PROJECT_CONTEXT]]\n\nthen continue.';
+  const wrappedMarkerPrompt = ProjectStore.applyProjectContext(state, 'chat-1', markerLikePrompt);
+  assert.equal(ProjectStore.stripProjectContext(wrappedMarkerPrompt), markerLikePrompt);
   assert.equal(ProjectStore.applyProjectContext(state, 'chat-2', 'Plain request'), 'Plain request');
+});
+
+test('first-message preparation uses the latest project details at send time', () => {
+  let state = ProjectStore.create(ProjectStore.empty(), 'People & OD', 'p_od', 100);
+  state = ProjectStore.assign(state, 'chat-1', 'p_od');
+  assert.equal(ProjectStore.prepareFirstPrompt(state, 'chat-1', 'Hello', true), 'Hello');
+  state = ProjectStore.updateDetails(state, 'p_od', { instructions:'Use the seeded facts.' });
+  const prepared = ProjectStore.prepareFirstPrompt(state, 'chat-1', 'Hello', true);
+  assert.match(prepared, /Use the seeded facts\./);
+  assert.equal(ProjectStore.stripProjectContext(prepared), 'Hello');
+  assert.equal(ProjectStore.prepareFirstPrompt(state, 'chat-1', 'Follow-up', false), 'Follow-up');
+});
+
+test('offline first message is contextualized only when the queued prompt is sent', () => {
+  assert.match(html, /projectContextPending = !visibleMessages\.length/);
+  const preparations = html.match(/const submittedPrompt = ProjectStore\.prepareFirstPrompt\(projectState, sessionKey, promptText, projectContextPending\)/g) || [];
+  assert.equal(preparations.length, 2);
+  assert.match(html, /queuedText=promptText/);
+  assert.doesNotMatch(html, /queuedText=submittedPrompt/);
 });
 
 test('slash command palette filters commands and exposes prompt or action behavior', () => {
@@ -143,6 +165,7 @@ test('slash command palette is keyboard accessible from the composer', () => {
   assert.match(html, /e\.key === 'ArrowDown'/);
   assert.match(html, /e\.key === 'ArrowUp'/);
   assert.match(html, /chooseSlashCommand\(slashMatches\[slashIndex\]\)/);
+  assert.match(html, /if \(e\.isComposing\) return/);
 });
 
 test('bridge keeps all backend calls on the dynamic tunnel', () => {
@@ -248,7 +271,7 @@ test('projects expose details, active context, and first-message instructions', 
   assert.match(html, /id="activeProjectChip"/);
   assert.match(html, /ProjectStore\.updateDetails\(/);
   assert.match(html, /function renderActiveProjectChip\(\)/);
-  assert.match(html, /ProjectStore\.applyProjectContext\(projectState, sessionKey, promptText\)/);
+  assert.match(html, /ProjectStore\.prepareFirstPrompt\(projectState, sessionKey, promptText, projectContextPending\)/);
   assert.match(html, /ProjectStore\.stripProjectContext\(message\.text\)/);
 });
 
@@ -358,7 +381,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v15/);
+  assert.match(sw, /brainy-shell-v16/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);

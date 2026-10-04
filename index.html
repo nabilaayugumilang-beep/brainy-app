@@ -1062,9 +1062,8 @@
       localStorage.setItem('brainy_session', sessionKey);
       input.value=''; clearAttachment(); autoGrow();
       latestUsage={}; runtimeInfo={}; replaceThread(result.messages); historyRendered=true;
-      const activeProject = ProjectStore.projectById(projectState, ProjectStore.projectForSession(projectState, sessionKey));
       const visibleMessages = (result.messages || []).filter(message => (message.role === 'user' || message.role === 'assistant') && message.text);
-      projectContextPending = Boolean(!visibleMessages.length && activeProject && (activeProject.description || activeProject.instructions));
+      projectContextPending = !visibleMessages.length;
       renderActiveProjectChip();
       ready=true; busy=!!result.running; applyRuntime(result.info || {});
       setStatus(busy ? 'Working...' : 'Ready');
@@ -1111,14 +1110,15 @@
   }
   async function flushQueuedMessage() {
     if (!queuedText || !ready || busy) return;
-    const text = queuedText;
+    const promptText = queuedText;
     const image = queuedImage;
     queuedText = '';
     queuedImage = null;
     updateSend();
-    try { await submitPrompt(text,image); projectContextPending=false; }
+    const submittedPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
+    try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
     catch (err) {
-      queuedText = text;
+      queuedText = promptText;
       queuedImage = image;
       ready = false;
       updateSend();
@@ -1143,9 +1143,8 @@
     if (createdNewSession && sessionKey && ProjectStore.projectById(projectState,projectState.selected)) {
       persistProjectState(ProjectStore.assign(projectState, sessionKey, projectState.selected));
     }
-    const activeProject = ProjectStore.projectById(projectState, ProjectStore.projectForSession(projectState, sessionKey));
     const visibleMessages = (result.messages || []).filter(message => (message.role === 'user' || message.role === 'assistant') && message.text);
-    projectContextPending = Boolean(!visibleMessages.length && activeProject && (activeProject.description || activeProject.instructions));
+    projectContextPending = !visibleMessages.length;
     renderActiveProjectChip();
     if (!historyRendered) { renderHistory(result.messages); historyRendered = true; }
     ready = true; busy = !!result.running;
@@ -1297,6 +1296,7 @@
   function autoGrow() { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; }
   input.addEventListener('input',()=>{ slashIndex=0; autoGrow(); updateSend(); renderSlashPalette(); });
   input.addEventListener('keydown',(e)=>{
+    if (e.isComposing) return;
     if (!commandPalette.hidden && e.key === 'ArrowDown') {
       e.preventDefault(); slashIndex = (slashIndex + 1) % slashMatches.length; renderSlashPalette(); return;
     }
@@ -1317,13 +1317,11 @@
     const image=selectedImage;
     if ((!text && !image) || busy || queuedText || imagePreparing) return;
     const promptText = text || 'Please analyze this image.';
-    const submittedPrompt = projectContextPending
-      ? ProjectStore.applyProjectContext(projectState, sessionKey, promptText)
-      : promptText;
+    const submittedPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
     addMessage('user',text || 'Image',false,image ? image.preview : '');
     input.value=''; selectedImage=null; imageInput.value=''; renderAttachment(); autoGrow();
     if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
-      queuedText=submittedPrompt; queuedImage=image; updateSend();
+      queuedText=promptText; queuedImage=image; updateSend();
       setStatus('Message saved · reconnecting...');
       connect().catch(fail);
       return;
@@ -1332,7 +1330,7 @@
     try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
     catch(err) {
       if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
-        queuedText=submittedPrompt; queuedImage=image; updateSend();
+        queuedText=promptText; queuedImage=image; updateSend();
         setStatus('Message saved · reconnecting...');
         connect().catch(fail);
       } else fail(err);
