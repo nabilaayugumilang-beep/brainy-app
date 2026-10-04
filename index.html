@@ -358,7 +358,7 @@
       <form class="composer" id="composer">
         <button class="attach-btn" id="attachBtn" type="button" aria-label="Add image" title="Add image">＋</button>
         <input id="imageInput" type="file" accept="image/*" class="file-input">
-        <textarea id="input" rows="1" placeholder="What needs to get done?" autocomplete="off"></textarea>
+        <textarea id="input" rows="1" placeholder="What needs to get done?" autocomplete="off" aria-keyshortcuts="Meta+Enter Control+Enter" title="Enter for a new line · Command/Ctrl + Enter to send"></textarea>
         <button class="send" id="send" type="submit" disabled>Send</button>
       </form>
       <div class="footnote">Ila's private workspace</div>
@@ -1328,7 +1328,9 @@
     if (!commandPalette.hidden && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault(); chooseSlashCommand(slashMatches[slashIndex]); return;
     }
-    if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); $('#composer').requestSubmit(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault(); $('#composer').requestSubmit();
+    }
   });
   $('#composer').addEventListener('submit',async(e)=>{
     e.preventDefault();
@@ -1427,7 +1429,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=18',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=19',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

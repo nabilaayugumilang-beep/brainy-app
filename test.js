@@ -197,6 +197,12 @@ test('slash command palette is keyboard accessible from the composer', () => {
   assert.match(html, /if \(e\.isComposing\) return/);
 });
 
+test('composer keeps Enter as a newline and sends only from a deliberate shortcut', () => {
+  assert.match(html, /if \(\(e\.metaKey \|\| e\.ctrlKey\) && e\.key === 'Enter'\)/);
+  assert.match(html, /requestSubmit\(\)/);
+  assert.doesNotMatch(html, /if \(e\.key==='Enter' && !e\.shiftKey\) \{ e\.preventDefault\(\); \$\('#composer'\)\.requestSubmit\(\); \}/);
+});
+
 test('bridge keeps all backend calls on the dynamic tunnel', () => {
   assert.match(html, /let backendUrl/);
   assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/auth\/ws-ticket`/);
@@ -219,7 +225,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=18'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=19'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -410,7 +416,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v18/);
+  assert.match(sw, /brainy-shell-v19/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);
