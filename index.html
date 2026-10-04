@@ -53,7 +53,7 @@
     *::-webkit-scrollbar-thumb:hover { background:var(--scroll-thumb-hover); }
     *::-webkit-scrollbar-corner { background:var(--scroll-track); }
     *::-webkit-scrollbar-button { width:0; height:0; display:none; background:var(--scroll-track); }
-    html,body { margin:0; width:100%; height:100%; overflow:hidden; color:var(--text); }
+    html,body { margin:0; width:100%; height:100%; overflow:hidden; color:var(--text); -webkit-text-size-adjust:100%; text-size-adjust:100%; }
     body { font:13px/1.55 'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:-.01em; background:radial-gradient(circle at 50% -20%,var(--electric-soft) 0,transparent 46%),var(--page); }
     button,textarea,input,select { font:inherit; }
     button { color:inherit; }
@@ -169,7 +169,7 @@
     .content h2 { font-size:14px; }
     .content h3 { font-size:13px; }
     .content h4, .content h5, .content h6 { font-size:12px; }
-    .content p, .content li, .content th, .content td, .content blockquote { font-size:inherit; }
+    .content p, .content li, .content blockquote { font-size:inherit; }
     .content p, .content ul, .content ol, .content blockquote, .content pre { margin:0 0 10px; }
     .content ul, .content ol { padding-left:22px; }
     .content blockquote { padding-left:12px; border-left:3px solid var(--accent); color:var(--muted); }
@@ -178,8 +178,8 @@
     .content pre code { padding:0; background:transparent; }
     .content a { color:var(--accent); text-decoration-thickness:1px; text-underline-offset:2px; }
     .markdown-table-wrap { width:100%; min-width:0; max-width:100%; overflow-x:auto; overscroll-behavior-inline:contain; -webkit-overflow-scrolling:touch; contain:inline-size; margin:0 0 10px; border:1px solid var(--line); border-radius:10px; }
-    .content table { width:max-content; min-width:100%; border-collapse:collapse; white-space:normal; }
-    .content th, .content td { padding:8px 10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    .content table { font-family:inherit; font-size:12px; -webkit-text-size-adjust:100%; text-size-adjust:100%; width:max-content; min-width:100%; border-collapse:collapse; white-space:normal; }
+    .content th, .content td { font-family:inherit; font-size:12px; line-height:1.5; padding:8px 10px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
     .content th { background:var(--soft); color:var(--accent); font-weight:700; }
     .content tr:last-child td { border-bottom:0; }
     .content th:last-child, .content td:last-child { border-right:0; }
@@ -1436,7 +1436,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=21',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=22',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

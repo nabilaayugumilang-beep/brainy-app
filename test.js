@@ -185,7 +185,13 @@ test('assistant typography keeps Markdown headings compact and consistent', () =
   assert.match(html, /\.content h2 \{ font-size:14px; \}/);
   assert.match(html, /\.content h3 \{ font-size:13px; \}/);
   assert.match(html, /\.content h4, \.content h5, \.content h6 \{ font-size:12px; \}/);
-  assert.match(html, /\.content p, \.content li, \.content th, \.content td, \.content blockquote \{ font-size:inherit; \}/);
+  assert.match(html, /\.content p, \.content li, \.content blockquote \{ font-size:inherit; \}/);
+});
+
+test('mobile Safari cannot auto-enlarge text inside wide Markdown tables', () => {
+  assert.match(html, /html,body \{[^}]*-webkit-text-size-adjust:100%;[^}]*text-size-adjust:100%;/);
+  assert.match(html, /\.content table \{[^}]*font-family:inherit;[^}]*font-size:12px;[^}]*-webkit-text-size-adjust:100%;[^}]*text-size-adjust:100%;/);
+  assert.match(html, /\.content th, \.content td \{[^}]*font-family:inherit;[^}]*font-size:12px;[^}]*line-height:1\.5;/);
 });
 
 test('wide Markdown tables scroll inside their own wrapper without shifting the chat', () => {
@@ -241,7 +247,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=21'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=22'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -432,7 +438,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v21/);
+  assert.match(sw, /brainy-shell-v22/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);
