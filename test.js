@@ -179,6 +179,15 @@ test('assistant messages render Markdown after completion and when history is re
   assert.match(html, /\.content table/);
 });
 
+test('assistant typography keeps Markdown headings compact and consistent', () => {
+  assert.match(html, /\.content h1, \.content h2, \.content h3, \.content h4, \.content h5, \.content h6 \{[^}]*font-family:inherit;[^}]*line-height:1\.45;/);
+  assert.match(html, /\.content h1 \{ font-size:15px; \}/);
+  assert.match(html, /\.content h2 \{ font-size:14px; \}/);
+  assert.match(html, /\.content h3 \{ font-size:13px; \}/);
+  assert.match(html, /\.content h4, \.content h5, \.content h6 \{ font-size:12px; \}/);
+  assert.match(html, /\.content p, \.content li, \.content th, \.content td, \.content blockquote \{ font-size:inherit; \}/);
+});
+
 test('wide Markdown tables scroll inside their own wrapper without shifting the chat', () => {
   assert.match(html, /main \{[^}]*overflow-y:auto;[^}]*overflow-x:hidden;/);
   assert.match(html, /\.message \{[^}]*min-width:0;[^}]*max-width:100%;/);
@@ -232,7 +241,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=20'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=21'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -423,7 +432,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v20/);
+  assert.match(sw, /brainy-shell-v21/);
   assert.match(sw, /session-actions\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);

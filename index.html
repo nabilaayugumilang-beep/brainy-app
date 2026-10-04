@@ -164,6 +164,12 @@
     .message.assistant .content { width:100%; }
     .content > :first-child { margin-top:0; }
     .content > :last-child { margin-bottom:0; }
+    .content h1, .content h2, .content h3, .content h4, .content h5, .content h6 { margin:14px 0 6px; font-family:inherit; font-weight:700; line-height:1.45; letter-spacing:-.02em; overflow-wrap:anywhere; }
+    .content h1 { font-size:15px; }
+    .content h2 { font-size:14px; }
+    .content h3 { font-size:13px; }
+    .content h4, .content h5, .content h6 { font-size:12px; }
+    .content p, .content li, .content th, .content td, .content blockquote { font-size:inherit; }
     .content p, .content ul, .content ol, .content blockquote, .content pre { margin:0 0 10px; }
     .content ul, .content ol { padding-left:22px; }
     .content blockquote { padding-left:12px; border-left:3px solid var(--accent); color:var(--muted); }
@@ -1430,7 +1436,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=20',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=21',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
