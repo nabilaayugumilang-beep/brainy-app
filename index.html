@@ -2,7 +2,7 @@
 <html lang="en" data-theme="auto">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f5f7ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,7 +26,10 @@
       --line:#dce3f5; --soft:#eef2ff; --accent:var(--electric); --accentText:#ffffff;
       --user:#1717ff; --danger:#c8334a; --shadow:0 10px 34px rgba(26,39,93,.08);
       --scroll-track:#f5f7ff; --scroll-thumb:#bdc9ea; --scroll-thumb-hover:#8da0d3;
+      --workspace-max:1600px; --content-max:780px; --density-space:1;
     }
+    :root[data-density="compact"] { --density-space:.82; }
+    :root[data-density="spacious"] { --density-space:1.18; }
     :root[data-theme="dark"] {
       color-scheme:dark;
       --electric:#7590ff; --electric-soft:#151b3d; --glow:rgba(86,111,255,.3);
@@ -57,8 +60,8 @@
     body { font:13px/1.55 'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace; letter-spacing:-.01em; background:radial-gradient(circle at 50% -20%,var(--electric-soft) 0,transparent 46%),var(--page); }
     button,textarea,input,select { font:inherit; }
     button { color:inherit; }
-    .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:minmax(0,920px); justify-content:center; background-image:linear-gradient(color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px); background-size:32px 32px; }
-    .workspace-shell.history-open { grid-template-columns:260px minmax(0,920px); }
+    .workspace-shell { width:100%; height:var(--tg-height,100svh); display:grid; grid-template-columns:minmax(0,var(--workspace-max)); justify-content:center; container:workspace / inline-size; background-image:linear-gradient(color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--electric) 3%,transparent) 1px,transparent 1px); background-size:32px 32px; }
+    .workspace-shell.history-open { grid-template-columns:clamp(230px,18vw,300px) minmax(0,1fr); }
     .workspace-shell:not(.history-open) .history-panel { display:none; }
     .history-panel { min-width:0; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto auto auto auto minmax(0,1fr); border-left:1px solid var(--line); border-right:1px solid var(--line); background:color-mix(in srgb,var(--panel) 92%,transparent); backdrop-filter:blur(18px); z-index:12; }
     .history-head { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); }
@@ -72,8 +75,8 @@
     .history-search-mark { position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
     .projects-section { margin:0 8px 6px; padding-bottom:8px; border-bottom:1px solid var(--line); }
     .projects-head { display:flex; align-items:center; gap:4px; }
-    .projects-toggle { flex:1; min-width:0; min-height:36px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px; border:0; border-radius:8px; background:transparent; cursor:pointer; text-align:left; font-weight:600; }
-    .projects-toggle:hover, .project-add:hover, .project-filter:hover, .project-action:hover { background:var(--soft); }
+    .projects-toggle, .chats-toggle { flex:1; min-width:0; min-height:36px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px; border:0; border-radius:8px; background:transparent; cursor:pointer; text-align:left; font-weight:600; }
+    .projects-toggle:hover, .chats-toggle:hover, .project-add:hover, .project-filter:hover, .project-action:hover { background:var(--soft); }
     .projects-count { color:var(--muted); font-size:11px; font-weight:400; }
     .project-add, .project-action { flex:none; width:36px; height:36px; border:0; border-radius:8px; background:transparent; cursor:pointer; }
     .project-list { max-height:30vh; overflow:auto; padding-top:2px; }
@@ -88,7 +91,11 @@
     .project-filter.active { background:var(--electric-soft); color:var(--accent); font-weight:700; box-shadow:inset 2px 0 0 var(--electric); }
     .project-name { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
     .project-chat-count { flex:none; color:var(--muted); font-size:11px; }
+    .chats-section { min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr); }
+    .chats-section.collapsed { grid-template-rows:auto; }
+    .chats-head { display:flex; align-items:center; margin:0 8px; }
     .history-list { min-height:0; overflow:auto; padding:4px 8px 14px; }
+    .history-list[hidden] { display:none; }
     .history-list-heading { padding:8px 10px 4px; color:var(--muted); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
     .history-controls { display:grid; grid-template-columns:minmax(0,1fr) auto auto auto; align-items:center; gap:4px; padding:0 8px 8px; }
     .history-project-select { grid-column:1/-1; width:100%; min-width:0; min-height:38px; border:1px solid var(--line); border-radius:9px; padding:0 8px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; }
@@ -128,10 +135,10 @@
     .history-item.active .history-action { color:var(--muted); }
     .history-toggle { display:inline-grid; place-items:center; }
     .history-backdrop { display:none; }
-    .app { width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:920px; margin:0 auto; background:color-mix(in srgb,var(--panel) 96%,transparent); border-inline:1px solid var(--line); box-shadow:0 0 80px var(--glow); }
+    .app { position:relative; width:100%; min-width:0; overflow:hidden; height:var(--tg-height,100svh); display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-width:none; margin:0 auto; background:color-mix(in srgb,var(--panel) 96%,transparent); border-inline:1px solid var(--line); box-shadow:0 0 80px var(--glow); }
     .topbar, header, main, footer { width:100%; min-width:0; }
     .topbar { background:color-mix(in srgb,var(--panel) 86%,transparent); border-bottom:1px solid var(--line); backdrop-filter:blur(18px); }
-    header { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:transparent; }
+    header { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:calc(10px * var(--density-space)) calc(18px * var(--density-space)); background:transparent; }
     .brand { display:flex; align-items:center; gap:10px; min-width:0; }
     .mark { width:30px; height:30px; border:1px solid color-mix(in srgb,var(--electric) 60%,white); border-radius:9px; display:grid; place-items:center; color:white; font:700 13px 'JetBrains Mono',monospace; background:linear-gradient(145deg,#4242ff,var(--electric)); box-shadow:0 0 22px var(--glow); }
     .title { font:700 12px/1.2 'JetBrains Mono',monospace; letter-spacing:.02em; }
@@ -242,7 +249,7 @@
     .action-draft-open strong { font-size:9px; }
     .action-draft-open span { margin-top:2px; color:var(--muted); font-size:8px; }
     .action-draft .action-draft-delete { color:var(--danger); }
-    .thread { width:min(720px,100%); min-width:0; max-width:100%; margin:0 auto; padding:28px 24px 120px; }
+    .thread { width:min(var(--content-max),100%); min-width:0; max-width:100%; margin:0 auto; padding:calc(28px * var(--density-space)) calc(24px * var(--density-space)) 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
     .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
     .empty p { margin:0 0 12px; color:var(--muted); font-size:12px; }
@@ -302,8 +309,8 @@
     .agent-stop { min-width:48px; height:28px; border:1px solid color-mix(in srgb,var(--danger) 40%,var(--line)); border-radius:8px; background:var(--panel); color:var(--danger); cursor:pointer; font-size:10px; font-weight:700; }
     .agent-stop:disabled { opacity:.5; cursor:default; }
     @keyframes agent-pulse { 50% { opacity:.45; transform:scale(.8); } }
-    footer { border-top:1px solid var(--line); background:var(--panel); padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
-    .composer-context { width:min(720px,100%); min-height:0; margin:0 auto 7px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    footer { border-top:1px solid var(--line); background:var(--panel); padding:calc(12px * var(--density-space)) max(calc(16px * var(--density-space)),env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(calc(16px * var(--density-space)),env(safe-area-inset-left)); }
+    .composer-context { width:min(var(--content-max),100%); min-height:0; margin:0 auto 7px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
     .composer-context:empty { display:none; }
     .expert-skill-select { min-height:30px; max-width:220px; padding:4px 28px 4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
     .expert-skill-select[hidden] { display:none; }
@@ -316,19 +323,22 @@
     .command-option:hover, .command-option.active { background:var(--electric-soft); color:var(--accent); }
     .command-name { flex:none; min-width:92px; font-weight:700; }
     .command-label { color:var(--muted); font-size:11px; }
-    .attachment-preview { width:min(720px,100%); margin:0 auto 8px; display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
+    .attachment-preview { width:min(var(--content-max),100%); margin:0 auto 8px; display:flex; align-items:center; gap:10px; padding:8px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
     .attachment-preview[hidden] { display:none; }
     .attachment-preview img { width:52px; height:52px; border-radius:9px; object-fit:cover; }
     .attachment-name { min-width:0; flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--muted); font-size:11px; }
     .remove-attachment { width:34px; height:34px; border:0; border-radius:9px; background:var(--panel); cursor:pointer; }
-    .composer { width:min(720px,100%); margin:0 auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:end; padding:8px; border:1px solid color-mix(in srgb,var(--electric) 22%,var(--line)); border-radius:16px; background:var(--panel); box-shadow:0 8px 34px var(--glow); }
+    .composer { width:min(var(--content-max),100%); margin:0 auto; display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:end; padding:8px; border:1px solid color-mix(in srgb,var(--electric) 22%,var(--line)); border-radius:16px; background:var(--panel); box-shadow:0 8px 34px var(--glow); }
     .attach-btn { width:36px; height:36px; border:0; border-radius:9px; background:var(--soft); color:var(--text); cursor:pointer; font-size:20px; line-height:1; }
     .file-input { display:none; }
     textarea { resize:none; max-height:140px; min-height:34px; padding:6px 0; border:0; outline:0; background:transparent; color:var(--text); font-size:12px; }
     textarea::placeholder { color:var(--muted); }
     .send { height:36px; min-width:64px; border:0; border-radius:9px; padding:0 14px; background:linear-gradient(135deg,#4242ff,var(--electric)); color:#fff; font-weight:700; cursor:pointer; box-shadow:0 6px 18px var(--glow); }
     .send:disabled { opacity:.42; cursor:default; }
-    .footnote { width:min(720px,100%); margin:6px auto 0; color:var(--muted); font-size:11px; text-align:center; }
+    .footnote { width:min(var(--content-max),100%); margin:6px auto 0; color:var(--muted); font-size:11px; text-align:center; }
+    .jump-latest { position:absolute; z-index:10; right:clamp(16px,3vw,34px); bottom:clamp(94px,13vh,124px); min-height:36px; padding:0 13px; border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line)); border-radius:999px; background:color-mix(in srgb,var(--panel) 94%,transparent); color:var(--accent); box-shadow:0 10px 30px var(--glow); backdrop-filter:blur(14px); cursor:pointer; font-size:10px; font-weight:700; transition:transform .16s ease,opacity .16s ease; }
+    .jump-latest:hover { transform:translateY(-2px); }
+    .jump-latest[hidden] { display:none; }
     .activation-panel { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px; background:color-mix(in srgb,var(--page) 94%,transparent); backdrop-filter:blur(10px); }
     .activation-panel[hidden] { display:none; }
     .activation-card { width:min(360px,100%); padding:24px; border:1px solid var(--line); border-radius:18px; background:var(--panel); box-shadow:0 16px 60px rgba(35,30,24,.14); }
@@ -339,6 +349,11 @@
     .activation-submit { height:46px; border:0; border-radius:12px; background:var(--accent); color:var(--accentText); font-weight:700; cursor:pointer; }
     .activation-error { min-height:18px; margin:0 !important; color:var(--danger) !important; }
     .toast { position:fixed; left:50%; bottom:96px; transform:translateX(-50%); background:var(--text); color:var(--panel); padding:8px 12px; border-radius:8px; font-size:12px; display:none; z-index:30; }
+    @container workspace (min-width:1200px) {
+      .app { --content-max:1040px; }
+      .agent-hq, .action-center { width:min(1120px,100%); }
+      .action-layout { grid-template-columns:260px minmax(0,1fr); }
+    }
     @media (max-width:900px) {
       .workspace-shell { display:block; }
       .workspace-shell:not(.history-open) .history-panel { display:grid; }
@@ -358,6 +373,7 @@
       .connection { display:block; margin-top:2px; font-size:11px; }
       .head-actions { flex:none; gap:4px; }
       .icon-btn { min-width:44px; height:44px; border:0; background:transparent; border-radius:12px; }
+      #densityBtn { display:none; }
       .meta-bar { min-width:0; min-height:42px; padding:0 14px; gap:14px; overflow:hidden; font-size:11px; }
       .meta-secondary, .meta-item:nth-of-type(4), .meta-item:nth-of-type(5), .meta-item:nth-of-type(6) { display:none; }
       .meta-more { margin-left:auto; flex:none; }
@@ -425,9 +441,16 @@
         </div>
         <div class="project-list" id="projectList"></div>
       </section>
-      <div class="history-list" id="historyList" aria-live="polite">
-        <p class="history-state">Loading history...</p>
-      </div>
+      <section class="chats-section" id="chatsSection" aria-label="Chats">
+        <div class="chats-head">
+          <button class="chats-toggle" id="chatsToggle" type="button" aria-expanded="true">
+            <span>Chats</span><span class="projects-count" id="chatsCount">0</span>
+          </button>
+        </div>
+        <div class="history-list" id="historyList" aria-live="polite">
+          <p class="history-state">Loading history...</p>
+        </div>
+      </section>
     </aside>
     <button class="history-backdrop" id="historyBackdrop" type="button" aria-label="Close history"></button>
     <div class="app">
@@ -439,6 +462,7 @@
         </div>
         <div class="head-actions">
           <button class="icon-btn history-toggle" id="historyBtn" type="button" title="Open history" aria-label="Open history" aria-expanded="false">☰</button>
+          <button class="icon-btn" id="densityBtn" type="button" title="Density: Comfortable">↔</button>
           <button class="icon-btn" id="themeBtn" type="button" title="Theme: System">◐</button>
           <button class="icon-btn" id="newBtn" type="button" title="New conversation">New</button>
         </div>
@@ -538,6 +562,8 @@
         </div>
       </section>
     </main>
+
+    <button class="jump-latest" id="jumpLatest" type="button" aria-label="Jump to latest message" hidden>↓ Latest</button>
 
     <footer>
       <div class="mode-row">
@@ -659,6 +685,7 @@
   const historyPanel = $('#historyPanel'), historyList = $('#historyList'), historyBackdrop = $('#historyBackdrop');
   const historySearch = $('#historySearch');
   const historyNew = $('#historyNew'), projectList = $('#projectList'), projectsToggle = $('#projectsToggle');
+  const chatsSection = $('#chatsSection'), chatsToggle = $('#chatsToggle'), jumpLatest = $('#jumpLatest');
   const projectModal = $('#projectModal'), projectNameInput = $('#projectNameInput');
   const projectDescriptionInput = $('#projectDescriptionInput'), projectInstructionsInput = $('#projectInstructionsInput');
   const activeProjectChip = $('#activeProjectChip'), activeProjectName = $('#activeProjectName');
@@ -666,6 +693,7 @@
   const expertSkillSelect = $('#expertSkill');
   const chatModal = $('#chatModal'), chatNameInput = $('#chatNameInput');
   const HISTORY_OPEN_KEY = 'brainy_history_open';
+  const CHATS_COLLAPSED_KEY = 'brainy_chats_collapsed';
   const imageInput = $('#imageInput'), attachmentPreview = $('#attachmentPreview');
   const attachmentThumb = $('#attachmentThumb'), attachmentName = $('#attachmentName');
   const statusEl = $('#status'), scroller = $('#scroller'), toast = $('#toast');
@@ -718,6 +746,7 @@
   let historyLoading = false;
   let historyItems = [];
   let historySearchQuery = '';
+  let chatsCollapsed = localStorage.getItem(CHATS_COLLAPSED_KEY) === 'true';
   let projectState = ProjectStore.load(localStorage);
   let editingProjectId = null;
   let editingChatId = null;
@@ -793,6 +822,23 @@
   $('#themeBtn').onclick = () => {
     theme = themeOrder[(themeOrder.indexOf(theme) + 1) % themeOrder.length];
     localStorage.setItem('brainy_theme', theme); applyTheme();
+  };
+  const densityOrder = ['compact','comfortable','spacious'];
+  let density = localStorage.getItem('brainy_density');
+  if (!densityOrder.includes(density)) density = 'comfortable';
+  function applyDensity() {
+    document.documentElement.dataset.density = density;
+    const labels = {compact:'Compact',comfortable:'Comfortable',spacious:'Spacious'};
+    const nextDensity = densityOrder[(densityOrder.indexOf(density) + 1) % densityOrder.length];
+    const button = $('#densityBtn');
+    button.title = `Density: ${labels[density]} · Next: ${labels[nextDensity]}`;
+    button.setAttribute('aria-label', button.title);
+  }
+  applyDensity();
+  $('#densityBtn').onclick = () => {
+    density = densityOrder[(densityOrder.indexOf(density) + 1) % densityOrder.length];
+    localStorage.setItem('brainy_density', density);
+    applyDensity();
   };
   $('#metaBar').onclick = () => {
     const panel = $('#infoPanel'); panel.hidden = !panel.hidden;
@@ -1088,6 +1134,7 @@
     send.textContent = isAgent ? 'Run' : 'Send';
     if (isHQ) renderAgentHQ();
     if (isActions) renderActionCenter();
+    requestAnimationFrame(updateJumpLatest);
   }
   function setInteractionMode(mode) {
     workspaceView = 'chat';
@@ -1140,7 +1187,21 @@
     toast.textContent = text; toast.style.display = 'block';
     clearTimeout(showToast.t); showToast.t = setTimeout(() => toast.style.display = 'none', 2800);
   }
-  function scrollBottom() { requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; }); }
+  function isNearBottom() {
+    return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 96;
+  }
+  function updateJumpLatest() {
+    const hasMessages = Boolean(thread.querySelector('.message'));
+    jumpLatest.hidden = workspaceView !== 'chat' || !hasMessages || isNearBottom() || scroller.scrollHeight <= scroller.clientHeight + 24;
+  }
+  function scrollBottom() {
+    requestAnimationFrame(() => {
+      scroller.scrollTop = scroller.scrollHeight;
+      updateJumpLatest();
+    });
+  }
+  scroller.addEventListener('scroll', updateJumpLatest, {passive:true});
+  jumpLatest.onclick = scrollBottom;
   function hideEmpty() { if (empty) empty.style.display = 'none'; }
   function addMessage(role, text, pendingState=false, imageUrl='') {
     hideEmpty();
@@ -1451,6 +1512,11 @@
   function renderHistorySessions(items) {
     historyItems = Array.isArray(items) ? items : [];
     historyList.replaceChildren();
+    $('#chatsCount').textContent = String(historyItems.length);
+    historyList.hidden = chatsCollapsed;
+    chatsSection.classList.toggle('collapsed', chatsCollapsed);
+    chatsToggle.setAttribute('aria-expanded', String(!chatsCollapsed));
+    chatsToggle.title = chatsCollapsed ? 'Open chat list' : 'Close chat list';
     renderProjectList();
     const heading = document.createElement('div'); heading.className = 'history-list-heading';
     heading.textContent = `Chats · ${selectedProjectLabel()}`;
@@ -2005,6 +2071,14 @@
     if (!persistProjectState(ProjectStore.setCollapsed(projectState,!projectState.collapsed))) return;
     renderProjectList();
   };
+  chatsToggle.onclick = () => {
+    chatsCollapsed = !chatsCollapsed;
+    localStorage.setItem(CHATS_COLLAPSED_KEY, String(chatsCollapsed));
+    historyList.hidden = chatsCollapsed;
+    chatsSection.classList.toggle('collapsed', chatsCollapsed);
+    chatsToggle.setAttribute('aria-expanded', String(!chatsCollapsed));
+    chatsToggle.title = chatsCollapsed ? 'Open chat list' : 'Close chat list';
+  };
   $('#addProjectBtn').onclick = () => openProjectModal();
   activeProjectChip.onclick = () => {
     const projectId = ProjectStore.projectForSession(projectState, sessionKey);
@@ -2061,7 +2135,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=30',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=31',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

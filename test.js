@@ -582,7 +582,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=30'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=31'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -717,6 +717,45 @@ test('the approved Hermes interface uses the previous JetBrains Mono font throug
   assert.doesNotMatch(html, /body \{[^}]*\bInter,/);
 });
 
+test('adaptive app shell uses extra desktop and browser zoom space without fixed-width islands', () => {
+  assert.match(html, /<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">/);
+  assert.match(html, /--workspace-max:1600px/);
+  assert.match(html, /\.workspace-shell \{[^}]*grid-template-columns:minmax\(0,var\(--workspace-max\)\);/);
+  assert.match(html, /\.workspace-shell\.history-open \{[^}]*grid-template-columns:clamp\(230px,18vw,300px\) minmax\(0,1fr\);/);
+  assert.match(html, /\.app \{[^}]*max-width:none;/);
+  assert.match(html, /@container workspace \(min-width:1200px\)/);
+});
+
+test('density control is local, persistent, and offers compact comfortable and spacious layouts', () => {
+  assert.match(html, /id="densityBtn"/);
+  assert.match(html, /const densityOrder = \['compact','comfortable','spacious'\]/);
+  assert.match(html, /localStorage\.getItem\('brainy_density'\)/);
+  assert.match(html, /localStorage\.setItem\('brainy_density', density\)/);
+  assert.match(html, /document\.documentElement\.dataset\.density = density/);
+  assert.match(html, /:root\[data-density="compact"\]/);
+  assert.match(html, /:root\[data-density="spacious"\]/);
+});
+
+test('projects and chats can collapse independently and remember their sidebar state', () => {
+  assert.match(html, /id="projectsToggle"[^>]+aria-expanded="true"/);
+  assert.match(html, /id="chatsToggle"[^>]+aria-expanded="true"/);
+  assert.match(html, /id="chatsSection"/);
+  assert.match(html, /const CHATS_COLLAPSED_KEY = 'brainy_chats_collapsed'/);
+  assert.match(html, /localStorage\.setItem\(CHATS_COLLAPSED_KEY, String\(chatsCollapsed\)\)/);
+  assert.match(html, /historyList\.hidden = chatsCollapsed/);
+  assert.match(html, /chatsToggle\.setAttribute\('aria-expanded', String\(!chatsCollapsed\)\)/);
+});
+
+test('jump-to-latest appears only away from the bottom and scrolls without AI', () => {
+  assert.match(html, /id="jumpLatest"/);
+  assert.match(html, /function isNearBottom\(\)/);
+  assert.match(html, /scroller\.scrollHeight - scroller\.scrollTop - scroller\.clientHeight/);
+  assert.match(html, /const hasMessages = Boolean\(thread\.querySelector\('\.message'\)\)/);
+  assert.match(html, /scroller\.addEventListener\('scroll', updateJumpLatest/);
+  assert.match(html, /jumpLatest\.onclick = scrollBottom/);
+  assert.match(html, /\.jump-latest\[hidden\] \{ display:none; \}/);
+});
+
 test('history sidebar becomes a closable drawer on narrow screens', () => {
   assert.match(html, /@media \(max-width:900px\)[\s\S]*\.history-panel \{[^}]*position:fixed;[^}]*transform:translateX\(-105%\);/);
   assert.match(html, /\.history-panel\.open \{ transform:translateX\(0\); \}/);
@@ -725,7 +764,7 @@ test('history sidebar becomes a closable drawer on narrow screens', () => {
 });
 
 test('history can be hidden and reopened on desktop with its state remembered', () => {
-  assert.match(html, /\.workspace-shell\.history-open \{[^}]*grid-template-columns:260px minmax\(0,920px\);/);
+  assert.match(html, /\.workspace-shell\.history-open \{[^}]*grid-template-columns:clamp\(230px,18vw,300px\) minmax\(0,1fr\);/);
   assert.match(html, /\.workspace-shell:not\(\.history-open\) \.history-panel \{[^}]*display:none;/);
   assert.match(html, /\.history-close, \.history-toggle \{[^}]*display:inline-grid;/);
   assert.match(html, /const HISTORY_OPEN_KEY = 'brainy_history_open'/);
@@ -773,7 +812,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v30/);
+  assert.match(sw, /brainy-shell-v31/);
   assert.match(sw, /\.\/action-center\.js/);
   assert.match(sw, /\.\/expert-skills\.js/);
   assert.match(sw, /response\.ok/);

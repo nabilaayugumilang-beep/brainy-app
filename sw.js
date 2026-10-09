@@ -1,4 +1,4 @@
-const CACHE = 'brainy-shell-v30';
+const CACHE = 'brainy-shell-v31';
 const SHELL = [
   './',
   './index.html',
