@@ -5,6 +5,9 @@ const { closeThen } = require('./session-actions.js');
 const ProjectStore = require('./project-store.js');
 const CommandPalette = require('./command-palette.js');
 const MarkdownRenderer = require('./markdown-renderer.js');
+const AgentMode = require('./agent-mode.js');
+const ApprovalQueue = require('./approval-queue.js');
+const AgentHQ = require('./agent-hq.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -145,7 +148,7 @@ test('first-message preparation uses the latest project details at send time', (
 
 test('offline first message is contextualized only when the queued prompt is sent', () => {
   assert.match(html, /projectContextPending = !visibleMessages\.length/);
-  const preparations = html.match(/const submittedPrompt = ProjectStore\.prepareFirstPrompt\(projectState, sessionKey, promptText, projectContextPending\)/g) || [];
+  const preparations = html.match(/ProjectStore\.prepareFirstPrompt\(projectState, sessionKey, promptText, projectContextPending\)/g) || [];
   assert.equal(preparations.length, 2);
   assert.match(html, /queuedText=promptText/);
   assert.doesNotMatch(html, /queuedText=submittedPrompt/);
@@ -233,6 +236,195 @@ test('composer keeps Enter as a newline and sends only from a deliberate shortcu
   assert.doesNotMatch(html, /if \(e\.key==='Enter' && !e\.shiftKey\) \{ e\.preventDefault\(\); \$\('#composer'\)\.requestSubmit\(\); \}/);
 });
 
+test('agent mode wraps execution guidance while stored transcript text remains verbatim', () => {
+  const wrapped = AgentMode.preparePrompt('agent', 'Open the site and summarize it.');
+  assert.match(wrapped, /BRAINY_AGENT_MODE/);
+  assert.match(wrapped, /Use the available tools/);
+  assert.equal(AgentMode.stripPrompt(wrapped), wrapped);
+  assert.equal(AgentMode.preparePrompt('chat', 'Just answer this.'), 'Just answer this.');
+  assert.equal(AgentMode.normalizeMode('unknown'), 'chat');
+  assert.match(html, /return ProjectStore\.stripProjectContext\(text\)/);
+  assert.doesNotMatch(html, /ProjectStore\.stripProjectContext\(AgentMode\.stripPrompt\(text\)\)/);
+});
+
+test('approval queue serializes decisions and safety gate persists until confirmed clear', () => {
+  const queue = ApprovalQueue.create();
+  const first = queue.enqueue({ command: 'first' });
+  const second = queue.enqueue({ command: 'second' });
+  assert.equal(queue.current().token, first);
+  assert.equal(queue.consume(second), false);
+  assert.equal(queue.consume(first), true);
+  assert.equal(queue.current().token, second);
+  queue.clear();
+  const later = queue.enqueue({ command: 'later' });
+  assert.equal(queue.isCurrent(second), false);
+  assert.equal(queue.isCurrent(later), true);
+
+  const values = new Map();
+  const storage = { getItem:key => values.get(key) || null, setItem:(key,value) => values.set(key,value), removeItem:key => values.delete(key) };
+  const gate = ApprovalQueue.createSafetyGate(storage, 'test-interrupt');
+  assert.equal(gate.isRequired(), false);
+  gate.require();
+  assert.equal(gate.isRequired(), true);
+  assert.equal(ApprovalQueue.createSafetyGate(storage, 'test-interrupt').isRequired(), true);
+  gate.clear();
+  assert.equal(gate.isRequired(), false);
+});
+
+test('Agent HQ derives specialist activity only from real gateway events', () => {
+  let state = AgentHQ.createState();
+  assert.equal(state.phase, 'idle');
+  assert.equal(state.agents.every((agent) => agent.status === 'idle'), true);
+
+  state = AgentHQ.reduce(state, 'message.start', { request: 'Research competitors', run_id: 'run-1' }, 1000);
+  assert.equal(state.phase, 'working');
+  assert.equal(state.agents.find((agent) => agent.id === 'orchestrator').status, 'active');
+
+  state = AgentHQ.reduce(state, 'tool.start', { name: 'browser_navigate', call_id: 'research-1', run_id: 'run-1' }, 2000);
+  assert.equal(state.agents.find((agent) => agent.id === 'research').status, 'active');
+  assert.equal(state.toolCount, 1);
+
+  state = AgentHQ.reduce(state, 'tool.start', { name: 'patch', call_id: 'builder-1', run_id: 'run-1' }, 3000);
+  assert.equal(state.agents.find((agent) => agent.id === 'research').status, 'active');
+  assert.equal(state.agents.find((agent) => agent.id === 'builder').status, 'active');
+
+  const beforeStaleCompletion = state;
+  state = AgentHQ.reduce(state, 'tool.complete', { name: 'patch', call_id: 'stale-builder', run_id: 'run-1' }, 3200);
+  assert.equal(state, beforeStaleCompletion);
+
+  state = AgentHQ.reduce(state, 'tool.complete', { name: 'browser_navigate', call_id: 'research-1', run_id: 'run-1' }, 3500);
+  assert.equal(state.agents.find((agent) => agent.id === 'builder').status, 'active');
+  assert.equal(state.activeRole, 'builder');
+
+  state = AgentHQ.reduce(state, 'tool.start', { name: 'test_runner', call_id: 'review-1', run_id: 'run-1' }, 4000);
+  assert.equal(state.agents.find((agent) => agent.id === 'reviewer').status, 'active');
+
+  const active = state;
+  assert.equal(AgentHQ.reduce(state, 'message.start', { request:'Old task', run_id:'old-run' }, 4100), active);
+  assert.equal(AgentHQ.reduce(state, 'message.start', { request:'Unidentified task' }, 4200), active);
+});
+
+test('Agent HQ reflects approval, completion, and bounded activity history', () => {
+  let state = AgentHQ.createState();
+  state = AgentHQ.reduce(state, 'approval.request', { description: 'Run a command' }, 1000);
+  assert.equal(state.phase, 'waiting');
+  assert.equal(state.agents.find((agent) => agent.id === 'orchestrator').status, 'waiting');
+
+  for (let i = 0; i < 15; i += 1) {
+    state = AgentHQ.reduce(state, 'tool.start', { name: 'read_file' }, 2000 + i);
+  }
+  assert.equal(state.activity.length <= 12, true);
+
+  state = AgentHQ.reduce(state, 'message.complete', { status: 'completed', run_id: 'run-1' }, 5000);
+  assert.equal(state.phase, 'complete');
+  assert.equal(state.agents.every((agent) => agent.status !== 'active'), true);
+  const completed = state;
+  state = AgentHQ.reduce(state, 'tool.start', { name: 'patch', call_id: 'late-1', run_id: 'run-1' }, 6000);
+  assert.deepEqual(state, completed);
+  assert.equal(AgentHQ.reduce(state, 'message.start', {request:'Late old run', run_id:'run-1'}, 6100), completed);
+  assert.equal(AgentHQ.reduce(state, 'message.start', {request:'Unidentified late run'}, 6200), completed);
+  state = AgentHQ.reduce(state, 'message.start', {request:'New run', run_id:'run-2'}, 6300);
+  assert.equal(state.runId, 'run-2');
+  assert.equal(state.phase, 'working');
+});
+
+test('Agent HQ uses confirmed session state without synthesizing a message start', () => {
+  let state = AgentHQ.createState();
+  state = AgentHQ.reduce(state, 'session.running', {}, 1000);
+  assert.equal(state.phase, 'working');
+  assert.equal(state.task, 'Running session');
+  assert.equal(state.toolCount, 0);
+  const waiting = AgentHQ.reduce(state, 'approval.request', {description:'Confirm'}, 1100);
+  assert.equal(AgentHQ.reduce(waiting, 'session.running', {}, 1200), waiting);
+  const submitHandler = html.slice(html.indexOf("$('#composer').addEventListener('submit'"), html.indexOf('bindPromptButtons();'));
+  const restoreHandler = html.slice(html.indexOf('function restoreRunningAgentState'), html.indexOf('function setStatus'));
+  assert.doesNotMatch(submitHandler, /updateAgentHQ\('message\.start'/);
+  assert.doesNotMatch(restoreHandler, /updateAgentHQ\('message\.start'/);
+});
+
+test('Agent HQ is a first-class BRAINY view wired to live gateway events', () => {
+  assert.match(html, /id="hqMode"[^>]*>HQ<\/button>/);
+  assert.match(html, /id="agentHQ"/);
+  assert.match(html, /id="hqAgents"/);
+  assert.match(html, /id="hqActivity"/);
+  assert.match(html, /BrainyAgentHQ\.reduce\(hqState, type, payload/);
+  assert.match(html, /updateAgentHQ\(type, eventPayload\)/);
+  assert.match(html, /run_id:\s*payload\.run_id \|\| ev\.run_id/);
+  assert.match(html, /<script src="\.\/agent-hq\.js"><\/script>/);
+  assert.match(html, /function invalidateLiveSession\(\)[\s\S]*resetAgentHQ\(\)/);
+  assert.match(html, /function resetAgentHQ\(\)[\s\S]*BrainyAgentHQ\.createState\(\)/);
+});
+
+test('Agent HQ collapses cleanly for phone-width screens', () => {
+  assert.match(html, /\.agent-hq \{[^}]*width:min\(860px,100%\)/);
+  assert.match(html, /@media \(max-width:900px\)[\s\S]*\.hq-grid \{ grid-template-columns:1fr; \}/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.hq-summary \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\); \}/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.hq-agents \{ grid-template-columns:1fr; \}/);
+});
+
+test('agent mode UI exposes an explicit mode switch and compact task progress', () => {
+  assert.match(html, /<script src="\.\/agent-mode\.js"><\/script>/);
+  assert.match(html, /id="chatMode"/);
+  assert.match(html, /id="agentMode"/);
+  assert.match(html, /id="agentRunbar"[^>]+aria-live="polite"/);
+  assert.match(html, /const mode = queuedMode/);
+  assert.match(html, /AgentMode\.preparePrompt\(mode/);
+  assert.match(html, /AgentMode\.preparePrompt\(interactionMode/);
+  assert.match(html, /type === 'tool\.start'/);
+  assert.match(html, /type === 'tool\.complete'/);
+});
+
+test('blocking prompts stay reachable from HQ and approval failures fail closed', () => {
+  const approvalHandler = html.slice(html.indexOf('function showNextApproval'), html.indexOf('function queueApprovalRequest'));
+  const closeHandler = html.slice(html.indexOf('ws.onclose'), html.indexOf('ws.onerror'));
+  assert.match(html, /function revealBlockingRequest\(\)/);
+  assert.match(html, /type === 'clarify\.request'[\s\S]*revealBlockingRequest\(\)/);
+  assert.match(html, /type === 'approval\.request'[\s\S]*revealBlockingRequest\(\)/);
+  assert.match(html, /id="stopAgent"/);
+  assert.match(html, /rpc\('session\.interrupt',\{session_id:sid\}\)/);
+  assert.match(html, /queueApprovalRequest\(payload\)/);
+  assert.match(approvalHandler, /approvalQueue\.isCurrent\(token\)/);
+  assert.match(approvalHandler, /if \(!ws \|\| ws\.readyState !== WebSocket\.OPEN\)/);
+  assert.match(approvalHandler, /if \(Number\(result && result\.resolved\) !== 1\)/);
+  assert.match(approvalHandler, /handleIndeterminateBlockingResponse\(error\)/);
+  assert.doesNotMatch(closeHandler, /invalidateApprovals\(\)/);
+  assert.match(html, /busy = !!result\.running;[\s\S]*if \(!result\.running\) \{[\s\S]*safetyGate\.clear\(\)/);
+  assert.match(html, /function handleIndeterminateBlockingResponse\(error\)[\s\S]*safetyGate\.require\(\)[\s\S]*enforceSafetyInterrupt\(\)/);
+  assert.match(html, /async function enforceSafetyInterrupt\(\)[\s\S]*safetyGate\.isRequired\(\)[\s\S]*rpc\('session\.interrupt'[\s\S]*safetyGate\.clear\(\)/);
+  assert.match(html, /const clarificationQueue = BrainyApprovalQueue\.create\(\)/);
+  assert.match(html, /function showNextClarification\(\)/);
+  assert.match(html, /clarificationQueue\.isCurrent\(token\)/);
+  assert.match(html, /await rpc\('clarify\.respond'/);
+  assert.match(html, /clarificationQueue\.consume\(token\)/);
+  assert.match(html, /handleIndeterminateBlockingResponse\(error\)/);
+  assert.match(html, /respond\('once'\)/);
+  assert.match(html, /respond\('deny'\)/);
+  assert.doesNotMatch(html, /allow_permanent/);
+});
+
+test('safety gate blocks session switching and retries the original resume until interrupt is confirmed', () => {
+  const historyHandler = html.slice(html.indexOf('async function openHistorySession'), html.indexOf('async function startNewSession'));
+  const newHandler = html.slice(html.indexOf('async function startNewSession'), html.indexOf('async function submitPrompt'));
+  const startHandler = html.slice(html.indexOf('async function startSession'), html.indexOf('function event'));
+  const stopHandler = html.slice(html.indexOf('stopAgent.onclick'), html.indexOf('renderInteractionMode();', html.indexOf('stopAgent.onclick')));
+  assert.match(historyHandler, /safetyGate\.isRequired\(\)/);
+  assert.match(newHandler, /safetyGate\.isRequired\(\)/);
+  assert.match(startHandler, /catch \(error\) \{ if \(safetyGate\.isRequired\(\)\) throw error;/);
+  assert.match(stopHandler, /handleIndeterminateBlockingResponse\(error\)/);
+});
+
+test('running sessions restore a visible stop control independent of local mode', () => {
+  assert.match(html, /function restoreRunningAgentState\(running\)/);
+  assert.match(html, /activeRunMode = 'agent'/);
+  assert.match(html, /restoreRunningAgentState\(result\.running\)/);
+});
+
+test('Mac companion status is honest until a local desktop runtime is paired', () => {
+  assert.match(html, /id="companionStatus"/);
+  assert.match(html, /Mac not connected/);
+  assert.match(html, /requires BRAINY Companion on your Mac/);
+});
+
 test('bridge keeps all backend calls on the dynamic tunnel', () => {
   assert.match(html, /let backendUrl/);
   assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/auth\/ws-ticket`/);
@@ -255,7 +447,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=23'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=27'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -337,7 +529,7 @@ test('projects expose details, active context, and first-message instructions', 
   assert.match(html, /ProjectStore\.updateDetails\(/);
   assert.match(html, /function renderActiveProjectChip\(\)/);
   assert.match(html, /ProjectStore\.prepareFirstPrompt\(projectState, sessionKey, promptText, projectContextPending\)/);
-  assert.match(html, /ProjectStore\.stripProjectContext\(message\.text\)/);
+  assert.match(html, /visibleUserText\(message\.text\)/);
 });
 
 test('projects categorize chats without changing or deleting backend sessions', () => {
@@ -446,10 +638,16 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v23/);
+  assert.match(sw, /brainy-shell-v27/);
+  assert.match(sw, /response\.ok/);
+  assert.match(sw, /event\.request\.mode === 'navigate'/);
+  assert.match(sw, /Response\.error\(\)/);
   assert.match(sw, /session-actions\.js/);
+  assert.match(sw, /approval-queue\.js/);
+  assert.match(sw, /agent-hq\.js/);
   assert.match(sw, /project-store\.js/);
   assert.match(sw, /command-palette\.js/);
+  assert.match(sw, /agent-mode\.js/);
   assert.match(sw, /markdown-renderer\.js/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
