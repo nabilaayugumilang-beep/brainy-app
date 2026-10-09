@@ -10,9 +10,90 @@ const ExpertSkills = require('./expert-skills.js');
 const ApprovalQueue = require('./approval-queue.js');
 const AgentHQ = require('./agent-hq.js');
 const HomeDashboard = require('./home-dashboard.js');
+const LocalTools = require('./local-tools.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const actionCenterSource = fs.readFileSync('action-center.js', 'utf8');
+const localToolsUiSource = fs.readFileSync('local-tools-ui.js', 'utf8');
+const localToolsControllerSource = fs.readFileSync('local-tools-controller.js', 'utf8');
+
+test('local tools store sanitizes and persists every private workspace collection', () => {
+  let raw = '';
+  const storage = { getItem:key => key === LocalTools.STORAGE_KEY ? raw : null, setItem:(key,value) => { raw=value; } };
+  LocalTools.upsert(storage,'tasks',{title:'  Launch   plan ',status:'today',priority:'high',due:'2026-10-10'},100);
+  LocalTools.upsert(storage,'notes',{title:'Idea',body:'  Keep this locally  '},110);
+  LocalTools.upsert(storage,'templates',{title:'Update',body:'Hello {audience}'},120);
+  LocalTools.upsert(storage,'clips',{text:'Copy me'},130);
+  LocalTools.upsert(storage,'decisions',{title:'Choose A',reason:'Faster',owner:'Ila',followUp:'Review'},140);
+  LocalTools.upsert(storage,'pins',{entityType:'notes',entityId:'notes-110',title:'Pinned idea'},150);
+  const state = LocalTools.load(storage);
+  assert.equal(state.tasks[0].title,'Launch plan');
+  assert.equal(state.notes[0].body,'Keep this locally');
+  assert.equal(state.templates[0].body,'Hello {audience}');
+  assert.equal(state.clips[0].text,'Copy me');
+  assert.equal(state.decisions[0].owner,'Ila');
+  assert.equal(state.pins[0].entityId,'notes-110');
+  assert.doesNotMatch(fs.readFileSync('local-tools.js','utf8'), /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
+});
+
+test('local kanban keeps checklist progress and moves tasks between columns', () => {
+  let raw=''; const storage={getItem:()=>raw,setItem:(key,value)=>{raw=value;}};
+  const task=LocalTools.upsert(storage,'tasks',{title:'Campaign',status:'backlog',checklist:[' Draft copy ',{text:'Approve',done:true},'']},100);
+  assert.deepEqual(task.checklist,[{text:'Draft copy',done:false},{text:'Approve',done:true}]);
+  LocalTools.toggleChecklist(storage,task.id,0,200);
+  LocalTools.moveTask(storage,task.id,'doing',300);
+  const saved=LocalTools.load(storage).tasks[0];
+  assert.equal(saved.status,'doing');
+  assert.equal(saved.checklist.every(item=>item.done),true);
+});
+
+test('local universal search finds matching private items without mutating state', () => {
+  const state=LocalTools.blank();
+  state.tasks=[{id:'t1',title:'Town hall launch',status:'today',updatedAt:20}];
+  state.notes=[{id:'n1',title:'Candidate notes',body:'Employer branding',updatedAt:30}];
+  state.decisions=[{id:'d1',title:'Town hall venue',reason:'Closer to office',updatedAt:10}];
+  const snapshot=JSON.stringify(state);
+  assert.deepEqual(LocalTools.search(state,'town hall').map(item=>`${item.type}:${item.id}`),['tasks:t1','decisions:d1']);
+  assert.equal(JSON.stringify(state),snapshot);
+  assert.deepEqual(LocalTools.search(state,'   '),[]);
+});
+
+test('local insights calculate today overdue completion and template variables deterministically', () => {
+  const state=LocalTools.blank();
+  state.tasks=[
+    {id:'a',title:'Overdue',status:'doing',due:'2026-10-08'},
+    {id:'b',title:'Today',status:'today',due:'2026-10-09'},
+    {id:'c',title:'Done',status:'done',due:'2026-10-07'}
+  ];
+  assert.deepEqual(LocalTools.insights(state,new Date(2026,9,9,10)),{total:3,done:1,today:1,overdue:1,completionRate:33,streak:0});
+  assert.equal(LocalTools.applyTemplate('Hello {audience}, due {deadline}.',{audience:'Leaders',deadline:'Friday'}),'Hello Leaders, due Friday.');
+});
+
+test('focus timer and personal display preferences persist locally', () => {
+  let raw=''; const storage={getItem:()=>raw,setItem:(key,value)=>{raw=value;}};
+  LocalTools.setPreferences(storage,{privateMode:true,focusMinutes:30,widgets:{pins:false}});
+  LocalTools.startFocus(storage,30,'Write update',1000);
+  let state=LocalTools.load(storage);
+  assert.equal(state.preferences.privateMode,true);
+  assert.equal(state.preferences.widgets.pins,false);
+  assert.equal(LocalTools.focusRemaining(state,61000),1740);
+  LocalTools.stopFocus(storage);
+  state=LocalTools.load(storage);
+  assert.equal(state.focus.running,false);
+});
+
+test('local rules sort by deadline and priority and calculate a completion streak', () => {
+  const now=new Date(2026,9,9,10,0,0);
+  const state=LocalTools.blank();
+  state.tasks=[
+    {id:'low',title:'Later',status:'today',priority:'low',due:'2026-10-12',updatedAt:new Date(2026,9,9).getTime(),checklist:[]},
+    {id:'high',title:'Urgent',status:'today',priority:'high',due:'2026-10-10',updatedAt:new Date(2026,9,8).getTime(),checklist:[]},
+    {id:'done1',title:'Today done',status:'done',priority:'medium',due:'',updatedAt:new Date(2026,9,9,8).getTime(),checklist:[]},
+    {id:'done2',title:'Yesterday done',status:'done',priority:'medium',due:'',updatedAt:new Date(2026,9,8,8).getTime(),checklist:[]}
+  ];
+  assert.deepEqual(LocalTools.sortTasks(state.tasks.slice(0,2),now).map(item=>item.id),['high','low']);
+  assert.equal(LocalTools.insights(state,now).streak,2);
+});
 
 test('personal home creates a local greeting and readable date without a network call', () => {
   const morning = new Date(2026, 9, 9, 8, 30);
@@ -61,6 +142,19 @@ test('personal home is a first-class zero-token workspace with local recents and
   assert.match(html, /BrainyActionCenter\.loadDrafts\(localStorage\)/);
   assert.match(html, /function showHomeDashboard\(\)/);
   assert.match(html, /\.mode-switch \{[^}]*grid-template-columns:repeat\(5,1fr\)/);
+});
+
+test('local tools suite exposes every zero-token workspace from Personal Home', () => {
+  assert.match(html, /<script src="\.\/local-tools\.js"><\/script>/);
+  assert.match(html, /<script src="\.\/local-tools-ui\.js"><\/script>/);
+  assert.match(html, /<script src="\.\/local-tools-controller\.js"><\/script>/);
+  assert.match(html, /data-home-action="tools"/);
+  assert.match(html, /id="localTools"[^>]*hidden/);
+  ['localSearch','localInsights','localPins','localBoard','taskForm','noteForm','templateForm','clipForm','decisionForm','focusPanel','localSettings'].forEach(id => assert.match(localToolsUiSource,new RegExp(`id="${id}"`)));
+  ['tasks','notes','templates','clips','decisions','focus','settings'].forEach(panel => assert.match(localToolsUiSource,new RegExp(`data-local-panel="${panel}"`)));
+  assert.match(html, /function showLocalTools\(panel/);
+  assert.match(localToolsControllerSource, /BrainyLocalTools\.upsert\(storage/);
+  assert.match(localToolsControllerSource, /BrainyLocalTools\.search\(localState/);
 });
 
 test('action center exposes five role workflows and prepares a compact expert handoff', () => {
@@ -429,7 +523,7 @@ test('expert skill selector is compact and wired to both Agent submission paths'
   assert.match(html, /const expertSkill = mode === 'agent' \? activeExpertSkill : 'none'/);
   assert.match(html, /ExpertSkills\.guidance\(expertSkill, promptText\)/);
   assert.match(html, /queuedExpertSkill=expertSkill/);
-  assert.match(html, /expertSkillSelect\.hidden = isHome \|\| isActions \|\| !isAgent/);
+  assert.match(html, /expertSkillSelect\.hidden = isHome \|\| isActions \|\| isTools \|\| !isAgent/);
 });
 
 test('approval queue serializes decisions and safety gate persists until confirmed clear', () => {
@@ -632,7 +726,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=32'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=33'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -862,7 +956,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v32/);
+  assert.match(sw, /brainy-shell-v33/);
   assert.match(sw, /\.\/home-dashboard\.js/);
   assert.match(sw, /\.\/action-center\.js/);
   assert.match(sw, /\.\/expert-skills\.js/);

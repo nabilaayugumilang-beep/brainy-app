@@ -271,6 +271,53 @@
     .home-item strong { font-size:10px; }
     .home-item span, .home-empty-copy { color:var(--muted); font-size:9px; }
     .home-empty-copy { margin:0; padding:12px 2px; }
+    .local-tools { width:min(1380px,100%); min-height:100%; margin:0 auto; padding:28px clamp(14px,3vw,36px) 96px; }
+    .local-tools[hidden], .local-panel[hidden] { display:none; }
+    .local-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:14px; }
+    .local-head h1 { margin:2px 0 4px; font-size:clamp(20px,3vw,31px); letter-spacing:-.05em; }
+    .local-head p { margin:0; color:var(--muted); font-size:10px; }
+    .local-badge { flex:none; padding:7px 10px; border:1px solid var(--line); border-radius:999px; color:var(--accent); background:var(--electric-soft); font-size:9px; font-weight:700; }
+    .local-search-wrap { position:relative; }
+    .local-search { width:100%; height:48px; padding:0 86px 0 15px; border:1px solid var(--line); border-radius:14px; background:var(--panel); color:var(--text); outline:none; box-shadow:var(--shadow); }
+    .local-search:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
+    .local-search-key { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:9px; }
+    .local-search-results { display:grid; gap:6px; margin-top:8px; }
+    .local-insights { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; margin:14px 0; }
+    .local-stat { padding:12px; border:1px solid var(--line); border-radius:13px; background:var(--panel); }
+    .local-stat strong, .local-stat span { display:block; }
+    .local-stat strong { font-size:17px; }
+    .local-stat span { color:var(--muted); font-size:8px; text-transform:uppercase; }
+    .local-tabs { display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; }
+    .local-tab { flex:none; min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--muted); cursor:pointer; font-size:9px; font-weight:700; }
+    .local-tab.active { border-color:var(--accent); background:var(--electric-soft); color:var(--accent); }
+    .local-panel { padding:16px; border:1px solid var(--line); border-radius:18px; background:color-mix(in srgb,var(--panel) 96%,transparent); }
+    .local-panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    .local-panel h2 { margin:0; font-size:12px; }
+    .local-form { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:14px; }
+    .local-form .wide { grid-column:span 2; }
+    .local-input { width:100%; min-height:40px; padding:9px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--text); outline:none; resize:vertical; }
+    .local-input:focus { border-color:var(--accent); box-shadow:0 0 0 2px var(--glow); }
+    .local-submit { min-height:40px; border:1px solid var(--accent); border-radius:10px; background:var(--accent); color:var(--accentText); cursor:pointer; font-weight:700; }
+    .local-board { display:grid; grid-template-columns:repeat(4,minmax(220px,1fr)); gap:9px; overflow-x:auto; }
+    .kanban-column { min-height:180px; padding:10px; border:1px solid var(--line); border-radius:13px; background:var(--soft); }
+    .kanban-column h3 { margin:0 0 8px; color:var(--muted); font-size:9px; text-transform:uppercase; }
+    .local-list { display:grid; gap:8px; }
+    .local-card { min-width:0; padding:11px; border:1px solid var(--line); border-radius:11px; background:var(--panel); }
+    .local-card-top { display:flex; justify-content:space-between; gap:8px; }
+    .local-card strong, .local-card p { overflow-wrap:anywhere; }
+    .local-card p { margin:5px 0; color:var(--muted); font-size:9px; white-space:pre-wrap; }
+    .local-meta { color:var(--muted); font-size:8px; }
+    .local-card-actions { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+    .local-mini { min-height:28px; padding:0 8px; border:1px solid var(--line); border-radius:8px; background:var(--soft); cursor:pointer; font-size:8px; }
+    .local-mini.danger { color:var(--danger); }
+    .local-check { display:flex; gap:7px; align-items:flex-start; margin-top:6px; color:var(--muted); font-size:8px; }
+    .local-empty { margin:8px 0; color:var(--muted); font-size:9px; }
+    .focus-display { display:grid; place-items:center; min-height:220px; text-align:center; }
+    .focus-clock { font-size:clamp(42px,9vw,82px); line-height:1; letter-spacing:-.08em; color:var(--accent); }
+    .focus-label { margin-top:10px; color:var(--muted); }
+    .local-settings-grid { display:grid; gap:10px; max-width:640px; }
+    .local-setting { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px; border:1px solid var(--line); border-radius:11px; background:var(--soft); }
+    .private-copy { filter:blur(5px); user-select:none; }
     .thread { width:min(var(--content-max),100%); min-width:0; max-width:100%; margin:0 auto; padding:calc(28px * var(--density-space)) calc(24px * var(--density-space)) 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
     .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
@@ -420,6 +467,13 @@
       .home-dashboard { padding:20px 14px 64px; }
       .home-hero { border-radius:18px; }
       .home-grid { grid-template-columns:1fr; }
+      .local-tools { padding:18px 12px 72px; }
+      .local-head { align-items:flex-start; }
+      .local-insights { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .local-stat:last-child { grid-column:1/-1; }
+      .local-form { grid-template-columns:1fr; }
+      .local-form .wide { grid-column:auto; }
+      .local-board { grid-template-columns:repeat(4,minmax(78vw,1fr)); }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
       .empty h1 { font-size:clamp(28px,10vw,38px); }
       .empty p { margin-bottom:18px; font-size:12px; line-height:1.5; }
@@ -539,6 +593,7 @@
             <button class="home-action" type="button" data-home-action="agent">Run Agent</button>
             <button class="home-action" type="button" data-home-action="actions">Open Actions</button>
             <button class="home-action" type="button" data-home-action="hq">Open HQ</button>
+            <button class="home-action" type="button" data-home-action="tools">Local Tools</button>
           </div>
         </div>
         <div class="home-grid">
@@ -550,8 +605,17 @@
             <div class="home-panel-head"><h2 id="homeDraftsTitle">Local drafts</h2><span class="home-panel-meta">Saved on this device</span></div>
             <div class="home-list" id="homeDrafts"></div>
           </section>
+          <section class="home-panel" aria-labelledby="homePulseTitle">
+            <div class="home-panel-head"><h2 id="homePulseTitle">Today</h2><span class="home-panel-meta">Rule-based</span></div>
+            <div class="home-list" id="homeLocalPulse"></div>
+          </section>
+          <section class="home-panel" aria-labelledby="homePinsTitle">
+            <div class="home-panel-head"><h2 id="homePinsTitle">Pinned</h2><span class="home-panel-meta">Private shortcuts</span></div>
+            <div class="home-list" id="homeLocalPins"></div>
+          </section>
         </div>
       </section>
+      <section class="local-tools" id="localTools" aria-labelledby="localToolsTitle" hidden></section>
       <section class="agent-hq" id="agentHQ" aria-labelledby="hqTitle" hidden>
         <div class="hq-head">
           <div>
@@ -705,6 +769,9 @@
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
 <script src="./home-dashboard.js"></script>
+<script src="./local-tools.js"></script>
+<script src="./local-tools-ui.js"></script>
+<script src="./local-tools-controller.js"></script>
 <script src="./approval-queue.js"></script>
 <script src="./agent-hq.js"></script>
 <script src="./markdown-renderer.js"></script>
@@ -720,10 +787,13 @@
     telegram.WebApp.onEvent('viewportChanged', syncTelegramViewport);
   }
   const $ = (s) => document.querySelector(s);
+  const localTools = $('#localTools');
+  BrainyLocalToolsUI.mount(localTools);
   const thread = $('#thread'), input = $('#input'), send = $('#send');
   const commandPalette = $('#commandPalette');
   const homeModeButton = $('#homeMode'), chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
   const homeDashboard = $('#homeDashboard'), homeContinue = $('#homeContinue'), homeDrafts = $('#homeDrafts');
+  const homeLocalPulse = $('#homeLocalPulse'), homeLocalPins = $('#homeLocalPins');
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
   const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
   const actionFields = $('#actionFields'), actionDrafts = $('#actionDrafts'), actionDraftCount = $('#actionDraftCount');
@@ -813,6 +883,19 @@
   const safetyGate = BrainyApprovalQueue.createSafetyGate(sessionStorage, 'brainy_must_interrupt');
   let activeApprovalCard = null;
   let activeClarificationCard = null;
+  const localToolsController = BrainyLocalToolsController.create({
+    root:localTools,
+    storage:localStorage,
+    showToast,
+    confirm:message => confirm(message),
+    onOpenPanel:panel => showLocalTools(panel),
+    onUseText:text => {
+      setInteractionMode('chat');
+      input.value = text;
+      autoGrow(); updateSend(); input.focus();
+      showToast('Prepared locally · review before sending');
+    }
+  });
 
   async function refreshBackend() {
     try {
@@ -1194,34 +1277,38 @@
     drafts.forEach(draft => homeItem(homeDrafts,draft.title,draft.preview,() => {
       showActionCenter(); openAction(draft.templateId,draft);
     }));
+    localToolsController.renderHome(homeLocalPulse,homeLocalPins);
   }
   function renderInteractionMode() {
     const isHome = workspaceView === 'home';
     const isHQ = workspaceView === 'hq';
     const isActions = workspaceView === 'actions';
+    const isTools = workspaceView === 'tools';
     const isAgent = interactionMode === 'agent';
     homeModeButton.classList.toggle('active', isHome);
-    chatModeButton.classList.toggle('active', !isHome && !isHQ && !isActions && !isAgent);
-    agentModeButton.classList.toggle('active', !isHome && !isHQ && !isActions && isAgent);
+    chatModeButton.classList.toggle('active', !isHome && !isHQ && !isActions && !isTools && !isAgent);
+    agentModeButton.classList.toggle('active', !isHome && !isHQ && !isActions && !isTools && isAgent);
     actionsModeButton.classList.toggle('active', isActions);
     hqModeButton.classList.toggle('active', isHQ);
     homeModeButton.setAttribute('aria-pressed', String(isHome));
-    chatModeButton.setAttribute('aria-pressed', String(!isHome && !isHQ && !isActions && !isAgent));
-    agentModeButton.setAttribute('aria-pressed', String(!isHome && !isHQ && !isActions && isAgent));
+    chatModeButton.setAttribute('aria-pressed', String(!isHome && !isHQ && !isActions && !isTools && !isAgent));
+    agentModeButton.setAttribute('aria-pressed', String(!isHome && !isHQ && !isActions && !isTools && isAgent));
     actionsModeButton.setAttribute('aria-pressed', String(isActions));
     hqModeButton.setAttribute('aria-pressed', String(isHQ));
-    thread.hidden = isHome || isHQ || isActions;
+    thread.hidden = isHome || isHQ || isActions || isTools;
     homeDashboard.hidden = !isHome;
+    localTools.hidden = !isTools;
     agentHQ.hidden = !isHQ;
     actionCenter.hidden = !isActions;
-    composer.hidden = isHome || isActions;
-    composerContext.hidden = isHome || isActions;
-    expertSkillSelect.hidden = isHome || isActions || !isAgent;
+    composer.hidden = isHome || isActions || isTools;
+    composerContext.hidden = isHome || isActions || isTools;
+    expertSkillSelect.hidden = isHome || isActions || isTools || !isAgent;
     input.placeholder = isHQ ? 'Give Agent HQ a task...' : (isAgent ? 'Describe the outcome you want...' : 'What needs to get done?');
     send.textContent = isAgent ? 'Run' : 'Send';
     if (isHome) renderHomeDashboard();
     if (isHQ) renderAgentHQ();
     if (isActions) renderActionCenter();
+    if (isTools) localToolsController.render();
     requestAnimationFrame(updateJumpLatest);
   }
   function setInteractionMode(mode) {
@@ -1236,6 +1323,12 @@
   }
   function showHomeDashboard() {
     workspaceView = 'home';
+    renderInteractionMode();
+    scroller.scrollTop = 0;
+  }
+  function showLocalTools(panel='tasks') {
+    workspaceView = 'tools';
+    localToolsController.show(panel);
     renderInteractionMode();
     scroller.scrollTop = 0;
   }
@@ -2017,6 +2110,7 @@
       const action = button.dataset.homeAction;
       if (action === 'actions') { showActionCenter(); return; }
       if (action === 'hq') { showAgentHQ(); return; }
+      if (action === 'tools') { showLocalTools(); return; }
       setInteractionMode(action === 'agent' ? 'agent' : 'chat'); input.focus();
     });
   });
@@ -2225,11 +2319,18 @@
     }
   });
   document.addEventListener('keydown',event => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      showLocalTools(activePanelForShortcut());
+      requestAnimationFrame(() => localToolsController.focusSearch());
+      return;
+    }
     if (event.key !== 'Escape') return;
     if (!chatModal.hidden) closeChatModal();
     else if (!projectModal.hidden) closeProjectModal();
     else toggleHistory(false);
   });
+  function activePanelForShortcut() { return workspaceView === 'tools' ? undefined : 'tasks'; }
   if ('serviceWorker' in navigator) {
     let reloadingForUpdate = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -2238,7 +2339,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=32',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=33',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
