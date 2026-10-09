@@ -8,9 +8,11 @@
   const STORAGE_KEY = 'brainy_expert_skill';
   const NONE = 'none';
   const PEOPLE_OD = 'people-od';
+  const CORPORATE_COMMS = 'corporate-comms';
   const PACKS = Object.freeze([
     { id: NONE, label: 'Expert: Off' },
-    { id: PEOPLE_OD, label: 'People & OD Expert' }
+    { id: PEOPLE_OD, label: 'People & OD Expert' },
+    { id: CORPORATE_COMMS, label: 'Corporate Communications Expert' }
   ]);
   const PEOPLE_OD_GUIDANCE = [
     'Expert skill: People & OD.',
@@ -21,10 +23,19 @@
     'Protect privacy, flag fairness, and do not make final employment or legal decisions.',
     'Ask only for blocking inputs. Stay concise.'
   ].join(' ');
-  const SUBSTANTIVE = /analys|assess|review|evaluat|recommend|plan|design|workforce|workload|\bwla\b|\bfte\b|talent|performance|appraisal|organi[sz]ation|org structure|job description|\bjd\b|capacity|productivity|promotion|succession|competenc|employee relations|learning|training|headcount|manpower|hiring|people|\bhr\b/i;
+  const CORPORATE_COMMS_GUIDANCE = [
+    'Corporate Communications expert.',
+    'Audience-first/channel-fit/brand-consistent.',
+    'Set objective/audience/message; separate evidence/assumptions/gaps; recommend CTA, owner, timing, success measures.',
+    'Scope: internal/external comms, PR/media relations, social/editorial, campaigns/events, executive comms, creative governance, stakeholder engagement, reputation, crisis/issues.',
+    'Never invent company claims; use approved refs or flag gaps.',
+    'Check tone, accessibility, privacy/consent, risk, approvals, measurement.',
+    'Review brief.'
+  ].join(' ');
+  const SUBSTANTIVE = /analys|assess|review|evaluat|recommend|plan|design|workforce|workload|\bwla\b|\bfte\b|talent|performance|appraisal|organi[sz]ation|org structure|job description|\bjd\b|capacity|productivity|promotion|succession|competenc|employee relations|learning|training|headcount|manpower|hiring|people|\bhr\b|corporate comm|\bcomms\b|communication|social media|socmed|campaign|content|caption|editorial|press release|media relations|town hall|event|creative|engagement|stakeholder|reputation|crisis|issues management|brand/i;
 
   function normalize(value) {
-    return value === PEOPLE_OD ? PEOPLE_OD : NONE;
+    return value === PEOPLE_OD || value === CORPORATE_COMMS ? value : NONE;
   }
 
   function load(storage) {
@@ -44,7 +55,11 @@
   }
 
   function guidance(value, text) {
-    return normalize(value) === PEOPLE_OD && isSubstantive(text) ? PEOPLE_OD_GUIDANCE : '';
+    if (!isSubstantive(text)) return '';
+    const skill = normalize(value);
+    if (skill === PEOPLE_OD) return PEOPLE_OD_GUIDANCE;
+    if (skill === CORPORATE_COMMS) return CORPORATE_COMMS_GUIDANCE;
+    return '';
   }
 
   return Object.freeze({ STORAGE_KEY, PACKS, normalize, load, save, isSubstantive, guidance });

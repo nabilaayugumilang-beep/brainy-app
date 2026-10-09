@@ -484,6 +484,7 @@
         <select class="expert-skill-select" id="expertSkill" aria-label="Expert skill" title="Adds compact expert guidance only to Agent tasks" hidden>
           <option value="none">Expert: Off</option>
           <option value="people-od">People &amp; OD Expert</option>
+          <option value="corporate-comms">Corporate Communications Expert</option>
         </select>
       </div>
       <div class="attachment-preview" id="attachmentPreview" hidden>
@@ -1867,7 +1868,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=28',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=29',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

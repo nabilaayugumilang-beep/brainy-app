@@ -271,6 +271,29 @@ test('People & OD expert skill is opt-in, substantive-only, compact, and persist
   assert.equal(ExpertSkills.load(storage), 'people-od');
 });
 
+test('Corporate Communications expert is opt-in, substantive-only, compact, and claim-safe', () => {
+  assert.equal(ExpertSkills.guidance('corporate-comms', 'Hi!'), '');
+  const request = 'Design a social media engagement campaign for our next event.';
+  const guidance = ExpertSkills.guidance('corporate-comms', request);
+  assert.equal(ExpertSkills.normalize('corporate-comms'), 'corporate-comms');
+  assert.match(guidance, /Corporate Communications/);
+  assert.match(guidance, /audience/i);
+  assert.match(guidance, /channel/i);
+  assert.match(guidance, /brand/i);
+  assert.match(guidance, /internal\/external comms.*PR\/media relations.*social\/editorial.*campaigns\/events.*executive comms.*creative governance.*stakeholder engagement.*reputation.*crisis\/issues/i);
+  assert.match(guidance, /evidence\/assumptions\/gaps/i);
+  assert.match(guidance, /success measures/i);
+  assert.match(guidance, /Never invent company claims/i);
+  assert.match(guidance, /privacy\/consent/i);
+  assert.match(guidance, /measurement/i);
+  assert.ok(guidance.length <= 520, `corporate communications guidance is too large: ${guidance.length} chars`);
+
+  const values = new Map();
+  const storage = { getItem:key => values.get(key) || null, setItem:(key,value) => values.set(key,value) };
+  assert.equal(ExpertSkills.save(storage, 'corporate-comms'), 'corporate-comms');
+  assert.equal(ExpertSkills.load(storage), 'corporate-comms');
+});
+
 test('expert guidance adds zero tokens when off and only augments Agent requests', () => {
   const request = 'Assess this workforce plan.';
   const baseline = AgentMode.preparePrompt('agent', request);
@@ -285,6 +308,7 @@ test('expert skill selector is compact and wired to both Agent submission paths'
   assert.match(html, /<script src="\.\/expert-skills\.js"><\/script>/);
   assert.match(html, /id="expertSkill"/);
   assert.match(html, /People &amp; OD Expert/);
+  assert.match(html, /Corporate Communications Expert/);
   assert.match(html, /ExpertSkills\.load\(localStorage\)/);
   assert.match(html, /ExpertSkills\.save\(localStorage, expertSkillSelect\.value\)/);
   assert.match(html, /const expertSkill = mode === 'agent' \? activeExpertSkill : 'none'/);
@@ -493,7 +517,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=28'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=29'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -684,7 +708,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v28/);
+  assert.match(sw, /brainy-shell-v29/);
   assert.match(sw, /\.\/expert-skills\.js/);
   assert.match(sw, /response\.ok/);
   assert.match(sw, /event\.request\.mode === 'navigate'/);
