@@ -9,9 +9,59 @@ const AgentMode = require('./agent-mode.js');
 const ExpertSkills = require('./expert-skills.js');
 const ApprovalQueue = require('./approval-queue.js');
 const AgentHQ = require('./agent-hq.js');
+const HomeDashboard = require('./home-dashboard.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const actionCenterSource = fs.readFileSync('action-center.js', 'utf8');
+
+test('personal home creates a local greeting and readable date without a network call', () => {
+  const morning = new Date(2026, 9, 9, 8, 30);
+  const evening = new Date(2026, 9, 9, 19, 0);
+  assert.equal(HomeDashboard.greeting(morning, 'Ila'), 'Good morning, Ila');
+  assert.equal(HomeDashboard.greeting(evening, 'Ila'), 'Good evening, Ila');
+  assert.match(HomeDashboard.dateLabel(morning), /Friday, October 9/);
+  const source = fs.readFileSync('home-dashboard.js', 'utf8');
+  assert.doesNotMatch(source, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
+});
+
+test('personal home summarizes recent chats and drafts from local state only', () => {
+  const chats = [
+    {key:'older', title:'Older work', preview:'Earlier', updatedAt:100},
+    {key:'latest', title:'Latest work', preview:'Continue this', updatedAt:300},
+    {key:'middle', title:'Middle work', preview:'In progress', updatedAt:200},
+    {key:'fourth', title:'Fourth work', preview:'Not shown', updatedAt:50}
+  ];
+  const drafts = [
+    {id:'d1', templateId:'plan-event', values:{objective:'Town hall'}, updatedAt:10},
+    {id:'d2', templateId:'review-work', values:{draft:'Review memo'}, updatedAt:20}
+  ];
+  const snapshot = JSON.stringify({chats,drafts});
+  assert.deepEqual(HomeDashboard.recentChats(chats).map(item => item.id), ['latest','middle','older']);
+  assert.deepEqual(HomeDashboard.recentDrafts(drafts, [
+    {id:'plan-event',title:'Plan Event'}, {id:'review-work',title:'Review Work'}
+  ]), [
+    {id:'d2',templateId:'review-work',title:'Review Work',preview:'Review memo',updatedAt:20},
+    {id:'d1',templateId:'plan-event',title:'Plan Event',preview:'Town hall',updatedAt:10}
+  ]);
+  assert.equal(JSON.stringify({chats,drafts}), snapshot);
+});
+
+test('personal home is a first-class zero-token workspace with local recents and quick actions', () => {
+  assert.match(html, /<script src="\.\/home-dashboard\.js"><\/script>/);
+  assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
+  assert.match(html, /id="homeDashboard"[^>]*hidden/);
+  assert.match(html, /id="homeGreeting"/);
+  assert.match(html, /id="homeDate"/);
+  assert.match(html, /id="homeContinue"/);
+  assert.match(html, /id="homeDrafts"/);
+  assert.match(html, /data-home-action="chat"/);
+  assert.match(html, /data-home-action="agent"/);
+  assert.match(html, /data-home-action="actions"/);
+  assert.match(html, /BrainyHomeDashboard\.recentChats\(historyItems\)/);
+  assert.match(html, /BrainyActionCenter\.loadDrafts\(localStorage\)/);
+  assert.match(html, /function showHomeDashboard\(\)/);
+  assert.match(html, /\.mode-switch \{[^}]*grid-template-columns:repeat\(5,1fr\)/);
+});
 
 test('action center exposes five role workflows and prepares a compact expert handoff', () => {
   const ActionCenter = require('./action-center.js');
@@ -379,7 +429,7 @@ test('expert skill selector is compact and wired to both Agent submission paths'
   assert.match(html, /const expertSkill = mode === 'agent' \? activeExpertSkill : 'none'/);
   assert.match(html, /ExpertSkills\.guidance\(expertSkill, promptText\)/);
   assert.match(html, /queuedExpertSkill=expertSkill/);
-  assert.match(html, /expertSkillSelect\.hidden = isActions \|\| !isAgent/);
+  assert.match(html, /expertSkillSelect\.hidden = isHome \|\| isActions \|\| !isAgent/);
 });
 
 test('approval queue serializes decisions and safety gate persists until confirmed clear', () => {
@@ -582,7 +632,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=31'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=32'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -812,7 +862,8 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v31/);
+  assert.match(sw, /brainy-shell-v32/);
+  assert.match(sw, /\.\/home-dashboard\.js/);
   assert.match(sw, /\.\/action-center\.js/);
   assert.match(sw, /\.\/expert-skills\.js/);
   assert.match(sw, /response\.ok/);

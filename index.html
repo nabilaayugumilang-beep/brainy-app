@@ -249,6 +249,28 @@
     .action-draft-open strong { font-size:9px; }
     .action-draft-open span { margin-top:2px; color:var(--muted); font-size:8px; }
     .action-draft .action-draft-delete { color:var(--danger); }
+    .home-dashboard { width:min(1120px,100%); min-height:100%; margin:0 auto; padding:clamp(24px,5vw,64px) clamp(18px,4vw,48px) 80px; }
+    .home-dashboard[hidden] { display:none; }
+    .home-hero { position:relative; overflow:hidden; padding:clamp(24px,5vw,48px); border:1px solid color-mix(in srgb,var(--electric) 22%,var(--line)); border-radius:24px; background:linear-gradient(145deg,color-mix(in srgb,var(--electric-soft) 75%,var(--panel)),var(--panel)); box-shadow:0 24px 70px var(--glow); }
+    .home-hero::after { content:''; position:absolute; width:240px; height:240px; right:-80px; top:-120px; border-radius:50%; background:var(--electric); filter:blur(80px); opacity:.13; pointer-events:none; }
+    .home-kicker { display:block; margin-bottom:8px; color:var(--accent); font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+    .home-hero h1 { position:relative; margin:0; font-size:clamp(23px,4vw,40px); line-height:1.05; letter-spacing:-.055em; }
+    .home-date { position:relative; margin:10px 0 0; color:var(--muted); font-size:11px; }
+    .home-actions { position:relative; display:flex; flex-wrap:wrap; gap:8px; margin-top:24px; }
+    .home-action { min-height:38px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:color-mix(in srgb,var(--panel) 88%,transparent); cursor:pointer; font-size:10px; font-weight:700; }
+    .home-action.primary { border-color:var(--electric); background:var(--electric); color:#fff; box-shadow:0 8px 24px var(--glow); }
+    .home-action:hover, .home-item:hover { border-color:color-mix(in srgb,var(--accent) 48%,var(--line)); transform:translateY(-1px); }
+    .home-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:14px; }
+    .home-panel { min-width:0; padding:18px; border:1px solid var(--line); border-radius:18px; background:color-mix(in srgb,var(--panel) 95%,transparent); }
+    .home-panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .home-panel h2 { margin:0; font-size:11px; letter-spacing:.01em; }
+    .home-panel-meta { color:var(--muted); font-size:9px; }
+    .home-list { display:grid; gap:7px; }
+    .home-item { width:100%; min-width:0; display:grid; gap:3px; padding:11px 12px; border:1px solid transparent; border-radius:12px; background:var(--soft); cursor:pointer; text-align:left; transition:transform .16s ease,border-color .16s ease; }
+    .home-item strong, .home-item span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .home-item strong { font-size:10px; }
+    .home-item span, .home-empty-copy { color:var(--muted); font-size:9px; }
+    .home-empty-copy { margin:0; padding:12px 2px; }
     .thread { width:min(var(--content-max),100%); min-width:0; max-width:100%; margin:0 auto; padding:calc(28px * var(--density-space)) calc(24px * var(--density-space)) 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
     .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
@@ -297,7 +319,7 @@
     .small-btn.primary { background:var(--accent); color:var(--accentText); border-color:var(--accent); }
     .approval-command { display:block; max-width:100%; margin:0 0 10px; padding:9px 10px; overflow:auto; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text); font-size:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
     .mode-row { width:min(720px,100%); min-width:0; margin:0 auto 7px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .mode-switch { display:inline-grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:3px; border:1px solid var(--line); border-radius:11px; background:var(--soft); }
+    .mode-switch { display:inline-grid; grid-template-columns:repeat(5,1fr); gap:2px; padding:3px; border:1px solid var(--line); border-radius:11px; background:var(--soft); }
     .mode-button { min-width:72px; height:30px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--muted); cursor:pointer; font-size:10px; font-weight:700; }
     .mode-button.active { background:var(--panel); color:var(--accent); box-shadow:0 3px 12px var(--glow); }
     .companion-status { min-width:0; height:32px; padding:0 9px; overflow:hidden; border:1px solid var(--line); border-radius:9px; background:transparent; color:var(--muted); text-overflow:ellipsis; white-space:nowrap; cursor:help; font-size:10px; }
@@ -395,6 +417,9 @@
       .hq-agent:first-child { grid-column:auto; min-height:86px; }
       .hq-agent { min-height:86px; }
       .thread { width:100%; min-width:0; padding:18px 16px 32px; }
+      .home-dashboard { padding:20px 14px 64px; }
+      .home-hero { border-radius:18px; }
+      .home-grid { grid-template-columns:1fr; }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
       .empty h1 { font-size:clamp(28px,10vw,38px); }
       .empty p { margin-bottom:18px; font-size:12px; line-height:1.5; }
@@ -504,6 +529,29 @@
           </div>
         </section>
       </div>
+      <section class="home-dashboard" id="homeDashboard" aria-labelledby="homeGreeting" hidden>
+        <div class="home-hero">
+          <span class="home-kicker">Personal workspace · 0 tokens</span>
+          <h1 id="homeGreeting">Good day, Ila</h1>
+          <p class="home-date" id="homeDate"></p>
+          <div class="home-actions" aria-label="Quick actions">
+            <button class="home-action primary" type="button" data-home-action="chat">Open Chat</button>
+            <button class="home-action" type="button" data-home-action="agent">Run Agent</button>
+            <button class="home-action" type="button" data-home-action="actions">Open Actions</button>
+            <button class="home-action" type="button" data-home-action="hq">Open HQ</button>
+          </div>
+        </div>
+        <div class="home-grid">
+          <section class="home-panel" aria-labelledby="homeContinueTitle">
+            <div class="home-panel-head"><h2 id="homeContinueTitle">Continue working</h2><span class="home-panel-meta">Recent chats</span></div>
+            <div class="home-list" id="homeContinue"></div>
+          </section>
+          <section class="home-panel" aria-labelledby="homeDraftsTitle">
+            <div class="home-panel-head"><h2 id="homeDraftsTitle">Local drafts</h2><span class="home-panel-meta">Saved on this device</span></div>
+            <div class="home-list" id="homeDrafts"></div>
+          </section>
+        </div>
+      </section>
       <section class="agent-hq" id="agentHQ" aria-labelledby="hqTitle" hidden>
         <div class="hq-head">
           <div>
@@ -568,6 +616,7 @@
     <footer>
       <div class="mode-row">
         <div class="mode-switch" role="group" aria-label="Interaction mode">
+          <button class="mode-button" id="homeMode" type="button" aria-pressed="false">Home</button>
           <button class="mode-button" id="chatMode" type="button" aria-pressed="true">Chat</button>
           <button class="mode-button" id="agentMode" type="button" aria-pressed="false">Agent</button>
           <button class="mode-button" id="actionsMode" type="button" aria-pressed="false">Actions</button>
@@ -655,6 +704,7 @@
 <script src="./agent-mode.js"></script>
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
+<script src="./home-dashboard.js"></script>
 <script src="./approval-queue.js"></script>
 <script src="./agent-hq.js"></script>
 <script src="./markdown-renderer.js"></script>
@@ -672,7 +722,8 @@
   const $ = (s) => document.querySelector(s);
   const thread = $('#thread'), input = $('#input'), send = $('#send');
   const commandPalette = $('#commandPalette');
-  const chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
+  const homeModeButton = $('#homeMode'), chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
+  const homeDashboard = $('#homeDashboard'), homeContinue = $('#homeContinue'), homeDrafts = $('#homeDrafts');
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
   const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
   const actionFields = $('#actionFields'), actionDrafts = $('#actionDrafts'), actionDraftCount = $('#actionDraftCount');
@@ -737,7 +788,7 @@
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
   let currentAssistant = null, currentText = '', reconnectTimer = null;
   let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', selectedImage = null, imagePreparing = false, connecting = false;
-  let interactionMode = AgentMode.load(localStorage), workspaceView = 'chat';
+  let interactionMode = AgentMode.load(localStorage), workspaceView = 'home';
   let activeActionId = '', editingActionDraftId = '';
   let activeExpertSkill = ExpertSkills.load(localStorage);
   expertSkillSelect.value = activeExpertSkill;
@@ -1112,26 +1163,63 @@
     autoGrow(); updateSend(); input.focus();
     showToast('Prepared locally · review and press Run when ready');
   }
+  function homeEmpty(target, text) {
+    const emptyState = document.createElement('p');
+    emptyState.className = 'home-empty-copy'; emptyState.textContent = text;
+    target.append(emptyState);
+  }
+  function homeItem(target, title, preview, onOpen) {
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'home-item';
+    const strong = document.createElement('strong'); strong.textContent = title;
+    const detail = document.createElement('span'); detail.textContent = preview;
+    button.append(strong,detail); button.addEventListener('click', () => onOpen(button)); target.append(button);
+  }
+  function renderHomeDashboard() {
+    const now = new Date();
+    $('#homeGreeting').textContent = BrainyHomeDashboard.greeting(now,'Ila');
+    $('#homeDate').textContent = BrainyHomeDashboard.dateLabel(now);
+    homeContinue.replaceChildren();
+    const recentChats = BrainyHomeDashboard.recentChats(historyItems);
+    if (!recentChats.length) homeEmpty(homeContinue,'Your recent conversations will appear here.');
+    recentChats.forEach(item => homeItem(homeContinue,item.title,item.preview,button => {
+      const source = historyItems.find(candidate => String(candidate.key || candidate.id) === item.id);
+      if (!source) return;
+      setInteractionMode('chat'); openHistorySession(source,button);
+    }));
+    homeDrafts.replaceChildren();
+    const drafts = BrainyHomeDashboard.recentDrafts(
+      BrainyActionCenter.loadDrafts(localStorage), BrainyActionCenter.templates()
+    );
+    if (!drafts.length) homeEmpty(homeDrafts,'Drafts saved in Actions will appear here.');
+    drafts.forEach(draft => homeItem(homeDrafts,draft.title,draft.preview,() => {
+      showActionCenter(); openAction(draft.templateId,draft);
+    }));
+  }
   function renderInteractionMode() {
+    const isHome = workspaceView === 'home';
     const isHQ = workspaceView === 'hq';
     const isActions = workspaceView === 'actions';
     const isAgent = interactionMode === 'agent';
-    chatModeButton.classList.toggle('active', !isHQ && !isActions && !isAgent);
-    agentModeButton.classList.toggle('active', !isHQ && !isActions && isAgent);
+    homeModeButton.classList.toggle('active', isHome);
+    chatModeButton.classList.toggle('active', !isHome && !isHQ && !isActions && !isAgent);
+    agentModeButton.classList.toggle('active', !isHome && !isHQ && !isActions && isAgent);
     actionsModeButton.classList.toggle('active', isActions);
     hqModeButton.classList.toggle('active', isHQ);
-    chatModeButton.setAttribute('aria-pressed', String(!isHQ && !isActions && !isAgent));
-    agentModeButton.setAttribute('aria-pressed', String(!isHQ && !isActions && isAgent));
+    homeModeButton.setAttribute('aria-pressed', String(isHome));
+    chatModeButton.setAttribute('aria-pressed', String(!isHome && !isHQ && !isActions && !isAgent));
+    agentModeButton.setAttribute('aria-pressed', String(!isHome && !isHQ && !isActions && isAgent));
     actionsModeButton.setAttribute('aria-pressed', String(isActions));
     hqModeButton.setAttribute('aria-pressed', String(isHQ));
-    thread.hidden = isHQ || isActions;
+    thread.hidden = isHome || isHQ || isActions;
+    homeDashboard.hidden = !isHome;
     agentHQ.hidden = !isHQ;
     actionCenter.hidden = !isActions;
-    composer.hidden = isActions;
-    composerContext.hidden = isActions;
-    expertSkillSelect.hidden = isActions || !isAgent;
+    composer.hidden = isHome || isActions;
+    composerContext.hidden = isHome || isActions;
+    expertSkillSelect.hidden = isHome || isActions || !isAgent;
     input.placeholder = isHQ ? 'Give Agent HQ a task...' : (isAgent ? 'Describe the outcome you want...' : 'What needs to get done?');
     send.textContent = isAgent ? 'Run' : 'Send';
+    if (isHome) renderHomeDashboard();
     if (isHQ) renderAgentHQ();
     if (isActions) renderActionCenter();
     requestAnimationFrame(updateJumpLatest);
@@ -1145,6 +1233,11 @@
     workspaceView = 'chat';
     renderInteractionMode();
     scrollBottom();
+  }
+  function showHomeDashboard() {
+    workspaceView = 'home';
+    renderInteractionMode();
+    scroller.scrollTop = 0;
   }
   function showActionCenter() {
     workspaceView = 'actions';
@@ -1511,6 +1604,7 @@
   }
   function renderHistorySessions(items) {
     historyItems = Array.isArray(items) ? items : [];
+    if (workspaceView === 'home') renderHomeDashboard();
     historyList.replaceChildren();
     $('#chatsCount').textContent = String(historyItems.length);
     historyList.hidden = chatsCollapsed;
@@ -1913,10 +2007,19 @@
     };
     ws.onerror = () => setStatus('Connection interrupted');
   }
+  homeModeButton.onclick = showHomeDashboard;
   chatModeButton.onclick = () => setInteractionMode('chat');
   agentModeButton.onclick = () => setInteractionMode('agent');
   actionsModeButton.onclick = showActionCenter;
   hqModeButton.onclick = showAgentHQ;
+  document.querySelectorAll('[data-home-action]').forEach(button => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.homeAction;
+      if (action === 'actions') { showActionCenter(); return; }
+      if (action === 'hq') { showAgentHQ(); return; }
+      setInteractionMode(action === 'agent' ? 'agent' : 'chat'); input.focus();
+    });
+  });
   actionForm.addEventListener('submit', event => {
     event.preventDefault();
     if (!activeActionId || !actionForm.reportValidity()) return;
@@ -2135,7 +2238,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=31',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=32',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
