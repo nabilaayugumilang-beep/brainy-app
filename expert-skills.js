@@ -38,6 +38,13 @@
     return value === PEOPLE_OD || value === CORPORATE_COMMS ? value : NONE;
   }
 
+  function label(value) {
+    const skill = normalize(value);
+    if (skill === NONE) return '';
+    const pack = PACKS.find(item => item.id === skill);
+    return pack ? pack.label : '';
+  }
+
   function load(storage) {
     try { return normalize(storage && storage.getItem(STORAGE_KEY)); }
     catch { return NONE; }
@@ -62,5 +69,5 @@
     return '';
   }
 
-  return Object.freeze({ STORAGE_KEY, PACKS, normalize, load, save, isSubstantive, guidance });
+  return Object.freeze({ STORAGE_KEY, PACKS, normalize, label, load, save, isSubstantive, guidance });
 });

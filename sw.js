@@ -1,4 +1,4 @@
-const CACHE = 'brainy-shell-v29';
+const CACHE = 'brainy-shell-v30';
 const SHELL = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const SHELL = [
   './command-palette.js',
   './agent-mode.js',
   './expert-skills.js',
+  './action-center.js',
   './approval-queue.js',
   './agent-hq.js',
   './markdown-renderer.js',

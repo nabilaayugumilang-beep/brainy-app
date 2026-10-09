@@ -150,7 +150,7 @@
     .info-cell span { display:block; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
     .info-cell strong { display:block; margin-top:2px; font-size:12px; font-weight:500; overflow-wrap:anywhere; }
     main { overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth; background:var(--panel); }
-    .thread[hidden], .agent-hq[hidden] { display:none; }
+    .thread[hidden], .agent-hq[hidden], .action-center[hidden], .composer[hidden], .composer-context[hidden] { display:none; }
     .agent-hq { width:min(860px,100%); min-height:100%; margin:0 auto; padding:22px 24px 80px; background:radial-gradient(circle at 50% 10%,var(--electric-soft),transparent 38%); }
     .hq-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
     .hq-kicker { display:block; margin-bottom:3px; color:var(--accent); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
@@ -203,6 +203,45 @@
     .hq-event[data-tone="error"] .hq-event-dot { background:var(--danger); }
     .hq-event strong { display:block; overflow:hidden; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
     .hq-event span { display:block; margin-top:2px; overflow:hidden; color:var(--muted); font-size:9px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+    .action-center { width:min(860px,100%); min-height:100%; margin:0 auto; padding:22px 24px 80px; background:radial-gradient(circle at 18% 4%,var(--electric-soft),transparent 34%); }
+    .action-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    .action-head h1 { margin:0; font-size:18px; line-height:1.25; letter-spacing:-.04em; }
+    .action-head p { margin:5px 0 0; color:var(--muted); font-size:11px; }
+    .zero-token-badge { flex:none; padding:6px 9px; border:1px solid color-mix(in srgb,#20a56a 45%,var(--line)); border-radius:999px; background:color-mix(in srgb,#20a56a 10%,var(--panel)); color:#168354; font-size:9px; font-weight:700; }
+    .action-layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:12px; align-items:start; }
+    .action-template-list, .action-workspace, .action-drafts { border:1px solid var(--line); border-radius:13px; background:color-mix(in srgb,var(--panel) 94%,transparent); box-shadow:0 8px 28px color-mix(in srgb,var(--glow) 35%,transparent); }
+    .action-template-list { display:grid; gap:4px; padding:7px; }
+    .action-template { width:100%; min-height:58px; padding:9px 10px; border:1px solid transparent; border-radius:9px; background:transparent; cursor:pointer; text-align:left; }
+    .action-template:hover, .action-template.active { border-color:var(--line); background:var(--electric-soft); color:var(--accent); }
+    .action-template strong, .action-template span { display:block; }
+    .action-template strong { font-size:10px; }
+    .action-template span { margin-top:3px; color:var(--muted); font-size:8px; line-height:1.4; }
+    .action-main { display:grid; gap:12px; }
+    .action-workspace { padding:16px; }
+    .action-empty { padding:42px 16px; color:var(--muted); font-size:11px; text-align:center; }
+    .action-form h2 { margin:0; font-size:13px; }
+    .action-form-copy { margin:4px 0 13px; color:var(--muted); font-size:10px; }
+    .action-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .action-field { display:grid; gap:5px; color:var(--muted); font-size:9px; font-weight:700; }
+    .action-field.wide { grid-column:1/-1; }
+    .action-input { width:100%; min-height:40px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; outline:none; background:var(--panel); color:var(--text); font-size:10px; font-weight:400; }
+    textarea.action-input { min-height:82px; resize:vertical; }
+    .action-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
+    .action-controls { display:flex; justify-content:flex-end; gap:7px; margin-top:13px; }
+    .action-controls button, .action-draft button { min-height:38px; padding:0 11px; border:1px solid var(--line); border-radius:9px; background:var(--panel); cursor:pointer; font-size:9px; font-weight:700; }
+    .action-controls .primary { border-color:var(--accent); background:var(--accent); color:var(--accentText); }
+    .action-drafts { padding:12px; }
+    .action-drafts-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+    .action-drafts-head strong { font-size:10px; }
+    .action-drafts-head span { color:var(--muted); font-size:8px; }
+    .action-draft-list { display:grid; gap:5px; }
+    .action-draft-empty { margin:0; padding:12px 4px; color:var(--muted); font-size:9px; text-align:center; }
+    .action-draft { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px; align-items:center; padding:7px; border:1px solid var(--line); border-radius:9px; }
+    .action-draft-open { min-width:0; text-align:left; }
+    .action-draft-open strong, .action-draft-open span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .action-draft-open strong { font-size:9px; }
+    .action-draft-open span { margin-top:2px; color:var(--muted); font-size:8px; }
+    .action-draft .action-draft-delete { color:var(--danger); }
     .thread { width:min(720px,100%); min-width:0; max-width:100%; margin:0 auto; padding:28px 24px 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
     .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
@@ -251,7 +290,7 @@
     .small-btn.primary { background:var(--accent); color:var(--accentText); border-color:var(--accent); }
     .approval-command { display:block; max-width:100%; margin:0 0 10px; padding:9px 10px; overflow:auto; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text); font-size:10px; white-space:pre-wrap; overflow-wrap:anywhere; }
     .mode-row { width:min(720px,100%); min-width:0; margin:0 auto 7px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .mode-switch { display:inline-grid; grid-template-columns:repeat(3,1fr); gap:2px; padding:3px; border:1px solid var(--line); border-radius:11px; background:var(--soft); }
+    .mode-switch { display:inline-grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:3px; border:1px solid var(--line); border-radius:11px; background:var(--soft); }
     .mode-button { min-width:72px; height:30px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--muted); cursor:pointer; font-size:10px; font-weight:700; }
     .mode-button.active { background:var(--panel); color:var(--accent); box-shadow:0 3px 12px var(--glow); }
     .companion-status { min-width:0; height:32px; padding:0 9px; overflow:hidden; border:1px solid var(--line); border-radius:9px; background:transparent; color:var(--muted); text-overflow:ellipsis; white-space:nowrap; cursor:help; font-size:10px; }
@@ -325,6 +364,11 @@
       .info-panel { max-height:42vh; overflow:auto; padding:14px; }
       .info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
       .agent-hq { padding:18px 14px 40px; }
+      .action-center { padding:18px 14px 40px; }
+      .action-layout { grid-template-columns:1fr; }
+      .action-template-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .action-fields { grid-template-columns:1fr; }
+      .action-field.wide { grid-column:auto; }
       .hq-head { align-items:center; }
       .hq-head h1 { font-size:16px; }
       .hq-head p { display:none; }
@@ -339,6 +383,7 @@
       .empty h1 { font-size:clamp(28px,10vw,38px); }
       .empty p { margin-bottom:18px; font-size:12px; line-height:1.5; }
       .prompts { width:100%; display:grid; grid-template-columns:1fr; gap:9px; }
+      .mode-button { min-width:0; padding:0 7px; }
       .prompt-chip { width:100%; min-height:48px; border-radius:14px; padding:12px 15px; text-align:left; box-shadow:none; }
       .message { grid-template-columns:1fr; gap:6px; padding:16px 0; }
       .message.user .content { max-width:88%; justify-self:end; }
@@ -461,6 +506,37 @@
           </section>
         </div>
       </section>
+      <section class="action-center" id="actionCenter" aria-labelledby="actionCenterTitle" hidden>
+        <div class="action-head">
+          <div>
+            <span class="hq-kicker">Workflows</span>
+            <h1 id="actionCenterTitle">Action Center</h1>
+            <p>Structure work and save drafts locally. AI runs only after you review and press Run.</p>
+          </div>
+          <span class="zero-token-badge">0 tokens until Run</span>
+        </div>
+        <div class="action-layout">
+          <nav class="action-template-list" id="actionTemplates" aria-label="Action templates"></nav>
+          <div class="action-main">
+            <section class="action-workspace" aria-live="polite">
+              <p class="action-empty" id="actionEmpty">Choose a workflow to start.</p>
+              <form class="action-form" id="actionForm" hidden>
+                <h2 id="actionFormTitle"></h2>
+                <p class="action-form-copy" id="actionFormCopy"></p>
+                <div class="action-fields" id="actionFields"></div>
+                <div class="action-controls">
+                  <button type="submit">Save Draft</button>
+                  <button class="primary" id="actionPrepare" type="button">Prepare in Agent</button>
+                </div>
+              </form>
+            </section>
+            <section class="action-drafts" aria-labelledby="actionDraftsTitle">
+              <div class="action-drafts-head"><strong id="actionDraftsTitle">Local drafts</strong><span id="actionDraftCount">0 saved</span></div>
+              <div class="action-draft-list" id="actionDrafts"></div>
+            </section>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer>
@@ -468,6 +544,7 @@
         <div class="mode-switch" role="group" aria-label="Interaction mode">
           <button class="mode-button" id="chatMode" type="button" aria-pressed="true">Chat</button>
           <button class="mode-button" id="agentMode" type="button" aria-pressed="false">Agent</button>
+          <button class="mode-button" id="actionsMode" type="button" aria-pressed="false">Actions</button>
           <button class="mode-button" id="hqMode" type="button" aria-pressed="false">HQ</button>
         </div>
         <button class="companion-status" id="companionStatus" type="button" title="Native desktop control requires BRAINY Companion on your Mac. Mac setup comes next.">Mac not connected</button>
@@ -551,6 +628,7 @@
 <script src="./command-palette.js"></script>
 <script src="./agent-mode.js"></script>
 <script src="./expert-skills.js"></script>
+<script src="./action-center.js"></script>
 <script src="./approval-queue.js"></script>
 <script src="./agent-hq.js"></script>
 <script src="./markdown-renderer.js"></script>
@@ -568,8 +646,10 @@
   const $ = (s) => document.querySelector(s);
   const thread = $('#thread'), input = $('#input'), send = $('#send');
   const commandPalette = $('#commandPalette');
-  const chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), hqModeButton = $('#hqMode');
+  const chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
+  const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
+  const actionFields = $('#actionFields'), actionDrafts = $('#actionDrafts'), actionDraftCount = $('#actionDraftCount');
   const hqPhase = $('#hqPhase'), hqTask = $('#hqTask'), hqToolCount = $('#hqToolCount');
   const hqApprovalCount = $('#hqApprovalCount'), hqActiveCount = $('#hqActiveCount'), hqActivityCount = $('#hqActivityCount');
   const agentRunbar = $('#agentRunbar'), agentActivity = $('#agentActivity'), agentCount = $('#agentCount');
@@ -582,6 +662,7 @@
   const projectModal = $('#projectModal'), projectNameInput = $('#projectNameInput');
   const projectDescriptionInput = $('#projectDescriptionInput'), projectInstructionsInput = $('#projectInstructionsInput');
   const activeProjectChip = $('#activeProjectChip'), activeProjectName = $('#activeProjectName');
+  const composerContext = $('#composerContext'), composer = $('#composer');
   const expertSkillSelect = $('#expertSkill');
   const chatModal = $('#chatModal'), chatNameInput = $('#chatNameInput');
   const HISTORY_OPEN_KEY = 'brainy_history_open';
@@ -629,6 +710,7 @@
   let currentAssistant = null, currentText = '', reconnectTimer = null;
   let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', selectedImage = null, imagePreparing = false, connecting = false;
   let interactionMode = AgentMode.load(localStorage), workspaceView = 'chat';
+  let activeActionId = '', editingActionDraftId = '';
   let activeExpertSkill = ExpertSkills.load(localStorage);
   expertSkillSelect.value = activeExpertSkill;
   let hqState = BrainyAgentHQ.createState();
@@ -902,21 +984,110 @@
     hqState = BrainyAgentHQ.createState();
     renderAgentHQ();
   }
+  function actionTemplate(id) {
+    return BrainyActionCenter.templates().find(item => item.id === id) || null;
+  }
+  function readActionValues() {
+    return Object.fromEntries(new FormData(actionForm).entries());
+  }
+  function openAction(templateId, draft=null) {
+    const template = actionTemplate(templateId);
+    if (!template) return;
+    activeActionId = template.id;
+    editingActionDraftId = draft ? draft.id : '';
+    $('#actionEmpty').hidden = true;
+    actionForm.hidden = false;
+    $('#actionFormTitle').textContent = template.title;
+    $('#actionFormCopy').textContent = draft ? 'Editing a local draft · no AI used' : template.description;
+    actionFields.replaceChildren();
+    template.fields.forEach(field => {
+      const label = document.createElement('label');
+      label.className = 'action-field' + (field.multiline ? ' wide' : '');
+      label.append(document.createTextNode(field.label + (field.required ? ' *' : '')));
+      const control = document.createElement(field.multiline ? 'textarea' : 'input');
+      control.className = 'action-input'; control.name = field.key; control.placeholder = field.placeholder;
+      control.maxLength = 1600; control.required = field.required;
+      if (!field.multiline) control.type = 'text';
+      control.value = draft && draft.values[field.key] ? draft.values[field.key] : '';
+      label.append(control); actionFields.append(label);
+    });
+    actionTemplates.querySelectorAll('.action-template').forEach(button => {
+      const active = button.dataset.actionId === template.id;
+      button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+    });
+    actionFields.querySelector('.action-input')?.focus();
+  }
+  function renderActionTemplates() {
+    actionTemplates.replaceChildren();
+    BrainyActionCenter.templates().forEach(template => {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'action-template';
+      button.dataset.actionId = template.id; button.setAttribute('aria-pressed', String(template.id === activeActionId));
+      const title = document.createElement('strong'); title.textContent = template.title;
+      const description = document.createElement('span'); description.textContent = template.description;
+      button.append(title,description); button.addEventListener('click', () => openAction(template.id)); actionTemplates.append(button);
+    });
+  }
+  function renderActionDrafts() {
+    const drafts = BrainyActionCenter.loadDrafts(localStorage);
+    actionDraftCount.textContent = `${drafts.length} saved`;
+    actionDrafts.replaceChildren();
+    if (!drafts.length) {
+      const emptyDrafts = document.createElement('p'); emptyDrafts.className = 'action-draft-empty';
+      emptyDrafts.textContent = 'Drafts stay on this device. No AI or network call.'; actionDrafts.append(emptyDrafts); return;
+    }
+    drafts.forEach(draft => {
+      const template = actionTemplate(draft.templateId);
+      const row = document.createElement('div'); row.className = 'action-draft';
+      const open = document.createElement('button'); open.type = 'button'; open.className = 'action-draft-open';
+      const title = document.createElement('strong'); title.textContent = template.title;
+      const preview = document.createElement('span'); preview.textContent = Object.values(draft.values)[0] || 'Untitled draft';
+      open.append(title,preview); open.addEventListener('click', () => openAction(draft.templateId,draft));
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'action-draft-delete';
+      remove.textContent = 'Delete'; remove.setAttribute('aria-label', `Delete ${template.title} draft`);
+      remove.addEventListener('click', () => {
+        if (!confirm('Delete this local draft?')) return;
+        try { BrainyActionCenter.removeDraft(localStorage,draft.id); if (editingActionDraftId === draft.id) openAction(draft.templateId); renderActionDrafts(); showToast('Draft deleted'); }
+        catch { showToast('Draft could not be deleted on this device'); }
+      });
+      row.append(open,remove); actionDrafts.append(row);
+    });
+  }
+  function renderActionCenter() {
+    renderActionTemplates(); renderActionDrafts();
+    if (!activeActionId) openAction(BrainyActionCenter.templates()[0].id);
+  }
+  function prepareActionForAgent() {
+    if (!activeActionId || !actionForm.reportValidity()) return;
+    const prepared = BrainyActionCenter.prepare(activeActionId, readActionValues());
+    activeExpertSkill = ExpertSkills.save(localStorage, prepared.expertSkill);
+    expertSkillSelect.value = activeExpertSkill;
+    setInteractionMode('agent');
+    input.value = prepared.prompt;
+    autoGrow(); updateSend(); input.focus();
+    showToast('Prepared locally · review and press Run when ready');
+  }
   function renderInteractionMode() {
     const isHQ = workspaceView === 'hq';
+    const isActions = workspaceView === 'actions';
     const isAgent = interactionMode === 'agent';
-    chatModeButton.classList.toggle('active', !isHQ && !isAgent);
-    agentModeButton.classList.toggle('active', !isHQ && isAgent);
+    chatModeButton.classList.toggle('active', !isHQ && !isActions && !isAgent);
+    agentModeButton.classList.toggle('active', !isHQ && !isActions && isAgent);
+    actionsModeButton.classList.toggle('active', isActions);
     hqModeButton.classList.toggle('active', isHQ);
-    chatModeButton.setAttribute('aria-pressed', String(!isHQ && !isAgent));
-    agentModeButton.setAttribute('aria-pressed', String(!isHQ && isAgent));
+    chatModeButton.setAttribute('aria-pressed', String(!isHQ && !isActions && !isAgent));
+    agentModeButton.setAttribute('aria-pressed', String(!isHQ && !isActions && isAgent));
+    actionsModeButton.setAttribute('aria-pressed', String(isActions));
     hqModeButton.setAttribute('aria-pressed', String(isHQ));
-    thread.hidden = isHQ;
+    thread.hidden = isHQ || isActions;
     agentHQ.hidden = !isHQ;
-    expertSkillSelect.hidden = !isAgent;
+    actionCenter.hidden = !isActions;
+    composer.hidden = isActions;
+    composerContext.hidden = isActions;
+    expertSkillSelect.hidden = isActions || !isAgent;
     input.placeholder = isHQ ? 'Give Agent HQ a task...' : (isAgent ? 'Describe the outcome you want...' : 'What needs to get done?');
     send.textContent = isAgent ? 'Run' : 'Send';
     if (isHQ) renderAgentHQ();
+    if (isActions) renderActionCenter();
   }
   function setInteractionMode(mode) {
     workspaceView = 'chat';
@@ -927,6 +1098,11 @@
     workspaceView = 'chat';
     renderInteractionMode();
     scrollBottom();
+  }
+  function showActionCenter() {
+    workspaceView = 'actions';
+    renderInteractionMode();
+    scroller.scrollTop = 0;
   }
   function showAgentHQ() {
     workspaceView = 'hq';
@@ -1673,11 +1849,28 @@
   }
   chatModeButton.onclick = () => setInteractionMode('chat');
   agentModeButton.onclick = () => setInteractionMode('agent');
+  actionsModeButton.onclick = showActionCenter;
   hqModeButton.onclick = showAgentHQ;
+  actionForm.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!activeActionId || !actionForm.reportValidity()) return;
+    try {
+      const draft = BrainyActionCenter.saveDraft(localStorage, {
+        id: editingActionDraftId,
+        templateId: activeActionId,
+        values: readActionValues()
+      });
+      editingActionDraftId = draft.id;
+      $('#actionFormCopy').textContent = 'Saved locally · no AI used';
+      renderActionDrafts(); showToast('Draft saved locally · 0 tokens');
+    } catch { showToast('Draft could not be saved on this device'); }
+  });
+  $('#actionPrepare').onclick = prepareActionForAgent;
   expertSkillSelect.addEventListener('change', () => {
     activeExpertSkill = ExpertSkills.save(localStorage, expertSkillSelect.value);
     expertSkillSelect.value = activeExpertSkill;
-    showToast(activeExpertSkill === 'none' ? 'Expert skill off' : 'People & OD Expert active');
+    const label = ExpertSkills.label(activeExpertSkill);
+    showToast(activeExpertSkill === 'none' ? 'Expert skill off' : `${label} active`);
   });
   companionStatus.onclick = () => showToast('Mac Companion is not connected yet');
   stopAgent.onclick = async () => {
@@ -1868,7 +2061,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=29',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=30',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

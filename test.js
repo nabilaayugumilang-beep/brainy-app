@@ -11,6 +11,62 @@ const ApprovalQueue = require('./approval-queue.js');
 const AgentHQ = require('./agent-hq.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
+const actionCenterSource = fs.readFileSync('action-center.js', 'utf8');
+
+test('action center exposes five role workflows and prepares a compact expert handoff', () => {
+  const ActionCenter = require('./action-center.js');
+  assert.deepEqual(ActionCenter.templates().map(item => item.id), [
+    'create-content', 'plan-event', 'draft-communication', 'review-work', 'people-od-task'
+  ]);
+  const prepared = ActionCenter.prepare('create-content', {
+    objective:'Launch the employer-brand campaign', audience:'LinkedIn candidates',
+    keyMessage:'Meet the people behind our work', notes:''
+  });
+  assert.equal(prepared.expertSkill, 'corporate-comms');
+  assert.match(prepared.prompt, /Create Content/);
+  assert.match(prepared.prompt, /Objective: Launch the employer-brand campaign/);
+  assert.match(prepared.prompt, /Audience: LinkedIn candidates/);
+  assert.doesNotMatch(prepared.prompt, /Notes:/);
+  assert.ok(prepared.prompt.length <= 700);
+});
+
+test('action drafts stay local, sanitize fields, update safely, and recover from corrupt storage', () => {
+  const ActionCenter = require('./action-center.js');
+  let raw = '';
+  const storage = {
+    getItem:key => key === ActionCenter.STORAGE_KEY ? raw : null,
+    setItem:(key,value) => { assert.equal(key, ActionCenter.STORAGE_KEY); raw = value; }
+  };
+  const saved = ActionCenter.saveDraft(storage, {
+    templateId:'plan-event', values:{objective:'  Team   connection  ', audience:'All employees', injected:'ignore'}
+  }, 1000);
+  assert.equal(saved.id, 'action-1000');
+  assert.equal(saved.values.objective, 'Team   connection');
+  assert.equal(saved.values.injected, undefined);
+  assert.deepEqual(ActionCenter.loadDrafts(storage).map(item => item.id), ['action-1000']);
+  const updated = ActionCenter.saveDraft(storage, {
+    id:saved.id, templateId:'plan-event', values:{objective:'Updated objective', audience:'Leaders'}
+  }, 2000);
+  assert.equal(updated.createdAt, 1000);
+  assert.equal(updated.updatedAt, 2000);
+  assert.equal(ActionCenter.loadDrafts(storage)[0].values.objective, 'Updated objective');
+  ActionCenter.removeDraft(storage, saved.id);
+  assert.deepEqual(ActionCenter.loadDrafts(storage), []);
+  raw = '{broken';
+  assert.deepEqual(ActionCenter.loadDrafts(storage), []);
+});
+
+test('action center UI is a zero-token workspace with explicit Agent preparation', () => {
+  assert.match(html, /<script src="\.\/action-center\.js"><\/script>/);
+  assert.match(html, /id="actionsMode"[^>]*>Actions<\/button>/);
+  assert.match(html, /id="actionCenter"[^>]*hidden/);
+  assert.match(html, /BrainyActionCenter\.saveDraft\(localStorage/);
+  assert.match(html, /BrainyActionCenter\.prepare\(/);
+  assert.match(html, /input\.value\s*=\s*prepared\.prompt/);
+  assert.match(html, /setInteractionMode\('agent'\)/);
+  assert.doesNotMatch(actionCenterSource, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
+  assert.doesNotMatch(html, /prepareActionForAgent[\s\S]{0,1000}composer\.requestSubmit/);
+});
 
 test('closeThen blocks the next operation when closing fails', async () => {
   const calls = [];
@@ -294,6 +350,15 @@ test('Corporate Communications expert is opt-in, substantive-only, compact, and 
   assert.equal(ExpertSkills.load(storage), 'corporate-comms');
 });
 
+test('expert notification label matches the selected expert pack', () => {
+  assert.equal(ExpertSkills.label('people-od'), 'People & OD Expert');
+  assert.equal(ExpertSkills.label('corporate-comms'), 'Corporate Communications Expert');
+  assert.equal(ExpertSkills.label('none'), '');
+  assert.equal(ExpertSkills.label('unknown'), '');
+  assert.match(html, /ExpertSkills\.label\(activeExpertSkill\)/);
+  assert.doesNotMatch(html, /activeExpertSkill === 'none' \? 'Expert skill off' : 'People & OD Expert active'/);
+});
+
 test('expert guidance adds zero tokens when off and only augments Agent requests', () => {
   const request = 'Assess this workforce plan.';
   const baseline = AgentMode.preparePrompt('agent', request);
@@ -314,7 +379,7 @@ test('expert skill selector is compact and wired to both Agent submission paths'
   assert.match(html, /const expertSkill = mode === 'agent' \? activeExpertSkill : 'none'/);
   assert.match(html, /ExpertSkills\.guidance\(expertSkill, promptText\)/);
   assert.match(html, /queuedExpertSkill=expertSkill/);
-  assert.match(html, /expertSkillSelect\.hidden = !isAgent/);
+  assert.match(html, /expertSkillSelect\.hidden = isActions \|\| !isAgent/);
 });
 
 test('approval queue serializes decisions and safety gate persists until confirmed clear', () => {
@@ -517,7 +582,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=29'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=30'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -708,7 +773,8 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v29/);
+  assert.match(sw, /brainy-shell-v30/);
+  assert.match(sw, /\.\/action-center\.js/);
   assert.match(sw, /\.\/expert-skills\.js/);
   assert.match(sw, /response\.ok/);
   assert.match(sw, /event\.request\.mode === 'navigate'/);
