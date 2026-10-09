@@ -264,8 +264,10 @@
     .agent-stop:disabled { opacity:.5; cursor:default; }
     @keyframes agent-pulse { 50% { opacity:.45; transform:scale(.8); } }
     footer { border-top:1px solid var(--line); background:var(--panel); padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
-    .composer-context { width:min(720px,100%); min-height:0; margin:0 auto 7px; }
+    .composer-context { width:min(720px,100%); min-height:0; margin:0 auto 7px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
     .composer-context:empty { display:none; }
+    .expert-skill-select { min-height:30px; max-width:220px; padding:4px 28px 4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
+    .expert-skill-select[hidden] { display:none; }
     .active-project-chip { max-width:100%; min-height:30px; display:inline-flex; align-items:center; gap:7px; padding:4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--electric-soft); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
     .active-project-chip[hidden] { display:none; }
     .active-project-chip span { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
@@ -479,6 +481,10 @@
       <div class="command-palette" id="commandPalette" role="listbox" aria-label="Slash commands" hidden></div>
       <div class="composer-context" id="composerContext">
         <button class="active-project-chip" id="activeProjectChip" type="button" hidden><span id="activeProjectName"></span><b aria-hidden="true">✎</b></button>
+        <select class="expert-skill-select" id="expertSkill" aria-label="Expert skill" title="Adds compact expert guidance only to Agent tasks" hidden>
+          <option value="none">Expert: Off</option>
+          <option value="people-od">People &amp; OD Expert</option>
+        </select>
       </div>
       <div class="attachment-preview" id="attachmentPreview" hidden>
         <img id="attachmentThumb" alt="Image preview">
@@ -543,6 +549,7 @@
 <script src="./session-actions.js"></script>
 <script src="./command-palette.js"></script>
 <script src="./agent-mode.js"></script>
+<script src="./expert-skills.js"></script>
 <script src="./approval-queue.js"></script>
 <script src="./agent-hq.js"></script>
 <script src="./markdown-renderer.js"></script>
@@ -574,6 +581,7 @@
   const projectModal = $('#projectModal'), projectNameInput = $('#projectNameInput');
   const projectDescriptionInput = $('#projectDescriptionInput'), projectInstructionsInput = $('#projectInstructionsInput');
   const activeProjectChip = $('#activeProjectChip'), activeProjectName = $('#activeProjectName');
+  const expertSkillSelect = $('#expertSkill');
   const chatModal = $('#chatModal'), chatNameInput = $('#chatNameInput');
   const HISTORY_OPEN_KEY = 'brainy_history_open';
   const imageInput = $('#imageInput'), attachmentPreview = $('#attachmentPreview');
@@ -618,8 +626,10 @@
   personalizeInstallManifest();
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
   let currentAssistant = null, currentText = '', reconnectTimer = null;
-  let queuedText = '', queuedImage = null, queuedMode = 'chat', selectedImage = null, imagePreparing = false, connecting = false;
+  let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', selectedImage = null, imagePreparing = false, connecting = false;
   let interactionMode = AgentMode.load(localStorage), workspaceView = 'chat';
+  let activeExpertSkill = ExpertSkills.load(localStorage);
+  expertSkillSelect.value = activeExpertSkill;
   let hqState = BrainyAgentHQ.createState();
   let activeRunMode = 'chat', agentToolCount = 0;
   let historyLoading = false;
@@ -902,6 +912,7 @@
     hqModeButton.setAttribute('aria-pressed', String(isHQ));
     thread.hidden = isHQ;
     agentHQ.hidden = !isHQ;
+    expertSkillSelect.hidden = !isAgent;
     input.placeholder = isHQ ? 'Give Agent HQ a task...' : (isAgent ? 'Describe the outcome you want...' : 'What needs to get done?');
     send.textContent = isAgent ? 'Run' : 'Send';
     if (isHQ) renderAgentHQ();
@@ -1506,18 +1517,21 @@
     const promptText = queuedText;
     const image = queuedImage;
     const mode = queuedMode;
+    const expertSkill = queuedExpertSkill;
     queuedText = '';
     queuedImage = null;
     queuedMode = 'chat';
+    queuedExpertSkill = 'none';
     updateSend();
     const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
-    const submittedPrompt = AgentMode.preparePrompt(mode, projectPrompt);
+    const submittedPrompt = AgentMode.preparePrompt(mode, projectPrompt, ExpertSkills.guidance(expertSkill, promptText));
     activeRunMode = mode; agentToolCount = 0;
     try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
     catch (err) {
       queuedText = promptText;
       queuedImage = image;
       queuedMode = mode;
+      queuedExpertSkill = expertSkill;
       ready = false;
       updateSend();
       setStatus('Message saved · reconnecting...');
@@ -1659,6 +1673,11 @@
   chatModeButton.onclick = () => setInteractionMode('chat');
   agentModeButton.onclick = () => setInteractionMode('agent');
   hqModeButton.onclick = showAgentHQ;
+  expertSkillSelect.addEventListener('change', () => {
+    activeExpertSkill = ExpertSkills.save(localStorage, expertSkillSelect.value);
+    expertSkillSelect.value = activeExpertSkill;
+    showToast(activeExpertSkill === 'none' ? 'Expert skill off' : 'People & OD Expert active');
+  });
   companionStatus.onclick = () => showToast('Mac Companion is not connected yet');
   stopAgent.onclick = async () => {
     if (!busy || !sid) return;
@@ -1754,13 +1773,14 @@
     if ((!text && !image) || busy || queuedText || imagePreparing) return;
     const promptText = text || 'Please analyze this image.';
     const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
-    const submittedPrompt = AgentMode.preparePrompt(interactionMode, projectPrompt);
     const mode = interactionMode;
+    const expertSkill = mode === 'agent' ? activeExpertSkill : 'none';
+    const submittedPrompt = AgentMode.preparePrompt(mode, projectPrompt, ExpertSkills.guidance(expertSkill, promptText));
     activeRunMode = mode; agentToolCount = 0;
     addMessage('user',text || 'Image',false,image ? image.preview : '');
     input.value=''; selectedImage=null; imageInput.value=''; renderAttachment(); autoGrow();
     if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
-      queuedText=promptText; queuedImage=image; queuedMode=mode; updateSend();
+      queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; updateSend();
       setStatus('Message saved · reconnecting...');
       connect().catch(fail);
       return;
@@ -1769,7 +1789,7 @@
     try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
     catch(err) {
       if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
-        queuedText=promptText; queuedImage=image; queuedMode=mode; updateSend();
+        queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; updateSend();
         setStatus('Message saved · reconnecting...');
         connect().catch(fail);
       } else fail(err);
@@ -1847,7 +1867,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=27',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=28',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

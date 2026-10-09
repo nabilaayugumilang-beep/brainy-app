@@ -8,16 +8,13 @@
   const STORAGE_KEY = 'brainy_interaction_mode';
   const OPEN = '[[BRAINY_AGENT_MODE]]';
   const CLOSE = '[[/BRAINY_AGENT_MODE]]';
-  const POLICY = [
-    OPEN,
+  const EXECUTION_GUIDANCE = Object.freeze([
     'Operate as an execution agent for this request.',
     '- Use the available tools when they materially help; do not stop at instructions when you can complete the work.',
     '- Keep progress concise and verify the result before claiming success.',
     '- Use native approval gates before risky, irreversible, external-send, account, or destructive actions.',
-    '- Ask a question only when missing information genuinely blocks safe execution.',
-    CLOSE,
-    ''
-  ].join('\n');
+    '- Ask a question only when missing information genuinely blocks safe execution.'
+  ]);
 
   function normalizeMode(value) {
     return value === 'agent' ? 'agent' : 'chat';
@@ -34,9 +31,11 @@
     return next;
   }
 
-  function preparePrompt(mode, text) {
+  function preparePrompt(mode, text, expertGuidance) {
     const request = String(text || '');
-    return normalizeMode(mode) === 'agent' ? `${POLICY}\n${request}` : request;
+    if (normalizeMode(mode) !== 'agent') return request;
+    const expert = String(expertGuidance || '').replace(/\s+/g, ' ').trim().slice(0, 700);
+    return [OPEN, ...EXECUTION_GUIDANCE, ...(expert ? [`- ${expert}`] : []), CLOSE, '', request].join('\n');
   }
 
   function stripPrompt(text) {

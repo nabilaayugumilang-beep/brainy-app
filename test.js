@@ -6,6 +6,7 @@ const ProjectStore = require('./project-store.js');
 const CommandPalette = require('./command-palette.js');
 const MarkdownRenderer = require('./markdown-renderer.js');
 const AgentMode = require('./agent-mode.js');
+const ExpertSkills = require('./expert-skills.js');
 const ApprovalQueue = require('./approval-queue.js');
 const AgentHQ = require('./agent-hq.js');
 
@@ -247,6 +248,51 @@ test('agent mode wraps execution guidance while stored transcript text remains v
   assert.doesNotMatch(html, /ProjectStore\.stripProjectContext\(AgentMode\.stripPrompt\(text\)\)/);
 });
 
+test('People & OD expert skill is opt-in, substantive-only, compact, and persisted safely', () => {
+  assert.equal(ExpertSkills.normalize('unknown'), 'none');
+  assert.equal(ExpertSkills.guidance('none', 'Analyze this workforce plan.'), '');
+  assert.equal(ExpertSkills.guidance('people-od', 'Hi!'), '');
+  assert.equal(ExpertSkills.isSubstantive('Hi!'), false);
+  assert.equal(ExpertSkills.isSubstantive('Review this talent plan.'), true);
+  const guidance = ExpertSkills.guidance('people-od', 'Review this talent plan.');
+  assert.match(guidance, /People & OD/);
+  assert.match(guidance, /evidence/i);
+  assert.match(guidance, /assumptions/i);
+  assert.match(guidance, /gaps/i);
+  assert.match(guidance, /recommendations/i);
+  assert.match(guidance, /FTE is capacity, not productivity/i);
+  assert.match(guidance, /employment.*legal/i);
+  assert.ok(guidance.length <= 520, `expert guidance is too large: ${guidance.length} chars`);
+
+  const values = new Map();
+  const storage = { getItem:key => values.get(key) || null, setItem:(key,value) => values.set(key,value) };
+  assert.equal(ExpertSkills.load(storage), 'none');
+  assert.equal(ExpertSkills.save(storage, 'people-od'), 'people-od');
+  assert.equal(ExpertSkills.load(storage), 'people-od');
+});
+
+test('expert guidance adds zero tokens when off and only augments Agent requests', () => {
+  const request = 'Assess this workforce plan.';
+  const baseline = AgentMode.preparePrompt('agent', request);
+  assert.equal(AgentMode.preparePrompt('agent', request, ExpertSkills.guidance('none', request)), baseline);
+  const expert = AgentMode.preparePrompt('agent', request, ExpertSkills.guidance('people-od', request));
+  assert.match(expert, /People & OD/);
+  assert.match(expert, /Assess this workforce plan\./);
+  assert.equal(AgentMode.preparePrompt('chat', request, ExpertSkills.guidance('people-od', request)), request);
+});
+
+test('expert skill selector is compact and wired to both Agent submission paths', () => {
+  assert.match(html, /<script src="\.\/expert-skills\.js"><\/script>/);
+  assert.match(html, /id="expertSkill"/);
+  assert.match(html, /People &amp; OD Expert/);
+  assert.match(html, /ExpertSkills\.load\(localStorage\)/);
+  assert.match(html, /ExpertSkills\.save\(localStorage, expertSkillSelect\.value\)/);
+  assert.match(html, /const expertSkill = mode === 'agent' \? activeExpertSkill : 'none'/);
+  assert.match(html, /ExpertSkills\.guidance\(expertSkill, promptText\)/);
+  assert.match(html, /queuedExpertSkill=expertSkill/);
+  assert.match(html, /expertSkillSelect\.hidden = !isAgent/);
+});
+
 test('approval queue serializes decisions and safety gate persists until confirmed clear', () => {
   const queue = ApprovalQueue.create();
   const first = queue.enqueue({ command: 'first' });
@@ -368,8 +414,8 @@ test('agent mode UI exposes an explicit mode switch and compact task progress', 
   assert.match(html, /id="agentMode"/);
   assert.match(html, /id="agentRunbar"[^>]+aria-live="polite"/);
   assert.match(html, /const mode = queuedMode/);
-  assert.match(html, /AgentMode\.preparePrompt\(mode/);
-  assert.match(html, /AgentMode\.preparePrompt\(interactionMode/);
+  assert.match(html, /AgentMode\.preparePrompt\(mode, projectPrompt/);
+  assert.equal((html.match(/AgentMode\.preparePrompt\(mode, projectPrompt/g) || []).length, 2);
   assert.match(html, /type === 'tool\.start'/);
   assert.match(html, /type === 'tool\.complete'/);
 });
@@ -447,7 +493,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=27'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=28'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -638,7 +684,8 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v27/);
+  assert.match(sw, /brainy-shell-v28/);
+  assert.match(sw, /\.\/expert-skills\.js/);
   assert.match(sw, /response\.ok/);
   assert.match(sw, /event\.request\.mode === 'navigate'/);
   assert.match(sw, /Response\.error\(\)/);
