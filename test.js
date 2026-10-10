@@ -623,7 +623,17 @@ test('bridge keeps all backend calls on the dynamic tunnel', () => {
   assert.match(html, /let backendUrl/);
   assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/auth\/ws-ticket`/);
   assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/codex-usage`/);
+  assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/codex-accounts`/);
   assert.match(html, /new WebSocket\(`\$\{proto\}\/\/\$\{wsBackend\.host\}/);
+});
+
+test('account control shows safe Codex credentials and supports deliberate switching', () => {
+  assert.match(html, /id="accountControl"/);
+  assert.match(html, /id="accountList"/);
+  assert.match(html, /Use account/);
+  assert.match(html, /method:'POST'/);
+  assert.match(html, /Switching restarts BRAINY and reconnects this workspace/);
+  assert.doesNotMatch(html, /access_token|refresh_token/);
 });
 
 test('repository contains no access key or backend URL', () => {
@@ -641,7 +651,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=36'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=37'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -871,7 +881,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v36/);
+  assert.match(sw, /brainy-shell-v37/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
   assert.match(sw, /\.\/action-center\.js/);
