@@ -20,10 +20,29 @@
   function resolve(value, request) {
     if (!IDS.has(value)) return 'auto';
     if (value !== 'auto') return value;
-    const text = String(request || '');
+    const text = String(request || '').trim();
+    const substantive = text.length >= 50 && text.split(/\s+/).filter(Boolean).length >= 7;
+    if (!substantive) return 'quick';
     if (RESEARCH.test(text)) return 'research';
     if (DEEP.test(text)) return 'deep';
     return 'quick';
+  }
+  function createSubmissionGate() {
+    let locked = false;
+    return Object.freeze({
+      tryLock() { if (locked) return false; locked = true; return true; },
+      unlock() { locked = false; },
+      isLocked() { return locked; }
+    });
+  }
+  async function fetchWithTimeout(fetcher,url,init={},timeoutMs=135000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(),timeoutMs);
+    try { return await fetcher(url,{...init,signal:controller.signal}); }
+    catch (error) {
+      if (controller.signal.aborted || error?.name === 'AbortError') throw new Error('Additional brain timed out');
+      throw error;
+    } finally { clearTimeout(timer); }
   }
   function needsContext(mode) { return mode === 'research' || mode === 'deep'; }
   function sanitizeReference(value) {
@@ -53,5 +72,5 @@
     ].join('\n');
   }
 
-  return Object.freeze({ modes, normalize, resolve, needsContext, wrap });
+  return Object.freeze({ modes, normalize, resolve, createSubmissionGate, fetchWithTimeout, needsContext, wrap });
 });

@@ -830,6 +830,7 @@
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
   let currentAssistant = null, currentText = '', reconnectTimer = null;
   let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', queuedBrainMode = 'auto', queuedBrainMaterial = '', selectedImage = null, imagePreparing = false, brainPreparing = false, connecting = false;
+  const submissionGate = BrainyMultiBrain.createSubmissionGate();
   let interactionMode = AgentMode.load(localStorage), workspaceView = 'home';
   let activeActionId = '', editingActionDraftId = '';
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
@@ -2037,7 +2038,7 @@
     }
   }
   async function brainContextRequest(mode,request) {
-    const response = await fetch(`${backendUrl}/api/brainy/multi-brain`,{
+    const response = await BrainyMultiBrain.fetchWithTimeout(fetch,`${backendUrl}/api/brainy/multi-brain`,{
       method:'POST',
       headers:{...authHeaders,'content-type':'application/json'},
       body:JSON.stringify({mode,request})
@@ -2076,13 +2077,14 @@
     return rpc('prompt.submit',{session_id:sid,text});
   }
   async function flushQueuedMessage() {
-    if (!queuedText || !ready || busy || brainPreparing) return;
+    if (!queuedText || !ready || busy || brainPreparing || !submissionGate.tryLock()) return;
     const promptText = queuedText;
     const image = queuedImage;
     const mode = queuedMode;
     const expertSkill = queuedExpertSkill;
     const brainMode = queuedBrainMode;
     const brainMaterial = queuedBrainMaterial;
+    const targetSession = sid;
     queuedText = '';
     queuedImage = null;
     queuedMode = 'chat';
@@ -2090,22 +2092,25 @@
     queuedBrainMode = 'auto';
     queuedBrainMaterial = '';
     updateSend();
-    const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
-    const brain = await prepareBrainPrompt(projectPrompt,brainMode,brainMaterial);
-    const submittedPrompt = AgentMode.preparePrompt(mode, brain.prompt, ExpertSkills.guidance(expertSkill, promptText));
-    activeRunMode = mode; agentToolCount = 0;
-    try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
+    let brain = {prompt:'',material:brainMaterial};
+    try {
+      const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
+      brain = await prepareBrainPrompt(projectPrompt,brainMode,brainMaterial);
+      if (busy || sid !== targetSession) {
+        queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=brain.material;
+        submissionGate.unlock(); updateSend(); setStatus('Message queued · waiting...'); return;
+      }
+      if (!ready || !ws || ws.readyState !== WebSocket.OPEN) throw new Error('Connection interrupted');
+      const submittedPrompt = AgentMode.preparePrompt(mode, brain.prompt, ExpertSkills.guidance(expertSkill, promptText));
+      activeRunMode = mode; agentToolCount = 0;
+      await submitPrompt(submittedPrompt,image); projectContextPending=false;
+    }
     catch (err) {
-      queuedText = promptText;
-      queuedImage = image;
-      queuedMode = mode;
-      queuedExpertSkill = expertSkill;
-      queuedBrainMode = brainMode;
-      queuedBrainMaterial = brain.material;
-      ready = false;
-      updateSend();
-      setStatus('Message saved · reconnecting...');
-      connect().catch(fail);
+      submissionGate.unlock();
+      if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
+        queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=brain.material;
+        ready=false; updateSend(); setStatus('Message saved · reconnecting...'); connect().catch(fail);
+      } else fail(err);
     }
   }
   async function startSession() {
@@ -2160,7 +2165,7 @@
     if (type === 'gateway.ready') { startSession().catch(fail); return; }
     if (type === 'session.info') { applyRuntime(payload); if (!busy) setStatus('Ready'); setTimeout(refreshUsage,200); return; }
     if (type === 'message.start') {
-      busy = true; setStatus(activeRunMode === 'agent' ? 'Agent working...' : `Answering with ${niceName(runtimeInfo.model || latestUsage.model)}...`); updateSend(); currentText='';
+      submissionGate.unlock(); busy = true; setStatus(activeRunMode === 'agent' ? 'Agent working...' : `Answering with ${niceName(runtimeInfo.model || latestUsage.model)}...`); updateSend(); currentText='';
       if (activeRunMode === 'agent') showAgentProgress('Planning the task');
       currentAssistant = addMessage('assistant','Preparing a response...',true); return;
     }
@@ -2174,9 +2179,9 @@
       if (!currentAssistant) currentAssistant = addMessage('assistant','');
       const finalText = payload.text || currentText || 'Done.';
       MarkdownRenderer.render(currentAssistant, finalText); currentAssistant.classList.remove('pending');
-      currentAssistant=null; currentText=''; busy=false; safetyGate.clear(); invalidateBlockingRequests(); setStatus(payload.status === 'interrupted' ? 'Stopped' : 'Ready'); updateSend(); scrollBottom();
+      currentAssistant=null; currentText=''; submissionGate.unlock(); busy=false; safetyGate.clear(); invalidateBlockingRequests(); setStatus(payload.status === 'interrupted' ? 'Stopped' : 'Ready'); updateSend(); scrollBottom();
       finishAgentProgress(payload.status === 'interrupted' ? 'Task stopped' : 'Task complete');
-      setTimeout(refreshUsage,250); setTimeout(loadSessionHistory,500); return;
+      setTimeout(refreshUsage,250); setTimeout(loadSessionHistory,500); flushQueuedMessage(); return;
     }
     if (type === 'tool.start') {
       agentToolCount += 1; setStatus('Working...'); showAgentProgress(AgentMode.activityLabel(payload.name)); return;
@@ -2204,7 +2209,7 @@
     reconnectTimer=setTimeout(()=>connect().catch(fail),1500);
   }
   function fail(err) {
-    busy=false; updateSend(); setStatus(queuedText ? 'Message saved · reconnecting...' : 'Connection interrupted'); showToast(err.message || String(err));
+    submissionGate.unlock(); busy=false; updateSend(); setStatus(queuedText ? 'Message saved · reconnecting...' : 'Connection interrupted'); showToast(err.message || String(err));
     if (currentAssistant && !currentText) currentAssistant.textContent='That did not work. Please try again.';
     scheduleReconnect();
   }
@@ -2348,7 +2353,7 @@
     commandPalette.hidden = false;
     input.setAttribute('aria-activedescendant', `slash-command-${slashIndex}`);
   }
-  function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing || brainPreparing || historyLoading; }
+  function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || submissionGate.isLocked() || !!queuedText || imagePreparing || brainPreparing || historyLoading; }
   function autoGrow() { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; }
   input.addEventListener('input',()=>{ slashIndex=0; autoGrow(); updateSend(); renderSlashPalette(); });
   input.addEventListener('keydown',(e)=>{
@@ -2373,29 +2378,36 @@
     e.preventDefault();
     const text=input.value.trim();
     const image=selectedImage;
-    if ((!text && !image) || busy || queuedText || imagePreparing || brainPreparing) return;
+    if ((!text && !image) || busy || queuedText || imagePreparing || brainPreparing || !submissionGate.tryLock()) return;
+    updateSend();
     const promptText = text || 'Please analyze this image.';
     const mode = interactionMode;
     const expertSkill = mode === 'agent' ? activeExpertSkill : 'none';
     const brainMode = activeBrainMode;
+    const targetSession = sid;
     activeRunMode = mode; agentToolCount = 0;
     addMessage('user',text || 'Image',false,image ? image.preview : '');
     input.value=''; selectedImage=null; imageInput.value=''; renderAttachment(); autoGrow();
     if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
-      queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=''; updateSend();
+      queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=''; submissionGate.unlock(); updateSend();
       setStatus('Message saved · reconnecting...');
       connect().catch(fail);
       return;
     }
-    updateSend();
     let brain = {prompt:'',material:''};
     try {
       const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
       brain = await prepareBrainPrompt(projectPrompt,brainMode);
+      if (busy || sid !== targetSession) {
+        queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=brain.material;
+        submissionGate.unlock(); updateSend(); setStatus('Message queued · waiting...'); return;
+      }
+      if (!ready || !ws || ws.readyState !== WebSocket.OPEN) throw new Error('Connection interrupted');
       const submittedPrompt = AgentMode.preparePrompt(mode, brain.prompt, ExpertSkills.guidance(expertSkill, promptText));
       await submitPrompt(submittedPrompt,image); projectContextPending=false;
     }
     catch(err) {
+      submissionGate.unlock();
       if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
         queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=brain.material || ''; updateSend();
         setStatus('Message saved · reconnecting...');
@@ -2485,7 +2497,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=40',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=41',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

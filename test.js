@@ -20,10 +20,23 @@ const actionCenterSource = fs.readFileSync('action-center.js', 'utf8');
 test('multi-brain routing defaults to Auto and only escalates substantive work', () => {
   assert.deepEqual(MultiBrain.modes().map(item => item.id), ['auto','quick','research','deep']);
   assert.equal(MultiBrain.resolve('auto','Rewrite this sentence'), 'quick');
-  assert.equal(MultiBrain.resolve('auto','Research current Indonesia workforce benchmarks with sources'), 'research');
-  assert.equal(MultiBrain.resolve('auto','Challenge the assumptions in this promotion decision'), 'deep');
+  assert.equal(MultiBrain.resolve('auto','current'), 'quick');
+  assert.equal(MultiBrain.resolve('auto','Research current Indonesia workforce benchmarks across comparable employers with credible sources'), 'research');
+  assert.equal(MultiBrain.resolve('auto','Challenge the assumptions and fairness risks in this promotion decision before we proceed'), 'deep');
   assert.equal(MultiBrain.resolve('research','Anything'), 'research');
   assert.equal(MultiBrain.resolve('unknown','Anything'), 'auto');
+});
+
+test('multi-brain browser request times out and the submission gate rejects a second turn', async () => {
+  const gate = MultiBrain.createSubmissionGate();
+  assert.equal(gate.tryLock(),true);
+  assert.equal(gate.tryLock(),false);
+  gate.unlock();
+  assert.equal(gate.tryLock(),true);
+  const never = (_url,options) => new Promise((resolve,reject) => {
+    options.signal.addEventListener('abort',() => reject(Object.assign(new Error('aborted'),{name:'AbortError'})));
+  });
+  await assert.rejects(() => MultiBrain.fetchWithTimeout(never,'/brain',{},5),/timed out/i);
 });
 
 test('multi-brain wrapper labels external material as untrusted and keeps the user request authoritative', () => {
@@ -47,6 +60,9 @@ test('multi-brain UI exposes honest modes and calls only the authenticated backe
   assert.match(html, /x-brainy-key/);
   assert.doesNotMatch(html, /GOOGLE_API_KEY|OPENAI_API_KEY|AIza[0-9A-Za-z_-]+/);
   assert.match(html, /BrainyMultiBrain\.resolve/);
+  assert.match(html, /BrainyMultiBrain\.fetchWithTimeout/);
+  assert.match(html, /submissionGate\.tryLock\(\)/);
+  assert.match(html, /message\.start[\s\S]*submissionGate\.unlock\(\)/);
   assert.match(html, /Gemini WORK ready · GPT synthesizing/);
   assert.match(html, /queuedBrainMode/);
 });
@@ -778,7 +794,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html,/serviceWorker\.register\('\.\/sw\.js\?v=40'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=41'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1008,7 +1024,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v40/);
+  assert.match(sw, /brainy-shell-v41/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
