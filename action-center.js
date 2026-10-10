@@ -102,9 +102,65 @@
 
   function readLegacyDrafts(storage) {
     if (!storage || typeof storage.getItem !== 'function') return [];
-    try { return migrateLegacyDrafts(JSON.parse(storage.getItem(STORAGE_KEY) || '[]')); }
-    catch { return []; }
+    try {
+      const items = JSON.parse(storage.getItem(STORAGE_KEY) || '[]');
+      if (!Array.isArray(items)) return [];
+      return items.slice(0,20).map((item,index) => {
+        const migrated = migrateLegacyDrafts([item])[0];
+        return migrated ? {...migrated,legacyKey:String(item && item.id || `legacy-${index}`)} : null;
+      }).filter(Boolean);
+    } catch { return []; }
   }
 
-  return { STORAGE_KEY, templates, prepare, normalizeDraft, migrateLegacyDrafts, readLegacyDrafts };
+  function removeLegacyDraft(storage, id) {
+    if (!storage || typeof storage.getItem !== 'function') return false;
+    try {
+      const items = JSON.parse(storage.getItem(STORAGE_KEY) || '[]');
+      if (!Array.isArray(items)) return false;
+      const needle = String(id == null ? '' : id);
+      const remaining = items.filter((item,index) => String(item && item.id || `legacy-${index}`) !== needle);
+      if (remaining.length === items.length) return false;
+      if (remaining.length) storage.setItem(STORAGE_KEY,JSON.stringify(remaining));
+      else storage.removeItem(STORAGE_KEY);
+      return true;
+    } catch { return false; }
+  }
+
+  function createSyncTracker() {
+    let revision = 0;
+    const activeMutations = new Set();
+    let idleWaiters = [];
+    return {
+      beginLoad() { return revision; },
+      beginMutation() {
+        const token = Symbol('action-draft-mutation');
+        activeMutations.add(token);
+        revision += 1;
+        return token;
+      },
+      endMutation(token) {
+        if (!activeMutations.delete(token)) return revision;
+        revision += 1;
+        if (!activeMutations.size) {
+          const waiters = idleWaiters;
+          idleWaiters = [];
+          waiters.forEach(resolve => resolve());
+        }
+        return revision;
+      },
+      needsReconcile(loadRevision) { return loadRevision !== revision; },
+      waitForIdle() {
+        if (!activeMutations.size) return Promise.resolve();
+        return new Promise(resolve => idleWaiters.push(resolve));
+      }
+    };
+  }
+
+  async function waitForReconciliation(tracker,loadRevision,attempt=0,maxAttempts=1) {
+    if (!tracker || attempt >= maxAttempts || !tracker.needsReconcile(loadRevision)) return false;
+    await tracker.waitForIdle();
+    return true;
+  }
+
+  return { STORAGE_KEY, templates, prepare, normalizeDraft, migrateLegacyDrafts, readLegacyDrafts, removeLegacyDraft, createSyncTracker, waitForReconciliation };
 });

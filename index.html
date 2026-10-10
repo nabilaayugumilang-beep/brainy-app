@@ -826,7 +826,8 @@
   let interactionMode = AgentMode.load(localStorage), workspaceView = 'home';
   let activeActionId = '', editingActionDraftId = '';
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
-  let actionDraftsAttempted = false, actionDraftRevision = 0;
+  let actionDraftsAttempted = false;
+  const actionDraftSync = BrainyActionCenter.createSyncTracker();
   let activeExpertSkill = ExpertSkills.load(localStorage);
   expertSkillSelect.value = activeExpertSkill;
   let hqState = BrainyAgentHQ.createState();
@@ -1234,29 +1235,34 @@
     if (!response.ok || !payload.ok) throw new Error(payload.error || 'Saved work is unavailable');
     return payload;
   }
-  async function loadActionDraftsRemote(force=false) {
+  async function loadActionDraftsRemote(force=false,reconciliationAttempt=0) {
     if (!accessKey) return;
     if (actionDraftsLoading || (actionDraftsLoaded && !force) || (actionDraftsAttempted && !force)) return;
     actionDraftsAttempted = true;
     actionDraftsLoading = true;
-    const loadRevision = actionDraftRevision;
+    const loadRevision = actionDraftSync.beginLoad();
+    let reconcile = false;
     renderActionDrafts();
     try {
       const payload = await actionDraftRequest();
-      if (loadRevision !== actionDraftRevision) return;
+      if (actionDraftSync.needsReconcile(loadRevision)) { reconcile = true; return; }
       actionDraftItems = Array.isArray(payload.drafts) ? payload.drafts.map(BrainyActionCenter.normalizeDraft).filter(Boolean) : [];
       const legacy = BrainyActionCenter.readLegacyDrafts(localStorage);
       const migrationBatch = legacy.slice(0,Math.max(0,20 - actionDraftItems.length));
       for (const draft of migrationBatch) {
-        const migrated = await actionDraftRequest({op:'save',draft:{...draft,migrationKey:draft.id}});
+        const {legacyKey,...legacyDraft} = draft;
+        const migrated = await actionDraftRequest({op:'save',draft:{...legacyDraft,migrationKey:legacyKey}});
         const normalized = BrainyActionCenter.normalizeDraft(migrated.draft);
-        if (normalized) actionDraftItems = [normalized,...actionDraftItems.filter(item => item.id !== normalized.id)];
+        if (normalized) {
+          actionDraftItems = [normalized,...actionDraftItems.filter(item => item.id !== normalized.id)];
+          BrainyActionCenter.removeLegacyDraft(localStorage,legacyKey);
+        }
       }
-      if (legacy.length && migrationBatch.length === legacy.length) {
-        localStorage.removeItem(BrainyActionCenter.STORAGE_KEY);
+      const remainingLegacy = BrainyActionCenter.readLegacyDrafts(localStorage);
+      if (legacy.length && !remainingLegacy.length) {
         showToast(`${legacy.length} local ${legacy.length === 1 ? 'draft' : 'drafts'} synced`);
       } else if (migrationBatch.length) {
-        showToast(`${migrationBatch.length} local drafts synced · ${legacy.length - migrationBatch.length} kept on this device`);
+        showToast(`${migrationBatch.length} local drafts synced · ${remainingLegacy.length} kept on this device`);
       }
       actionDraftsLoaded = true;
     } catch (error) {
@@ -1264,22 +1270,38 @@
     } finally {
       actionDraftsLoading = false; renderActionDrafts();
       if (workspaceView === 'home') renderHomeDashboard();
+      if (reconcile) {
+        const retry = await BrainyActionCenter.waitForReconciliation(actionDraftSync,loadRevision,reconciliationAttempt,1);
+        if (retry) loadActionDraftsRemote(true,reconciliationAttempt + 1);
+        else {
+          actionDraftsLoaded = false;
+          showToast('Saved work changed again · retry to refresh');
+        }
+      }
     }
   }
   async function saveActionDraftRemote(draft) {
-    actionDraftRevision += 1;
-    const payload = await actionDraftRequest({op:'save',draft});
-    const saved = BrainyActionCenter.normalizeDraft(payload.draft);
-    if (!saved) throw new Error('The saved work response was invalid');
-    actionDraftItems = [saved,...actionDraftItems.filter(item => item.id !== saved.id)];
-    actionDraftsLoaded = true;
-    return saved;
+    const mutation = actionDraftSync.beginMutation();
+    try {
+      const payload = await actionDraftRequest({op:'save',draft});
+      const saved = BrainyActionCenter.normalizeDraft(payload.draft);
+      if (!saved) throw new Error('The saved work response was invalid');
+      actionDraftItems = [saved,...actionDraftItems.filter(item => item.id !== saved.id)];
+      actionDraftsLoaded = true;
+      return saved;
+    } finally {
+      actionDraftSync.endMutation(mutation);
+    }
   }
   async function deleteActionDraftRemote(id) {
-    actionDraftRevision += 1;
-    await actionDraftRequest({op:'delete',id});
-    actionDraftItems = actionDraftItems.filter(item => item.id !== id);
-    actionDraftsLoaded = true;
+    const mutation = actionDraftSync.beginMutation();
+    try {
+      await actionDraftRequest({op:'delete',id});
+      actionDraftItems = actionDraftItems.filter(item => item.id !== id);
+      actionDraftsLoaded = true;
+    } finally {
+      actionDraftSync.endMutation(mutation);
+    }
   }
   function renderActionDrafts() {
     actionDraftCount.textContent = actionDraftsLoading ? 'Syncing…' : `${actionDraftItems.length} saved`;
@@ -2403,7 +2425,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=38',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=39',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

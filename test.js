@@ -97,6 +97,88 @@ test('legacy local action drafts migrate into the simple synced shape', () => {
   assert.equal(migrated[1].request, 'Town hall note');
 });
 
+test('successful legacy migration removes only that exact item from the local queue', () => {
+  const ActionCenter = require('./action-center.js');
+  const prefix = 'x'.repeat(100);
+  const raw = [
+    {id:`${prefix}-one`,templateId:'draft-communication',values:{objective:'First'}},
+    {id:`${prefix}-two`,templateId:'review-work',values:{objective:'Second'}},
+    {id:'old-3',templateId:'plan-event',values:{objective:'Third'}}
+  ];
+  const map = new Map([[ActionCenter.STORAGE_KEY,JSON.stringify(raw)]]);
+  const storage = {
+    getItem:key => map.get(key) || null,
+    setItem:(key,value) => map.set(key,value),
+    removeItem:key => map.delete(key)
+  };
+  const queued = ActionCenter.readLegacyDrafts(storage);
+  assert.equal(queued[0].legacyKey,`${prefix}-one`);
+  assert.equal(queued[1].legacyKey,`${prefix}-two`);
+  assert.equal(ActionCenter.removeLegacyDraft(storage,queued[0].legacyKey),true);
+  const remaining = ActionCenter.readLegacyDrafts(storage);
+  assert.deepEqual(remaining.map(item => item.request),['Second','Third']);
+  assert.equal(remaining[0].legacyKey,`${prefix}-two`);
+});
+
+test('sync tracker waits for overlapping mutations before reconciliation', async () => {
+  const ActionCenter = require('./action-center.js');
+  const tracker = ActionCenter.createSyncTracker();
+  const loadRevision = tracker.beginLoad();
+  const mutation = tracker.beginMutation();
+  let settled = false;
+  const idle = tracker.waitForIdle().then(() => { settled = true; });
+  await Promise.resolve();
+  assert.equal(settled,false);
+  tracker.endMutation(mutation);
+  await idle;
+  assert.equal(settled,true);
+  assert.equal(tracker.needsReconcile(loadRevision),true);
+  const reconciliationRevision = tracker.beginLoad();
+  assert.equal(tracker.needsReconcile(reconciliationRevision),false);
+});
+
+test('reconciliation waits for a pending save before reloading the final snapshot', async () => {
+  const ActionCenter = require('./action-center.js');
+  const tracker = ActionCenter.createSyncTracker();
+  const loadRevision = tracker.beginLoad();
+  const mutation = tracker.beginMutation();
+  let server = ['existing'];
+  let local = ['existing'];
+  const reconciliation = ActionCenter.waitForReconciliation(tracker,loadRevision).then(needed => {
+    if (needed) local = [...server];
+  });
+  server.push('saved');
+  tracker.endMutation(mutation);
+  await reconciliation;
+  assert.deepEqual(local,['existing','saved']);
+});
+
+test('reconciliation waits for a pending delete before reloading the final snapshot', async () => {
+  const ActionCenter = require('./action-center.js');
+  const tracker = ActionCenter.createSyncTracker();
+  const loadRevision = tracker.beginLoad();
+  const mutation = tracker.beginMutation();
+  let server = ['keep','delete'];
+  let local = [...server];
+  const reconciliation = ActionCenter.waitForReconciliation(tracker,loadRevision).then(needed => {
+    if (needed) local = [...server];
+  });
+  server = ['keep'];
+  tracker.endMutation(mutation);
+  await reconciliation;
+  assert.deepEqual(local,['keep']);
+});
+
+test('reconciliation is capped after one forced reload', async () => {
+  const ActionCenter = require('./action-center.js');
+  const tracker = ActionCenter.createSyncTracker();
+  const loadRevision = tracker.beginLoad();
+  const mutation = tracker.beginMutation();
+  tracker.endMutation(mutation);
+  assert.equal(await ActionCenter.waitForReconciliation(tracker,loadRevision,0,1),true);
+  assert.equal(await ActionCenter.waitForReconciliation(tracker,loadRevision,1,1),false);
+});
+
 test('action center UI saves drafts through the authenticated backend and prepares without auto-running', () => {
   assert.match(html, /<script src="\.\/action-center\.js"><\/script>/);
   assert.match(html, /id="actionsMode"[^>]*>Actions<\/button>/);
@@ -111,19 +193,24 @@ test('action center UI saves drafts through the authenticated backend and prepar
   assert.doesNotMatch(html, /prepareActionForAgent[\s\S]{0,1400}composer\.requestSubmit/);
 });
 
-test('saved-work sync is authorized, bounded after failure, and ignores stale loads', () => {
+test('saved-work sync is authorized, bounded after failure, and reconciles stale loads', () => {
   assert.match(html, /if \(!accessKey\) return/);
   assert.match(html, /actionDraftsAttempted/);
-  assert.match(html, /actionDraftRevision/);
-  assert.match(html, /loadRevision !== actionDraftRevision/);
+  assert.match(html,/if \(actionDraftSync\.needsReconcile\(loadRevision\)\) \{ reconcile = true; return; \}/);
+  assert.match(html,/BrainyActionCenter\.waitForReconciliation\(actionDraftSync,loadRevision,reconciliationAttempt,1\)/);
+  assert.match(html,/loadActionDraftsRemote\(true,reconciliationAttempt \+ 1\)/);
+  assert.match(html,/const mutation = actionDraftSync\.beginMutation\(\)/);
+  assert.match(html,/actionDraftSync\.endMutation\(mutation\)/);
+  assert.match(html, /BrainyActionCenter\.removeLegacyDraft\(localStorage,legacyKey\)/);
   const homeRenderer = html.match(/function renderHomeDashboard\(\) \{([\s\S]*?)\n  \}\n  function renderInteractionMode/)[1];
   const actionRenderer = html.match(/function renderActionCenter\(\) \{([\s\S]*?)\n  \}\n  function prepareActionForAgent/)[1];
   assert.doesNotMatch(homeRenderer, /loadActionDraftsRemote/);
   assert.doesNotMatch(actionRenderer, /loadActionDraftsRemote/);
 });
 
-test('legacy draft migration sends a deterministic migration key', () => {
-  assert.match(html, /migrationKey\s*:\s*draft\.id/);
+test('legacy draft migration sends the exact deterministic migration key', () => {
+  assert.match(html, /migrationKey\s*:\s*legacyKey/);
+  assert.match(html, /const \{legacyKey,\.\.\.legacyDraft\} = draft/);
 });
 
 test('closeThen blocks the next operation when closing fails', async () => {
@@ -655,7 +742,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html,/serviceWorker\.register\('\.\/sw\.js\?v=38'/);
+  assert.match(html,/serviceWorker\.register\('\.\/sw\.js\?v=39'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -885,7 +972,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw,/brainy-shell-v38/);
+  assert.match(sw,/brainy-shell-v39/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
   assert.match(sw, /\.\/action-center\.js/);
