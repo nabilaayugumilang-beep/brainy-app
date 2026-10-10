@@ -354,8 +354,8 @@
     footer { border-top:1px solid var(--line); background:var(--panel); padding:calc(12px * var(--density-space)) max(calc(16px * var(--density-space)),env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(calc(16px * var(--density-space)),env(safe-area-inset-left)); }
     .composer-context { width:min(var(--content-max),100%); min-height:0; margin:0 auto 7px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
     .composer-context:empty { display:none; }
-    .expert-skill-select { min-height:30px; max-width:220px; padding:4px 28px 4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
-    .expert-skill-select[hidden] { display:none; }
+    .expert-skill-select, .brain-mode-select { min-height:30px; max-width:240px; padding:4px 28px 4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--panel); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
+    .expert-skill-select[hidden], .brain-mode-select[hidden] { display:none; }
     .active-project-chip { max-width:100%; min-height:30px; display:inline-flex; align-items:center; gap:7px; padding:4px 10px; border:1px solid color-mix(in srgb,var(--electric) 34%,var(--line)); border-radius:999px; background:var(--electric-soft); color:var(--accent); cursor:pointer; font-size:10px; font-weight:700; }
     .active-project-chip[hidden] { display:none; }
     .active-project-chip span { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
@@ -664,6 +664,12 @@
       <div class="command-palette" id="commandPalette" role="listbox" aria-label="Slash commands" hidden></div>
       <div class="composer-context" id="composerContext">
         <button class="active-project-chip" id="activeProjectChip" type="button" hidden><span id="activeProjectName"></span><b aria-hidden="true">✎</b></button>
+        <select class="brain-mode-select" id="brainMode" aria-label="Brain routing" title="Choose how many brains BRAINY should use">
+          <option value="auto">Brains: Auto</option>
+          <option value="quick">Quick · GPT</option>
+          <option value="research">Research · Gemini + GPT</option>
+          <option value="deep">Deep Think · Gemini + GPT</option>
+        </select>
         <select class="expert-skill-select" id="expertSkill" aria-label="Expert skill" title="Adds compact expert guidance only to Agent tasks" hidden>
           <option value="none">Expert: Off</option>
           <option value="people-od">People &amp; OD Expert</option>
@@ -736,6 +742,7 @@
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
 <script src="./home-dashboard.js"></script>
+<script src="./multi-brain.js"></script>
 
 <script src="./approval-queue.js"></script>
 <script src="./agent-hq.js"></script>
@@ -775,7 +782,7 @@
   const projectDescriptionInput = $('#projectDescriptionInput'), projectInstructionsInput = $('#projectInstructionsInput');
   const activeProjectChip = $('#activeProjectChip'), activeProjectName = $('#activeProjectName');
   const composerContext = $('#composerContext'), composer = $('#composer');
-  const expertSkillSelect = $('#expertSkill');
+  const expertSkillSelect = $('#expertSkill'), brainModeSelect = $('#brainMode');
   const chatModal = $('#chatModal'), chatNameInput = $('#chatNameInput');
   const HISTORY_OPEN_KEY = 'brainy_history_open';
   const CHATS_COLLAPSED_KEY = 'brainy_chats_collapsed';
@@ -822,7 +829,7 @@
   personalizeInstallManifest();
   let ws = null, sid = '', sessionKey = '', seq = 0, ready = false, busy = false;
   let currentAssistant = null, currentText = '', reconnectTimer = null;
-  let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', selectedImage = null, imagePreparing = false, connecting = false;
+  let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', queuedBrainMode = 'auto', queuedBrainMaterial = '', selectedImage = null, imagePreparing = false, brainPreparing = false, connecting = false;
   let interactionMode = AgentMode.load(localStorage), workspaceView = 'home';
   let activeActionId = '', editingActionDraftId = '';
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
@@ -830,6 +837,8 @@
   const actionDraftSync = BrainyActionCenter.createSyncTracker();
   let activeExpertSkill = ExpertSkills.load(localStorage);
   expertSkillSelect.value = activeExpertSkill;
+  let activeBrainMode = BrainyMultiBrain.normalize(localStorage.getItem('brainy_brain_mode_v1'));
+  brainModeSelect.value = activeBrainMode;
   let hqState = BrainyAgentHQ.createState();
   let activeRunMode = 'chat', agentToolCount = 0;
   let historyLoading = false;
@@ -2027,6 +2036,38 @@
       showToast(error.message || 'The previous conversation could not be closed');
     }
   }
+  async function brainContextRequest(mode,request) {
+    const response = await fetch(`${backendUrl}/api/brainy/multi-brain`,{
+      method:'POST',
+      headers:{...authHeaders,'content-type':'application/json'},
+      body:JSON.stringify({mode,request})
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.ok || typeof payload.context !== 'string') {
+      throw new Error(payload.error || 'The additional brain is unavailable');
+    }
+    return payload;
+  }
+  async function prepareBrainPrompt(request,selectedMode,existingMaterial='') {
+    const resolved = BrainyMultiBrain.resolve(selectedMode,request);
+    if (!BrainyMultiBrain.needsContext(resolved)) return {prompt:request,resolved,material:''};
+    if (existingMaterial) return {prompt:BrainyMultiBrain.wrap(request,existingMaterial,resolved),resolved,material:existingMaterial};
+    brainPreparing = true; updateSend();
+    let succeeded = false;
+    setStatus(resolved === 'research' ? 'Gemini WORK researching...' : 'Gemini WORK challenging assumptions...');
+    try {
+      const result = await brainContextRequest(resolved,request);
+      succeeded = true;
+      setStatus('Gemini WORK ready · GPT synthesizing...');
+      return {prompt:BrainyMultiBrain.wrap(request,result.context,resolved),resolved,material:result.context};
+    } catch (error) {
+      showToast(`${error.message || 'Additional brain unavailable'} · continuing with GPT`);
+      return {prompt:request,resolved:'quick',material:''};
+    } finally {
+      brainPreparing = false; updateSend();
+      if (!succeeded && !busy) setStatus(ready ? 'Ready' : 'Connection interrupted');
+    }
+  }
   async function submitPrompt(text,image) {
     if (image && !image.attached) {
       await rpc('image.attach_bytes',{session_id:sid,content_base64:image.base64,filename:image.name});
@@ -2035,18 +2076,23 @@
     return rpc('prompt.submit',{session_id:sid,text});
   }
   async function flushQueuedMessage() {
-    if (!queuedText || !ready || busy) return;
+    if (!queuedText || !ready || busy || brainPreparing) return;
     const promptText = queuedText;
     const image = queuedImage;
     const mode = queuedMode;
     const expertSkill = queuedExpertSkill;
+    const brainMode = queuedBrainMode;
+    const brainMaterial = queuedBrainMaterial;
     queuedText = '';
     queuedImage = null;
     queuedMode = 'chat';
     queuedExpertSkill = 'none';
+    queuedBrainMode = 'auto';
+    queuedBrainMaterial = '';
     updateSend();
     const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
-    const submittedPrompt = AgentMode.preparePrompt(mode, projectPrompt, ExpertSkills.guidance(expertSkill, promptText));
+    const brain = await prepareBrainPrompt(projectPrompt,brainMode,brainMaterial);
+    const submittedPrompt = AgentMode.preparePrompt(mode, brain.prompt, ExpertSkills.guidance(expertSkill, promptText));
     activeRunMode = mode; agentToolCount = 0;
     try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
     catch (err) {
@@ -2054,6 +2100,8 @@
       queuedImage = image;
       queuedMode = mode;
       queuedExpertSkill = expertSkill;
+      queuedBrainMode = brainMode;
+      queuedBrainMaterial = brain.material;
       ready = false;
       updateSend();
       setStatus('Message saved · reconnecting...');
@@ -2226,6 +2274,13 @@
     const label = ExpertSkills.label(activeExpertSkill);
     showToast(activeExpertSkill === 'none' ? 'Expert skill off' : `${label} active`);
   });
+  brainModeSelect.addEventListener('change', () => {
+    activeBrainMode = BrainyMultiBrain.normalize(brainModeSelect.value);
+    localStorage.setItem('brainy_brain_mode_v1',activeBrainMode);
+    brainModeSelect.value = activeBrainMode;
+    const label = BrainyMultiBrain.modes().find(item => item.id === activeBrainMode)?.label || 'Auto';
+    showToast(`Brain routing: ${label}`);
+  });
   companionStatus.onclick = () => showToast('Mac Companion is not connected yet');
   stopAgent.onclick = async () => {
     if (!busy || !sid) return;
@@ -2293,7 +2348,7 @@
     commandPalette.hidden = false;
     input.setAttribute('aria-activedescendant', `slash-command-${slashIndex}`);
   }
-  function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing || historyLoading; }
+  function updateSend() { send.disabled = (!input.value.trim() && !selectedImage) || busy || !!queuedText || imagePreparing || brainPreparing || historyLoading; }
   function autoGrow() { input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; }
   input.addEventListener('input',()=>{ slashIndex=0; autoGrow(); updateSend(); renderSlashPalette(); });
   input.addEventListener('keydown',(e)=>{
@@ -2318,26 +2373,31 @@
     e.preventDefault();
     const text=input.value.trim();
     const image=selectedImage;
-    if ((!text && !image) || busy || queuedText || imagePreparing) return;
+    if ((!text && !image) || busy || queuedText || imagePreparing || brainPreparing) return;
     const promptText = text || 'Please analyze this image.';
-    const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
     const mode = interactionMode;
     const expertSkill = mode === 'agent' ? activeExpertSkill : 'none';
-    const submittedPrompt = AgentMode.preparePrompt(mode, projectPrompt, ExpertSkills.guidance(expertSkill, promptText));
+    const brainMode = activeBrainMode;
     activeRunMode = mode; agentToolCount = 0;
     addMessage('user',text || 'Image',false,image ? image.preview : '');
     input.value=''; selectedImage=null; imageInput.value=''; renderAttachment(); autoGrow();
     if (!ready || !sid || !ws || ws.readyState !== WebSocket.OPEN) {
-      queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; updateSend();
+      queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=''; updateSend();
       setStatus('Message saved · reconnecting...');
       connect().catch(fail);
       return;
     }
     updateSend();
-    try { await submitPrompt(submittedPrompt,image); projectContextPending=false; }
+    let brain = {prompt:'',material:''};
+    try {
+      const projectPrompt = ProjectStore.prepareFirstPrompt(projectState, sessionKey, promptText, projectContextPending);
+      brain = await prepareBrainPrompt(projectPrompt,brainMode);
+      const submittedPrompt = AgentMode.preparePrompt(mode, brain.prompt, ExpertSkills.guidance(expertSkill, promptText));
+      await submitPrompt(submittedPrompt,image); projectContextPending=false;
+    }
     catch(err) {
       if (!ready || !ws || ws.readyState !== WebSocket.OPEN) {
-        queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; updateSend();
+        queuedText=promptText; queuedImage=image; queuedMode=mode; queuedExpertSkill=expertSkill; queuedBrainMode=brainMode; queuedBrainMaterial=brain.material || ''; updateSend();
         setStatus('Message saved · reconnecting...');
         connect().catch(fail);
       } else fail(err);
@@ -2425,7 +2485,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=39',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=40',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
