@@ -316,6 +316,11 @@ test('mobile Safari cannot auto-enlarge text inside wide Markdown tables', () =>
   assert.match(html, /\.content th, \.content td \{[^}]*font-family:inherit;[^}]*font-size:12px;[^}]*line-height:1\.5;/);
 });
 
+test('mobile text controls stay at 16px so iPhone Safari does not auto-zoom on focus', () => {
+  assert.match(html, /@media \(max-width:640px\) \{[\s\S]*?input, textarea, select \{ font-size:16px !important; \}/);
+  assert.doesNotMatch(html, /user-scalable\s*=\s*no|maximum-scale\s*=\s*1/);
+});
+
 test('wide Markdown tables scroll inside their own wrapper without shifting the chat', () => {
   assert.match(html, /main \{[^}]*overflow-y:auto;[^}]*overflow-x:hidden;/);
   assert.match(html, /\.message \{[^}]*min-width:0;[^}]*max-width:100%;/);
@@ -636,7 +641,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=34'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=35'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -866,7 +871,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v34/);
+  assert.match(sw, /brainy-shell-v35/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
   assert.match(sw, /\.\/action-center\.js/);

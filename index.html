@@ -436,6 +436,7 @@
       .content { font-size:12px; line-height:1.6; }
       footer { padding:10px max(12px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); }
       .attachment-preview { width:100%; }
+      input, textarea, select { font-size:16px !important; }
       .composer { width:100%; min-width:0; min-height:54px; border-radius:18px; padding:5px; gap:6px; box-shadow:0 6px 26px var(--glow); }
       .attach-btn { width:44px; height:44px; border-radius:14px; }
       textarea { min-width:0; min-height:42px; padding:10px 0 7px; font-size:12px; }
@@ -2249,7 +2250,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=34',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=35',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
