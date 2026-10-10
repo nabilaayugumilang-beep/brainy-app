@@ -39,15 +39,15 @@
   function recentDrafts(items, templates, limit=3) {
     const titles = new Map((Array.isArray(templates) ? templates : []).map(item => [item.id,item.title]));
     return (Array.isArray(items) ? items : [])
-      .filter(item => item && item.id && item.templateId)
+      .filter(item => item && item.id && item.intent && item.request)
       .slice()
       .sort((a,b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0))
       .slice(0, limit)
       .map(item => ({
         id:String(item.id),
-        templateId:String(item.templateId),
-        title:String(titles.get(item.templateId) || 'Action draft'),
-        preview:String(Object.values(item.values || {}).find(Boolean) || 'Untitled draft'),
+        intent:String(item.intent),
+        title:String(titles.get(item.intent) || 'Action draft'),
+        preview:String(item.request || 'Untitled draft'),
         updatedAt:Number(item.updatedAt) || 0
       }));
   }

@@ -248,7 +248,11 @@
     .action-field { display:grid; gap:5px; color:var(--muted); font-size:9px; font-weight:700; }
     .action-field.wide { grid-column:1/-1; }
     .action-input { width:100%; min-height:40px; padding:8px 10px; border:1px solid var(--line); border-radius:9px; outline:none; background:var(--panel); color:var(--text); font-size:10px; font-weight:400; }
-    textarea.action-input { min-height:82px; resize:vertical; }
+    textarea.action-input { min-height:64px; resize:vertical; }
+    .action-context { grid-column:1/-1; border:1px solid var(--line); border-radius:9px; background:color-mix(in srgb,var(--soft) 45%,var(--panel)); }
+    .action-context summary { padding:10px; color:var(--muted); cursor:pointer; font-size:9px; font-weight:700; }
+    .action-context[open] summary { border-bottom:1px solid var(--line); }
+    .action-context .action-field { padding:10px; }
     .action-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
     .action-controls { display:flex; justify-content:flex-end; gap:7px; margin-top:13px; }
     .action-controls button, .action-draft button { min-height:38px; padding:0 11px; border:1px solid var(--line); border-radius:9px; background:var(--panel); cursor:pointer; font-size:9px; font-weight:700; }
@@ -557,15 +561,14 @@
       </div>
       <section class="home-dashboard" id="homeDashboard" aria-labelledby="homeGreeting" hidden>
         <div class="home-hero">
-          <span class="home-kicker">Personal workspace · 0 tokens</span>
+          <span class="home-kicker">Work thinking space · 0 tokens</span>
           <h1 id="homeGreeting">Good day, Ila</h1>
           <p class="home-date" id="homeDate"></p>
-          <div class="home-actions" aria-label="Quick actions">
-            <button class="home-action primary" type="button" data-home-action="chat">Open Chat</button>
-            <button class="home-action" type="button" data-home-action="agent">Run Agent</button>
-            <button class="home-action" type="button" data-home-action="actions">Open Actions</button>
-            <button class="home-action" type="button" data-home-action="hq">Open HQ</button>
-
+          <div class="home-actions" aria-label="Quick starts">
+            <button class="home-action primary" type="button" data-home-intent="brainstorm">Brainstorm</button>
+            <button class="home-action" type="button" data-home-intent="draft">Draft</button>
+            <button class="home-action" type="button" data-home-intent="analyze">Analyze</button>
+            <button class="home-action" type="button" data-home-intent="run-task">Run a task</button>
           </div>
         </div>
         <div class="home-grid">
@@ -574,10 +577,9 @@
             <div class="home-list" id="homeContinue"></div>
           </section>
           <section class="home-panel" aria-labelledby="homeDraftsTitle">
-            <div class="home-panel-head"><h2 id="homeDraftsTitle">Local drafts</h2><span class="home-panel-meta">Saved on this device</span></div>
+            <div class="home-panel-head"><h2 id="homeDraftsTitle">Saved work</h2><span class="home-panel-meta">Synced across devices</span></div>
             <div class="home-list" id="homeDrafts"></div>
           </section>
-
         </div>
       </section>
 
@@ -610,29 +612,29 @@
       <section class="action-center" id="actionCenter" aria-labelledby="actionCenterTitle" hidden>
         <div class="action-head">
           <div>
-            <span class="hq-kicker">Workflows</span>
-            <h1 id="actionCenterTitle">Action Center</h1>
-            <p>Structure work and save drafts locally. AI runs only after you review and press Run.</p>
+            <span class="hq-kicker">Think · Draft · Analyze · Execute</span>
+            <h1 id="actionCenterTitle">What do you need BRAINY to help with?</h1>
+            <p>Choose a starting point, describe the outcome, and add context only when it helps.</p>
           </div>
-          <span class="zero-token-badge">0 tokens until Run</span>
+          <span class="zero-token-badge">0 tokens until you send</span>
         </div>
         <div class="action-layout">
-          <nav class="action-template-list" id="actionTemplates" aria-label="Action templates"></nav>
+          <nav class="action-template-list" id="actionTemplates" aria-label="Ways to start"></nav>
           <div class="action-main">
             <section class="action-workspace" aria-live="polite">
-              <p class="action-empty" id="actionEmpty">Choose a workflow to start.</p>
+              <p class="action-empty" id="actionEmpty">Choose how you want to start.</p>
               <form class="action-form" id="actionForm" hidden>
                 <h2 id="actionFormTitle"></h2>
                 <p class="action-form-copy" id="actionFormCopy"></p>
                 <div class="action-fields" id="actionFields"></div>
                 <div class="action-controls">
-                  <button type="submit">Save Draft</button>
-                  <button class="primary" id="actionPrepare" type="button">Prepare in Agent</button>
+                  <button type="submit">Save for later</button>
+                  <button class="primary" id="actionPrepare" type="button">Continue</button>
                 </div>
               </form>
             </section>
             <section class="action-drafts" aria-labelledby="actionDraftsTitle">
-              <div class="action-drafts-head"><strong id="actionDraftsTitle">Local drafts</strong><span id="actionDraftCount">0 saved</span></div>
+              <div class="action-drafts-head"><strong id="actionDraftsTitle">Saved work</strong><span id="actionDraftCount">0 saved</span></div>
               <div class="action-draft-list" id="actionDrafts"></div>
             </section>
           </div>
@@ -823,6 +825,8 @@
   let queuedText = '', queuedImage = null, queuedMode = 'chat', queuedExpertSkill = 'none', selectedImage = null, imagePreparing = false, connecting = false;
   let interactionMode = AgentMode.load(localStorage), workspaceView = 'home';
   let activeActionId = '', editingActionDraftId = '';
+  let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
+  let actionDraftsAttempted = false, actionDraftRevision = 0;
   let activeExpertSkill = ExpertSkills.load(localStorage);
   expertSkillSelect.value = activeExpertSkill;
   let hqState = BrainyAgentHQ.createState();
@@ -1183,22 +1187,29 @@
     $('#actionEmpty').hidden = true;
     actionForm.hidden = false;
     $('#actionFormTitle').textContent = template.title;
-    $('#actionFormCopy').textContent = draft ? 'Editing a local draft · no AI used' : template.description;
+    $('#actionFormCopy').textContent = draft ? 'Editing synced work · no AI used' : template.description;
     actionFields.replaceChildren();
     template.fields.forEach(field => {
       const label = document.createElement('label');
-      label.className = 'action-field' + (field.multiline ? ' wide' : '');
-      label.append(document.createTextNode(field.label + (field.required ? ' *' : '')));
-      const control = document.createElement(field.multiline ? 'textarea' : 'input');
+      label.className = 'action-field wide';
+      label.append(document.createTextNode(field.label + (field.required ? ' *' : ' (optional)')));
+      const control = document.createElement('textarea');
       control.className = 'action-input'; control.name = field.key; control.placeholder = field.placeholder;
-      control.maxLength = 1600; control.required = field.required;
-      if (!field.multiline) control.type = 'text';
-      control.value = draft && draft.values[field.key] ? draft.values[field.key] : '';
-      label.append(control); actionFields.append(label);
+      control.maxLength = field.key === 'request' ? 4000 : 6000; control.required = field.required;
+      control.rows = field.key === 'request' ? 3 : 4;
+      const value = draft ? String(draft[field.key] || '') : '';
+      control.value = value;
+      label.append(control);
+      if (field.key === 'context') {
+        label.firstChild.textContent = 'Helpful background';
+        const details = document.createElement('details'); details.className = 'action-context'; details.open = Boolean(value);
+        const summary = document.createElement('summary'); summary.textContent = 'Add context (optional)';
+        details.append(summary,label); actionFields.append(details);
+      } else actionFields.append(label);
     });
     actionTemplates.querySelectorAll('.action-template').forEach(button => {
       const active = button.dataset.actionId === template.id;
-      button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+      button.classList.toggle('active',active); button.setAttribute('aria-pressed',String(active));
     });
     actionFields.querySelector('.action-input')?.focus();
   }
@@ -1212,27 +1223,90 @@
       button.append(title,description); button.addEventListener('click', () => openAction(template.id)); actionTemplates.append(button);
     });
   }
-  function renderActionDrafts() {
-    const drafts = BrainyActionCenter.loadDrafts(localStorage);
-    actionDraftCount.textContent = `${drafts.length} saved`;
-    actionDrafts.replaceChildren();
-    if (!drafts.length) {
-      const emptyDrafts = document.createElement('p'); emptyDrafts.className = 'action-draft-empty';
-      emptyDrafts.textContent = 'Drafts stay on this device. No AI or network call.'; actionDrafts.append(emptyDrafts); return;
+  async function actionDraftRequest(body=null) {
+    const options = { method:body ? 'POST' : 'GET', headers:{...authHeaders} };
+    if (body) {
+      options.headers['content-type'] = 'application/json';
+      options.body = JSON.stringify(body);
     }
-    drafts.forEach(draft => {
-      const template = actionTemplate(draft.templateId);
+    const response = await fetch(`${backendUrl}/api/brainy/action-drafts`,options);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.ok) throw new Error(payload.error || 'Saved work is unavailable');
+    return payload;
+  }
+  async function loadActionDraftsRemote(force=false) {
+    if (!accessKey) return;
+    if (actionDraftsLoading || (actionDraftsLoaded && !force) || (actionDraftsAttempted && !force)) return;
+    actionDraftsAttempted = true;
+    actionDraftsLoading = true;
+    const loadRevision = actionDraftRevision;
+    renderActionDrafts();
+    try {
+      const payload = await actionDraftRequest();
+      if (loadRevision !== actionDraftRevision) return;
+      actionDraftItems = Array.isArray(payload.drafts) ? payload.drafts.map(BrainyActionCenter.normalizeDraft).filter(Boolean) : [];
+      const legacy = BrainyActionCenter.readLegacyDrafts(localStorage);
+      const migrationBatch = legacy.slice(0,Math.max(0,20 - actionDraftItems.length));
+      for (const draft of migrationBatch) {
+        const migrated = await actionDraftRequest({op:'save',draft:{...draft,migrationKey:draft.id}});
+        const normalized = BrainyActionCenter.normalizeDraft(migrated.draft);
+        if (normalized) actionDraftItems = [normalized,...actionDraftItems.filter(item => item.id !== normalized.id)];
+      }
+      if (legacy.length && migrationBatch.length === legacy.length) {
+        localStorage.removeItem(BrainyActionCenter.STORAGE_KEY);
+        showToast(`${legacy.length} local ${legacy.length === 1 ? 'draft' : 'drafts'} synced`);
+      } else if (migrationBatch.length) {
+        showToast(`${migrationBatch.length} local drafts synced · ${legacy.length - migrationBatch.length} kept on this device`);
+      }
+      actionDraftsLoaded = true;
+    } catch (error) {
+      showToast(error.message || 'Saved work could not be loaded');
+    } finally {
+      actionDraftsLoading = false; renderActionDrafts();
+      if (workspaceView === 'home') renderHomeDashboard();
+    }
+  }
+  async function saveActionDraftRemote(draft) {
+    actionDraftRevision += 1;
+    const payload = await actionDraftRequest({op:'save',draft});
+    const saved = BrainyActionCenter.normalizeDraft(payload.draft);
+    if (!saved) throw new Error('The saved work response was invalid');
+    actionDraftItems = [saved,...actionDraftItems.filter(item => item.id !== saved.id)];
+    actionDraftsLoaded = true;
+    return saved;
+  }
+  async function deleteActionDraftRemote(id) {
+    actionDraftRevision += 1;
+    await actionDraftRequest({op:'delete',id});
+    actionDraftItems = actionDraftItems.filter(item => item.id !== id);
+    actionDraftsLoaded = true;
+  }
+  function renderActionDrafts() {
+    actionDraftCount.textContent = actionDraftsLoading ? 'Syncing…' : `${actionDraftItems.length} saved`;
+    actionDrafts.replaceChildren();
+    if (!actionDraftItems.length) {
+      const emptyDrafts = document.createElement('p'); emptyDrafts.className = 'action-draft-empty';
+      emptyDrafts.textContent = actionDraftsLoading ? 'Loading saved work…' : 'No saved work yet. Drafts sync through your private BRAINY backend.';
+      actionDrafts.append(emptyDrafts); return;
+    }
+    actionDraftItems.forEach(draft => {
+      const template = actionTemplate(draft.intent);
+      if (!template) return;
       const row = document.createElement('div'); row.className = 'action-draft';
       const open = document.createElement('button'); open.type = 'button'; open.className = 'action-draft-open';
       const title = document.createElement('strong'); title.textContent = template.title;
-      const preview = document.createElement('span'); preview.textContent = Object.values(draft.values)[0] || 'Untitled draft';
-      open.append(title,preview); open.addEventListener('click', () => openAction(draft.templateId,draft));
+      const preview = document.createElement('span'); preview.textContent = draft.request;
+      open.append(title,preview); open.addEventListener('click', () => openAction(draft.intent,draft));
       const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'action-draft-delete';
       remove.textContent = 'Delete'; remove.setAttribute('aria-label', `Delete ${template.title} draft`);
-      remove.addEventListener('click', () => {
-        if (!confirm('Delete this local draft?')) return;
-        try { BrainyActionCenter.removeDraft(localStorage,draft.id); if (editingActionDraftId === draft.id) openAction(draft.templateId); renderActionDrafts(); showToast('Draft deleted'); }
-        catch { showToast('Draft could not be deleted on this device'); }
+      remove.addEventListener('click', async () => {
+        if (!confirm('Delete this saved draft?')) return;
+        remove.disabled = true;
+        try {
+          await deleteActionDraftRemote(draft.id);
+          if (editingActionDraftId === draft.id) openAction(draft.intent);
+          renderActionDrafts(); showToast('Draft deleted');
+        } catch (error) { remove.disabled = false; showToast(error.message || 'Draft could not be deleted'); }
       });
       row.append(open,remove); actionDrafts.append(row);
     });
@@ -1243,13 +1317,13 @@
   }
   function prepareActionForAgent() {
     if (!activeActionId || !actionForm.reportValidity()) return;
-    const prepared = BrainyActionCenter.prepare(activeActionId, readActionValues());
-    activeExpertSkill = ExpertSkills.save(localStorage, prepared.expertSkill);
+    const prepared = BrainyActionCenter.prepare(activeActionId,readActionValues());
+    activeExpertSkill = ExpertSkills.save(localStorage,prepared.expertSkill);
     expertSkillSelect.value = activeExpertSkill;
-    setInteractionMode('agent');
+    setInteractionMode(prepared.mode);
     input.value = prepared.prompt;
     autoGrow(); updateSend(); input.focus();
-    showToast('Prepared locally · review and press Run when ready');
+    showToast(`Ready in ${prepared.mode === 'agent' ? 'Agent' : 'Chat'} · review before sending`);
   }
   function homeEmpty(target, text) {
     const emptyState = document.createElement('p');
@@ -1275,12 +1349,11 @@
       setInteractionMode('chat'); openHistorySession(source,button);
     }));
     homeDrafts.replaceChildren();
-    const drafts = BrainyHomeDashboard.recentDrafts(
-      BrainyActionCenter.loadDrafts(localStorage), BrainyActionCenter.templates()
-    );
-    if (!drafts.length) homeEmpty(homeDrafts,'Drafts saved in Actions will appear here.');
+    const drafts = BrainyHomeDashboard.recentDrafts(actionDraftItems,BrainyActionCenter.templates());
+    if (!drafts.length) homeEmpty(homeDrafts,actionDraftsLoading ? 'Loading saved work…' : 'Saved work will appear here and sync across devices.');
     drafts.forEach(draft => homeItem(homeDrafts,draft.title,draft.preview,() => {
-      showActionCenter(); openAction(draft.templateId,draft);
+      const source = actionDraftItems.find(item => item.id === draft.id);
+      showActionCenter(); if (source) openAction(source.intent,source);
     }));
   }
   function renderInteractionMode() {
@@ -1326,11 +1399,13 @@
     workspaceView = 'home';
     renderInteractionMode();
     scroller.scrollTop = 0;
+    loadActionDraftsRemote(actionDraftsAttempted && !actionDraftsLoaded);
   }
   function showActionCenter() {
     workspaceView = 'actions';
     renderInteractionMode();
     scroller.scrollTop = 0;
+    loadActionDraftsRemote(actionDraftsAttempted && !actionDraftsLoaded);
   }
   function showAgentHQ() {
     workspaceView = 'hq';
@@ -2100,28 +2175,27 @@
   agentModeButton.onclick = () => setInteractionMode('agent');
   actionsModeButton.onclick = showActionCenter;
   hqModeButton.onclick = showAgentHQ;
-  document.querySelectorAll('[data-home-action]').forEach(button => {
+  document.querySelectorAll('[data-home-intent]').forEach(button => {
     button.addEventListener('click', () => {
-      const action = button.dataset.homeAction;
-      if (action === 'actions') { showActionCenter(); return; }
-      if (action === 'hq') { showAgentHQ(); return; }
-
-      setInteractionMode(action === 'agent' ? 'agent' : 'chat'); input.focus();
+      showActionCenter(); openAction(button.dataset.homeIntent);
     });
   });
-  actionForm.addEventListener('submit', event => {
+  actionForm.addEventListener('submit', async event => {
     event.preventDefault();
     if (!activeActionId || !actionForm.reportValidity()) return;
+    const submit = actionForm.querySelector('[type="submit"]');
+    submit.disabled = true; submit.textContent = 'Saving…';
     try {
-      const draft = BrainyActionCenter.saveDraft(localStorage, {
-        id: editingActionDraftId,
-        templateId: activeActionId,
-        values: readActionValues()
+      const values = readActionValues();
+      const draft = await saveActionDraftRemote({
+        id:editingActionDraftId, intent:activeActionId,
+        request:values.request, context:values.context
       });
       editingActionDraftId = draft.id;
-      $('#actionFormCopy').textContent = 'Saved locally · no AI used';
-      renderActionDrafts(); showToast('Draft saved locally · 0 tokens');
-    } catch { showToast('Draft could not be saved on this device'); }
+      $('#actionFormCopy').textContent = 'Saved securely · synced across your BRAINY devices';
+      renderActionDrafts(); showToast('Saved and synced · 0 AI tokens');
+    } catch (error) { showToast(error.message || 'Draft could not be saved'); }
+    finally { submit.disabled = false; submit.textContent = 'Save for later'; }
   });
   $('#actionPrepare').onclick = prepareActionForAgent;
   expertSkillSelect.addEventListener('change', () => {
@@ -2329,12 +2403,16 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=37',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=38',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
   }
-  refreshBackend().finally(() => accessKey ? connect().catch(fail) : showActivation());
+  refreshBackend().finally(() => {
+    if (!accessKey) { showActivation(); return; }
+    loadActionDraftsRemote();
+    connect().catch(fail);
+  });
   setInterval(refreshAccountUsage, 5 * 60 * 1000);
 })();
 </script>

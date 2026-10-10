@@ -16,7 +16,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const actionCenterSource = fs.readFileSync('action-center.js', 'utf8');
 
 
-test('personal home creates a local greeting and readable date without a network call', () => {
+test('work home creates a local greeting and readable date without a network call', () => {
   const morning = new Date(2026, 9, 9, 8, 30);
   const evening = new Date(2026, 9, 9, 19, 0);
   assert.equal(HomeDashboard.greeting(morning, 'Ila'), 'Good morning, Ila');
@@ -26,7 +26,7 @@ test('personal home creates a local greeting and readable date without a network
   assert.doesNotMatch(source, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
 });
 
-test('personal home summarizes recent chats and drafts from local state only', () => {
+test('work home summarizes recent chats and server-backed drafts without mutating state', () => {
   const chats = [
     {key:'older', title:'Older work', preview:'Earlier', updatedAt:100},
     {key:'latest', title:'Latest work', preview:'Continue this', updatedAt:300},
@@ -34,92 +34,96 @@ test('personal home summarizes recent chats and drafts from local state only', (
     {key:'fourth', title:'Fourth work', preview:'Not shown', updatedAt:50}
   ];
   const drafts = [
-    {id:'d1', templateId:'plan-event', values:{objective:'Town hall'}, updatedAt:10},
-    {id:'d2', templateId:'review-work', values:{draft:'Review memo'}, updatedAt:20}
+    {id:'d1', intent:'brainstorm', request:'Retention ideas', updatedAt:10},
+    {id:'d2', intent:'analyze', request:'Review appraisal data', updatedAt:20}
   ];
   const snapshot = JSON.stringify({chats,drafts});
   assert.deepEqual(HomeDashboard.recentChats(chats).map(item => item.id), ['latest','middle','older']);
   assert.deepEqual(HomeDashboard.recentDrafts(drafts, [
-    {id:'plan-event',title:'Plan Event'}, {id:'review-work',title:'Review Work'}
+    {id:'brainstorm',title:'Brainstorm'}, {id:'analyze',title:'Analyze'}
   ]), [
-    {id:'d2',templateId:'review-work',title:'Review Work',preview:'Review memo',updatedAt:20},
-    {id:'d1',templateId:'plan-event',title:'Plan Event',preview:'Town hall',updatedAt:10}
+    {id:'d2',intent:'analyze',title:'Analyze',preview:'Review appraisal data',updatedAt:20},
+    {id:'d1',intent:'brainstorm',title:'Brainstorm',preview:'Retention ideas',updatedAt:10}
   ]);
   assert.equal(JSON.stringify({chats,drafts}), snapshot);
 });
 
-test('personal home is a first-class zero-token workspace with local recents and quick actions', () => {
+test('work home is a focused zero-token launchpad with synced recents and four quick starts', () => {
   assert.match(html, /<script src="\.\/home-dashboard\.js"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
-  assert.match(html, /id="homeGreeting"/);
-  assert.match(html, /id="homeDate"/);
+  assert.match(html, /Work thinking space · 0 tokens/);
   assert.match(html, /id="homeContinue"/);
   assert.match(html, /id="homeDrafts"/);
-  assert.match(html, /data-home-action="chat"/);
-  assert.match(html, /data-home-action="agent"/);
-  assert.match(html, /data-home-action="actions"/);
+  for (const intent of ['brainstorm','draft','analyze','run-task']) {
+    assert.match(html, new RegExp(`data-home-intent="${intent}"`));
+  }
   assert.match(html, /BrainyHomeDashboard\.recentChats\(historyItems\)/);
-  assert.match(html, /BrainyActionCenter\.loadDrafts\(localStorage\)/);
+  assert.match(html, /BrainyHomeDashboard\.recentDrafts\(actionDraftItems/);
   assert.match(html, /function showHomeDashboard\(\)/);
   assert.match(html, /\.mode-switch \{[^}]*grid-template-columns:repeat\(5,1fr\)/);
-  assert.doesNotMatch(html, /local-tools|data-home-action="tools"|id="localTools"/);
-  assert.match(html, /\['brainy_local_tools_v1','brainy_note_scratch_v1','brainy_local_reminder_v1'\]\.forEach\(key => localStorage\.removeItem\(key\)\)/);
+  assert.doesNotMatch(html, /Personal workspace|Local drafts|Saved on this device/);
 });
 
-test('action center exposes five role workflows and prepares a compact expert handoff', () => {
+test('action center asks for one outcome across four simple work intents', () => {
   const ActionCenter = require('./action-center.js');
   assert.deepEqual(ActionCenter.templates().map(item => item.id), [
-    'create-content', 'plan-event', 'draft-communication', 'review-work', 'people-od-task'
+    'brainstorm', 'draft', 'analyze', 'run-task'
   ]);
-  const prepared = ActionCenter.prepare('create-content', {
-    objective:'Launch the employer-brand campaign', audience:'LinkedIn candidates',
-    keyMessage:'Meet the people behind our work', notes:''
+  assert.ok(ActionCenter.templates().every(item => item.fields.length === 2));
+  assert.ok(ActionCenter.templates().every(item => item.fields[0].key === 'request' && item.fields[0].required));
+  const prepared = ActionCenter.prepare('brainstorm', {
+    request:'Explore a better performance-management approach',
+    context:'Current process is too administrative'
   });
-  assert.equal(prepared.expertSkill, 'corporate-comms');
-  assert.match(prepared.prompt, /Create Content/);
-  assert.match(prepared.prompt, /Objective: Launch the employer-brand campaign/);
-  assert.match(prepared.prompt, /Audience: LinkedIn candidates/);
-  assert.doesNotMatch(prepared.prompt, /Notes:/);
-  assert.ok(prepared.prompt.length <= 700);
+  assert.equal(prepared.mode, 'chat');
+  assert.equal(prepared.expertSkill, 'none');
+  assert.match(prepared.prompt, /Brainstorm/);
+  assert.match(prepared.prompt, /What I need: Explore a better performance-management approach/);
+  assert.match(prepared.prompt, /Context: Current process is too administrative/);
+  assert.doesNotMatch(prepared.prompt, /Task type|Available evidence|Audience|Deliverable/);
 });
 
-test('action drafts stay local, sanitize fields, update safely, and recover from corrupt storage', () => {
+test('legacy local action drafts migrate into the simple synced shape', () => {
   const ActionCenter = require('./action-center.js');
-  let raw = '';
-  const storage = {
-    getItem:key => key === ActionCenter.STORAGE_KEY ? raw : null,
-    setItem:(key,value) => { assert.equal(key, ActionCenter.STORAGE_KEY); raw = value; }
-  };
-  const saved = ActionCenter.saveDraft(storage, {
-    templateId:'plan-event', values:{objective:'  Team   connection  ', audience:'All employees', injected:'ignore'}
-  }, 1000);
-  assert.equal(saved.id, 'action-1000');
-  assert.equal(saved.values.objective, 'Team   connection');
-  assert.equal(saved.values.injected, undefined);
-  assert.deepEqual(ActionCenter.loadDrafts(storage).map(item => item.id), ['action-1000']);
-  const updated = ActionCenter.saveDraft(storage, {
-    id:saved.id, templateId:'plan-event', values:{objective:'Updated objective', audience:'Leaders'}
-  }, 2000);
-  assert.equal(updated.createdAt, 1000);
-  assert.equal(updated.updatedAt, 2000);
-  assert.equal(ActionCenter.loadDrafts(storage)[0].values.objective, 'Updated objective');
-  ActionCenter.removeDraft(storage, saved.id);
-  assert.deepEqual(ActionCenter.loadDrafts(storage), []);
-  raw = '{broken';
-  assert.deepEqual(ActionCenter.loadDrafts(storage), []);
+  const migrated = ActionCenter.migrateLegacyDrafts([
+    {id:'old-1', templateId:'people-od-task', values:{objective:'Review WLA', taskType:'FTE', data:'Workbook attached'}, createdAt:10, updatedAt:20},
+    {id:'old-2', templateId:'draft-communication', values:{objective:'Town hall note', audience:'All staff'}, createdAt:30, updatedAt:40}
+  ]);
+  assert.deepEqual(migrated.map(item => item.intent), ['analyze','draft']);
+  assert.equal(migrated[0].request, 'Review WLA');
+  assert.match(migrated[0].context, /Task type: FTE/);
+  assert.match(migrated[0].context, /Available evidence: Workbook attached/);
+  assert.equal(migrated[1].request, 'Town hall note');
 });
 
-test('action center UI is a zero-token workspace with explicit Agent preparation', () => {
+test('action center UI saves drafts through the authenticated backend and prepares without auto-running', () => {
   assert.match(html, /<script src="\.\/action-center\.js"><\/script>/);
   assert.match(html, /id="actionsMode"[^>]*>Actions<\/button>/);
   assert.match(html, /id="actionCenter"[^>]*hidden/);
-  assert.match(html, /BrainyActionCenter\.saveDraft\(localStorage/);
+  assert.match(html, /What do you need BRAINY to help with\?/);
+  assert.match(html, /\/api\/brainy\/action-drafts/);
+  assert.match(html, /saveActionDraftRemote/);
   assert.match(html, /BrainyActionCenter\.prepare\(/);
   assert.match(html, /input\.value\s*=\s*prepared\.prompt/);
-  assert.match(html, /setInteractionMode\('agent'\)/);
+  assert.doesNotMatch(html, /BrainyActionCenter\.saveDraft\(localStorage/);
   assert.doesNotMatch(actionCenterSource, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
-  assert.doesNotMatch(html, /prepareActionForAgent[\s\S]{0,1000}composer\.requestSubmit/);
+  assert.doesNotMatch(html, /prepareActionForAgent[\s\S]{0,1400}composer\.requestSubmit/);
+});
+
+test('saved-work sync is authorized, bounded after failure, and ignores stale loads', () => {
+  assert.match(html, /if \(!accessKey\) return/);
+  assert.match(html, /actionDraftsAttempted/);
+  assert.match(html, /actionDraftRevision/);
+  assert.match(html, /loadRevision !== actionDraftRevision/);
+  const homeRenderer = html.match(/function renderHomeDashboard\(\) \{([\s\S]*?)\n  \}\n  function renderInteractionMode/)[1];
+  const actionRenderer = html.match(/function renderActionCenter\(\) \{([\s\S]*?)\n  \}\n  function prepareActionForAgent/)[1];
+  assert.doesNotMatch(homeRenderer, /loadActionDraftsRemote/);
+  assert.doesNotMatch(actionRenderer, /loadActionDraftsRemote/);
+});
+
+test('legacy draft migration sends a deterministic migration key', () => {
+  assert.match(html, /migrationKey\s*:\s*draft\.id/);
 });
 
 test('closeThen blocks the next operation when closing fails', async () => {
@@ -651,7 +655,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=37'/);
+  assert.match(html,/serviceWorker\.register\('\.\/sw\.js\?v=38'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -881,7 +885,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v37/);
+  assert.match(sw,/brainy-shell-v38/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
   assert.match(sw, /\.\/action-center\.js/);
