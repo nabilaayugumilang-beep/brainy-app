@@ -78,13 +78,24 @@ test('work home creates a local greeting and readable date without a network cal
   assert.doesNotMatch(source, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
 });
 
-test('work home exposes the canonical Notion materials dashboard and server-backed drafts', () => {
-  const materials = HomeDashboard.materialsDashboard();
-  assert.deepEqual(materials, {
-    title:'My Work HQ',
-    subtitle:'Personal Command Center',
-    url:'https://app.notion.com/p/My-Work-HQ-Personal-Command-Center-3f5877a2c48b815ea32ffa82912e6271?source=copy_link'
+test('work home normalizes a bounded live materials snapshot and server-backed drafts', () => {
+  const materials = HomeDashboard.normalizeMaterials({
+    ok:true,
+    title:'My Work HQ | Personal Command Center',
+    status:'Manual publish verified',
+    focus:[{title:'Review TOR',priority:'P1',checked:false},{title:'Check brief',priority:'P2',checked:true}],
+    upcoming:[{when:'14 Oct · 10.00',event:'Talent Review',next:'Prepare'}],
+    collections:{
+      actions:{count:9,items:[{title:'Review TOR',priority:'P1',state:'Needs Verification',workstream:'L&D'}]},
+      decisions:{count:1,items:[{title:'SOP reply',status:'Needs Verification',nextMove:'Confirm comments'}]},
+      sync:{count:2,items:[{source:'Google Drive',state:'Healthy',lastSync:'2026-10-12'}]}
+    },
+    meta:{sourceUpdatedAt:'2026-10-13T14:48:00.000Z',refreshedAt:'2026-10-13T15:00:00.000Z',tokenCost:0}
   });
+  assert.equal(materials.title,'My Work HQ | Personal Command Center');
+  assert.deepEqual(materials.focus.map(item => item.priority),['P1','P2']);
+  assert.equal(materials.collections.actions.count,9);
+  assert.equal(materials.meta.tokenCost,0);
   const drafts = [
     {id:'d1', intent:'brainstorm', request:'Retention ideas', updatedAt:10},
     {id:'d2', intent:'analyze', request:'Review appraisal data', updatedAt:20}
@@ -99,24 +110,29 @@ test('work home exposes the canonical Notion materials dashboard and server-back
   assert.equal(JSON.stringify(drafts), snapshot);
 });
 
-test('work home replaces Continue Working with a zero-token Notion materials dashboard', () => {
+test('work home replaces Continue Working with a zero-token inline Notion materials dashboard', () => {
   assert.match(html, /<script src="\.\/home-dashboard\.js"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
   assert.match(html, /Work thinking space · 0 tokens/);
   assert.doesNotMatch(html, /Continue working|id="homeContinue"/i);
   assert.match(html, /id="homeMaterials"/);
-  assert.match(html, /id="homeMaterialsOpen"/);
-  assert.match(html, /aria-label="Open My Work HQ in Notion \(opens in new tab\)"/);
+  assert.match(html, /id="homeMaterialsRefresh"/);
+  assert.match(html, /id="homeMaterialStatus"/);
+  assert.match(html, /id="homeFocus"/);
+  assert.match(html, /id="homeUpcoming"/);
+  assert.match(html, /id="homeMaterialSources"/);
   assert.match(html, /My Work HQ/);
-  assert.match(html, /3f5877a2c48b815ea32ffa82912e6271/);
   assert.match(html, /Notion · live source/);
-  assert.match(html, /\.home-material-open \{[^}]*color:var\(--accentText\)/);
+  assert.doesNotMatch(html, /Open in Notion|homeMaterialsOpen|app\.notion\.com\/p\//);
+  assert.match(html, /\/api\/brainy\/materials/);
+  assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/materials/);
+  assert.match(html, /headers:authHeaders/);
   assert.match(html, /id="homeDrafts"/);
   for (const intent of ['brainstorm','draft','analyze','run-task']) {
     assert.match(html, new RegExp(`data-home-intent="${intent}"`));
   }
-  assert.match(html, /BrainyHomeDashboard\.materialsDashboard\(\)/);
+  assert.match(html, /BrainyHomeDashboard\.normalizeMaterials\(/);
   assert.doesNotMatch(html, /BrainyHomeDashboard\.recentChats\(historyItems\)/);
   assert.match(html, /BrainyHomeDashboard\.recentDrafts\(actionDraftItems/);
   assert.match(html, /function showHomeDashboard\(\)/);
@@ -801,7 +817,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=42'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=43'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1031,7 +1047,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v42/);
+  assert.match(sw, /brainy-shell-v43/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);

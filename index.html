@@ -291,15 +291,44 @@
     .home-item strong { font-size:10px; }
     .home-item span, .home-empty-copy { color:var(--muted); font-size:9px; }
     .home-empty-copy { margin:0; padding:12px 2px; }
-    .home-materials { display:grid; align-content:start; }
-    .home-material-card { min-height:142px; display:grid; align-content:start; gap:7px; padding:16px; border:1px solid color-mix(in srgb,var(--electric) 24%,var(--line)); border-radius:14px; background:linear-gradient(145deg,color-mix(in srgb,var(--electric-soft) 58%,var(--panel)),var(--panel)); }
-    .home-material-kicker { color:var(--accent); font-size:8px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
-    .home-material-card strong { font-size:13px; letter-spacing:-.02em; }
-    .home-material-card p { margin:0; color:var(--muted); font-size:9px; line-height:1.55; }
-    .home-material-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
-    .home-material-open { min-height:36px; display:inline-flex; align-items:center; padding:0 12px; border-radius:9px; background:var(--electric); color:var(--accentText); font-size:9px; font-weight:700; text-decoration:none; box-shadow:0 7px 20px var(--glow); }
-    .home-material-open:hover { transform:translateY(-1px); }
-    .home-material-token { color:var(--muted); font-size:8px; white-space:nowrap; }
+    .home-materials { grid-column:1/-1; display:grid; align-content:start; gap:12px; overflow:hidden; }
+    .home-material-toolbar { display:flex; align-items:center; gap:9px; }
+    .home-refresh { width:34px; height:34px; display:inline-grid; place-items:center; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--accent); cursor:pointer; transition:transform .16s ease,border-color .16s ease; }
+    .home-refresh:hover { border-color:var(--accent); transform:translateY(-1px); }
+    .home-refresh:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .home-refresh[aria-busy="true"] { animation:material-spin .9s linear infinite; }
+    @keyframes material-spin { to { transform:rotate(360deg); } }
+    .home-material-status { display:flex; align-items:flex-start; gap:8px; padding:10px 12px; border:1px solid color-mix(in srgb,var(--electric) 18%,var(--line)); border-radius:12px; background:color-mix(in srgb,var(--electric-soft) 52%,var(--panel)); color:var(--muted); font-size:9px; line-height:1.55; }
+    .home-material-status::before { content:''; flex:none; width:7px; height:7px; margin-top:4px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px var(--glow); }
+    .home-material-status.error::before { background:var(--danger); }
+    .home-material-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+    .home-material-stat { min-width:0; display:grid; gap:2px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
+    .home-material-stat strong { color:var(--accent); font-size:16px; line-height:1.1; }
+    .home-material-stat span { color:var(--muted); font-size:8px; text-transform:uppercase; letter-spacing:.08em; }
+    .home-material-main { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:10px; }
+    .home-material-section, .home-source-card { min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    .home-material-section { padding:13px; }
+    .home-material-section h3, .home-source-card h3 { margin:0; font-size:10px; }
+    .home-material-section-head, .home-source-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:9px; }
+    .home-count { color:var(--muted); font-size:8px; }
+    .home-material-list { display:grid; gap:6px; }
+    .home-focus-row, .home-upcoming-row { min-width:0; display:grid; gap:3px; padding:9px 10px; border-radius:10px; background:var(--soft); }
+    .home-focus-row { grid-template-columns:auto minmax(0,1fr); align-items:start; column-gap:8px; }
+    .home-priority { min-width:25px; padding:2px 5px; border-radius:6px; background:var(--electric-soft); color:var(--accent); font-size:8px; font-weight:700; text-align:center; }
+    .home-focus-copy { min-width:0; display:grid; gap:2px; }
+    .home-focus-copy strong, .home-upcoming-row strong, .home-source-item strong { overflow:hidden; font-size:9px; text-overflow:ellipsis; }
+    .home-focus-copy span, .home-upcoming-row span, .home-source-item span { color:var(--muted); font-size:8px; line-height:1.45; }
+    .home-upcoming-row { grid-template-columns:86px minmax(0,1fr); column-gap:8px; }
+    .home-upcoming-time { color:var(--accent)!important; font-weight:700; }
+    .home-material-sources { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .home-source-card { padding:13px; }
+    .home-source-list { display:grid; gap:6px; }
+    .home-source-item { min-width:0; display:grid; gap:2px; padding:8px 9px; border-radius:9px; background:var(--soft); }
+    .home-source-line { display:flex; align-items:center; justify-content:space-between; gap:7px; }
+    .home-state { flex:none; max-width:52%; overflow:hidden; padding:2px 5px; border-radius:999px; background:var(--electric-soft); color:var(--accent); font-size:7px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
+    .home-state.error { background:color-mix(in srgb,var(--danger) 13%,var(--panel)); color:var(--danger); }
+    .home-material-footer { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:8px; }
+    .home-saved { grid-column:1/-1; }
     .thread { width:min(var(--content-max),100%); min-width:0; max-width:100%; margin:0 auto; padding:calc(28px * var(--density-space)) calc(24px * var(--density-space)) 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
     .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
@@ -450,6 +479,10 @@
       .home-dashboard { padding:20px 14px 64px; }
       .home-hero { border-radius:18px; }
       .home-grid { grid-template-columns:1fr; }
+      .home-material-main, .home-material-sources { grid-template-columns:1fr; }
+      .home-material-stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .home-upcoming-row { grid-template-columns:78px minmax(0,1fr); }
+      .home-material-footer { flex-direction:column; gap:2px; }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
       .empty h1 { font-size:clamp(28px,10vw,38px); }
       .empty p { margin-bottom:18px; font-size:12px; line-height:1.5; }
@@ -581,19 +614,34 @@
           </div>
         </div>
         <div class="home-grid">
-          <section class="home-panel home-materials" aria-labelledby="homeMaterialsTitle">
-            <div class="home-panel-head"><h2 id="homeMaterialsTitle">Materials Dashboard</h2><span class="home-panel-meta">Notion · live source</span></div>
-            <div class="home-material-card" id="homeMaterials">
-              <span class="home-material-kicker">My Work HQ</span>
-              <strong id="homeMaterialsSubtitle">Personal Command Center</strong>
-              <p>Open the live source of truth. Changes written to Notion by GPT are visible there immediately without an AI refresh.</p>
-              <div class="home-material-actions">
-                <a class="home-material-open" id="homeMaterialsOpen" href="https://app.notion.com/p/My-Work-HQ-Personal-Command-Center-3f5877a2c48b815ea32ffa82912e6271?source=copy_link" target="_blank" rel="noopener noreferrer" aria-label="Open My Work HQ in Notion (opens in new tab)">Open in Notion ↗</a>
-                <span class="home-material-token">0 tokens to open</span>
+          <section class="home-panel home-materials" id="homeMaterials" aria-labelledby="homeMaterialsTitle">
+            <div class="home-panel-head">
+              <div><h2 id="homeMaterialsTitle">My Work HQ</h2><span class="home-panel-meta">Notion · live source · 0 AI tokens</span></div>
+              <div class="home-material-toolbar">
+                <span class="home-panel-meta" id="homeMaterialsUpdated">Waiting for sync</span>
+                <button class="home-refresh" id="homeMaterialsRefresh" type="button" aria-label="Refresh materials dashboard" title="Refresh materials">↻</button>
               </div>
             </div>
+            <div class="home-material-status" id="homeMaterialStatus" role="status" aria-live="polite">Connecting to your materials…</div>
+            <div class="home-material-stats" aria-label="Materials overview">
+              <div class="home-material-stat"><strong id="homeFocusCount">—</strong><span>Focus</span></div>
+              <div class="home-material-stat"><strong id="homeUpcomingCount">—</strong><span>Upcoming</span></div>
+              <div class="home-material-stat"><strong id="homeActionCount">—</strong><span>Actions</span></div>
+            </div>
+            <div class="home-material-main">
+              <section class="home-material-section" aria-labelledby="homeFocusTitle">
+                <div class="home-material-section-head"><h3 id="homeFocusTitle">My focus</h3><span class="home-count" id="homeFocusMeta"></span></div>
+                <div class="home-material-list" id="homeFocus"></div>
+              </section>
+              <section class="home-material-section" aria-labelledby="homeUpcomingTitle">
+                <div class="home-material-section-head"><h3 id="homeUpcomingTitle">Upcoming</h3><span class="home-count" id="homeUpcomingMeta"></span></div>
+                <div class="home-material-list" id="homeUpcoming"></div>
+              </section>
+            </div>
+            <div class="home-material-sources" id="homeMaterialSources"></div>
+            <div class="home-material-footer"><span>Read-only dashboard · updates come from My Work HQ</span><span id="homeMaterialsFetched">No AI processing</span></div>
           </section>
-          <section class="home-panel" aria-labelledby="homeDraftsTitle">
+          <section class="home-panel home-saved" aria-labelledby="homeDraftsTitle">
             <div class="home-panel-head"><h2 id="homeDraftsTitle">Saved work</h2><span class="home-panel-meta">Synced across devices</span></div>
             <div class="home-list" id="homeDrafts"></div>
           </section>
@@ -780,7 +828,9 @@
   const thread = $('#thread'), input = $('#input'), send = $('#send');
   const commandPalette = $('#commandPalette');
   const homeModeButton = $('#homeMode'), chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
-  const homeDashboard = $('#homeDashboard'), homeMaterialsOpen = $('#homeMaterialsOpen'), homeDrafts = $('#homeDrafts');
+  const homeDashboard = $('#homeDashboard'), homeDrafts = $('#homeDrafts');
+  const homeMaterialsRefresh = $('#homeMaterialsRefresh'), homeMaterialStatus = $('#homeMaterialStatus');
+  const homeFocus = $('#homeFocus'), homeUpcoming = $('#homeUpcoming'), homeMaterialSources = $('#homeMaterialSources');
 
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
   const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
@@ -852,6 +902,8 @@
   let activeActionId = '', editingActionDraftId = '';
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
   let actionDraftsAttempted = false;
+  let materialsSnapshot = null, materialsState = 'idle', materialsError = '', materialsRequest = null;
+  let backendReady = false;
   const actionDraftSync = BrainyActionCenter.createSyncTracker();
   let activeExpertSkill = ExpertSkills.load(localStorage);
   expertSkillSelect.value = activeExpertSkill;
@@ -915,6 +967,9 @@
       setAccessKey(data.access);
       $('#activationPanel').hidden = true;
       $('#activationCode').value = '';
+      materialsState = 'idle';
+      loadMaterials();
+      loadActionDraftsRemote();
       connect().catch(fail);
     } catch (error) {
       $('#activationError').textContent = error.message || 'Activation was not completed.';
@@ -1385,14 +1440,113 @@
     const detail = document.createElement('span'); detail.textContent = preview;
     button.append(strong,detail); button.addEventListener('click', () => onOpen(button)); target.append(button);
   }
+  function materialDate(value) {
+    const date = new Date(value || '');
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
+  }
+  function materialEmpty(target,text) {
+    target.replaceChildren(); homeEmpty(target,text);
+  }
+  function materialSourceCard(title,collection,kind) {
+    const card = document.createElement('section'); card.className = 'home-source-card';
+    const head = document.createElement('div'); head.className = 'home-source-head';
+    const heading = document.createElement('h3'); heading.textContent = title;
+    const count = document.createElement('span'); count.className = 'home-count'; count.textContent = `${collection.count} total`;
+    head.append(heading,count);
+    const list = document.createElement('div'); list.className = 'home-source-list';
+    if (!collection.items.length) homeEmpty(list,'Nothing waiting here.');
+    collection.items.slice(0,kind === 'actions' ? 3 : 4).forEach(item => {
+      const row = document.createElement('div'); row.className = 'home-source-item';
+      const line = document.createElement('div'); line.className = 'home-source-line';
+      const strong = document.createElement('strong'); strong.textContent = item.title || item.source;
+      const state = document.createElement('span'); state.className = 'home-state';
+      state.textContent = item.priority || item.status || item.state || '—';
+      if (/error|blocked/i.test(state.textContent)) state.classList.add('error');
+      line.append(strong,state);
+      const detail = document.createElement('span');
+      detail.textContent = item.nextAction || item.nextMove || item.notes || item.workstream || 'No additional note';
+      row.append(line,detail); list.append(row);
+    });
+    card.append(head,list); return card;
+  }
+  function renderMaterialsDashboard() {
+    const loading = materialsState === 'loading';
+    homeMaterialsRefresh.disabled = loading;
+    homeMaterialsRefresh.setAttribute('aria-busy',String(loading));
+    homeMaterialStatus.classList.toggle('error',materialsState === 'error');
+    if (!materialsSnapshot) {
+      homeMaterialStatus.textContent = materialsState === 'error' ? (materialsError || 'Materials could not be refreshed.') : 'Connecting to your materials…';
+      ['homeFocusCount','homeUpcomingCount','homeActionCount'].forEach(id => { $(`#${id}`).textContent = '—'; });
+      $('#homeMaterialsUpdated').textContent = loading ? 'Refreshing…' : 'Waiting for sync';
+      $('#homeMaterialsFetched').textContent = 'No AI processing';
+      $('#homeFocusMeta').textContent = '';
+      $('#homeUpcomingMeta').textContent = '';
+      materialEmpty(homeFocus,loading ? 'Loading focus…' : 'No focus data yet.');
+      materialEmpty(homeUpcoming,loading ? 'Loading upcoming items…' : 'No upcoming data yet.');
+      materialEmpty(homeMaterialSources,loading ? 'Loading source status…' : 'No source data yet.');
+      return;
+    }
+    const data = materialsSnapshot;
+    $('#homeMaterialsTitle').textContent = data.title.split('|')[0].trim() || 'My Work HQ';
+    homeMaterialStatus.textContent = data.status || 'Materials synced from Notion.';
+    $('#homeFocusCount').textContent = String(data.focus.length);
+    $('#homeUpcomingCount').textContent = String(data.upcoming.length);
+    $('#homeActionCount').textContent = String(data.collections.actions.count);
+    $('#homeFocusMeta').textContent = `${data.focus.filter(item => !item.checked).length} active`;
+    $('#homeUpcomingMeta').textContent = `${data.upcoming.length} items`;
+    $('#homeMaterialsUpdated').textContent = materialDate(data.meta.sourceUpdatedAt) || 'Live source';
+    $('#homeMaterialsFetched').textContent = `Refreshed ${materialDate(data.meta.refreshedAt) || 'now'} · 0 tokens`;
+    homeFocus.replaceChildren();
+    if (!data.focus.length) homeEmpty(homeFocus,'No active focus items.');
+    data.focus.forEach(item => {
+      const row = document.createElement('div'); row.className = 'home-focus-row';
+      const priority = document.createElement('span'); priority.className = 'home-priority'; priority.textContent = item.priority;
+      const copy = document.createElement('div'); copy.className = 'home-focus-copy';
+      const strong = document.createElement('strong'); strong.textContent = item.title;
+      const detail = document.createElement('span'); detail.textContent = item.detail || (item.checked ? 'Complete' : 'Active');
+      copy.append(strong,detail); row.append(priority,copy); homeFocus.append(row);
+    });
+    homeUpcoming.replaceChildren();
+    if (!data.upcoming.length) homeEmpty(homeUpcoming,'Nothing upcoming.');
+    data.upcoming.slice(0,6).forEach(item => {
+      const row = document.createElement('div'); row.className = 'home-upcoming-row';
+      const when = document.createElement('span'); when.className = 'home-upcoming-time'; when.textContent = item.when;
+      const copy = document.createElement('div'); copy.className = 'home-focus-copy';
+      const strong = document.createElement('strong'); strong.textContent = item.event;
+      const detail = document.createElement('span'); detail.textContent = item.next;
+      copy.append(strong,detail); row.append(when,copy); homeUpcoming.append(row);
+    });
+    homeMaterialSources.replaceChildren(
+      materialSourceCard('Action inbox',data.collections.actions,'actions'),
+      materialSourceCard('Decision queue',data.collections.decisions,'decisions'),
+      materialSourceCard('Sync status',data.collections.sync,'sync')
+    );
+  }
+  async function loadMaterials(force=false) {
+    if (materialsRequest) return materialsRequest;
+    if (!accessKey) { materialsState='error'; materialsError='Activate BRAINY to load your private materials.'; renderMaterialsDashboard(); return; }
+    materialsState='loading'; materialsError=''; renderMaterialsDashboard();
+    materialsRequest = (async() => {
+      const response = await fetch(`${backendUrl}/api/brainy/materials${force ? '?refresh=1' : ''}`,{headers:authHeaders});
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Materials could not be refreshed');
+      materialsSnapshot = BrainyHomeDashboard.normalizeMaterials(payload);
+      materialsState='ready';
+    })().catch(error => {
+      materialsState='error'; materialsError=error.message || 'Materials could not be refreshed';
+      if (force) showToast(materialsError);
+    }).finally(() => {
+      materialsRequest=null; renderMaterialsDashboard();
+    });
+    return materialsRequest;
+  }
   function renderHomeDashboard() {
     const now = new Date();
     $('#homeGreeting').textContent = BrainyHomeDashboard.greeting(now,'Ila');
     $('#homeDate').textContent = BrainyHomeDashboard.dateLabel(now);
-    const materials = BrainyHomeDashboard.materialsDashboard();
-    $('#homeMaterialsTitle').textContent = `${materials.title} Materials`;
-    $('#homeMaterialsSubtitle').textContent = materials.subtitle;
-    homeMaterialsOpen.href = materials.url;
+    renderMaterialsDashboard();
+    if (materialsState === 'idle' && backendReady) loadMaterials();
     homeDrafts.replaceChildren();
     const drafts = BrainyHomeDashboard.recentDrafts(actionDraftItems,BrainyActionCenter.templates());
     if (!drafts.length) homeEmpty(homeDrafts,actionDraftsLoading ? 'Loading saved work…' : 'Saved work will appear here and sync across devices.');
@@ -2259,6 +2413,7 @@
     ws.onerror = () => setStatus('Connection interrupted');
   }
   homeModeButton.onclick = showHomeDashboard;
+  homeMaterialsRefresh.onclick = () => loadMaterials(true);
   chatModeButton.onclick = () => setInteractionMode('chat');
   agentModeButton.onclick = () => setInteractionMode('agent');
   actionsModeButton.onclick = showActionCenter;
@@ -2510,13 +2665,15 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=42',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=43',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
   }
   refreshBackend().finally(() => {
-    if (!accessKey) { showActivation(); return; }
+    backendReady = true;
+    if (!accessKey) { showActivation(); renderMaterialsDashboard(); return; }
+    loadMaterials();
     loadActionDraftsRemote();
     connect().catch(fail);
   });
