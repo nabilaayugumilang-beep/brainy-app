@@ -291,6 +291,15 @@
     .home-item strong { font-size:10px; }
     .home-item span, .home-empty-copy { color:var(--muted); font-size:9px; }
     .home-empty-copy { margin:0; padding:12px 2px; }
+    .home-materials { display:grid; align-content:start; }
+    .home-material-card { min-height:142px; display:grid; align-content:start; gap:7px; padding:16px; border:1px solid color-mix(in srgb,var(--electric) 24%,var(--line)); border-radius:14px; background:linear-gradient(145deg,color-mix(in srgb,var(--electric-soft) 58%,var(--panel)),var(--panel)); }
+    .home-material-kicker { color:var(--accent); font-size:8px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    .home-material-card strong { font-size:13px; letter-spacing:-.02em; }
+    .home-material-card p { margin:0; color:var(--muted); font-size:9px; line-height:1.55; }
+    .home-material-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; }
+    .home-material-open { min-height:36px; display:inline-flex; align-items:center; padding:0 12px; border-radius:9px; background:var(--electric); color:var(--accentText); font-size:9px; font-weight:700; text-decoration:none; box-shadow:0 7px 20px var(--glow); }
+    .home-material-open:hover { transform:translateY(-1px); }
+    .home-material-token { color:var(--muted); font-size:8px; white-space:nowrap; }
     .thread { width:min(var(--content-max),100%); min-width:0; max-width:100%; margin:0 auto; padding:calc(28px * var(--density-space)) calc(24px * var(--density-space)) 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
     .empty h1 { margin:0; font:700 clamp(28px,5vw,44px)/.95 'JetBrains Mono',monospace; letter-spacing:-.07em; color:var(--accent); text-shadow:0 0 30px var(--glow); }
@@ -572,9 +581,17 @@
           </div>
         </div>
         <div class="home-grid">
-          <section class="home-panel" aria-labelledby="homeContinueTitle">
-            <div class="home-panel-head"><h2 id="homeContinueTitle">Continue working</h2><span class="home-panel-meta">Recent chats</span></div>
-            <div class="home-list" id="homeContinue"></div>
+          <section class="home-panel home-materials" aria-labelledby="homeMaterialsTitle">
+            <div class="home-panel-head"><h2 id="homeMaterialsTitle">Materials Dashboard</h2><span class="home-panel-meta">Notion · live source</span></div>
+            <div class="home-material-card" id="homeMaterials">
+              <span class="home-material-kicker">My Work HQ</span>
+              <strong id="homeMaterialsSubtitle">Personal Command Center</strong>
+              <p>Open the live source of truth. Changes written to Notion by GPT are visible there immediately without an AI refresh.</p>
+              <div class="home-material-actions">
+                <a class="home-material-open" id="homeMaterialsOpen" href="https://app.notion.com/p/My-Work-HQ-Personal-Command-Center-3f5877a2c48b815ea32ffa82912e6271?source=copy_link" target="_blank" rel="noopener noreferrer" aria-label="Open My Work HQ in Notion (opens in new tab)">Open in Notion ↗</a>
+                <span class="home-material-token">0 tokens to open</span>
+              </div>
+            </div>
           </section>
           <section class="home-panel" aria-labelledby="homeDraftsTitle">
             <div class="home-panel-head"><h2 id="homeDraftsTitle">Saved work</h2><span class="home-panel-meta">Synced across devices</span></div>
@@ -763,7 +780,7 @@
   const thread = $('#thread'), input = $('#input'), send = $('#send');
   const commandPalette = $('#commandPalette');
   const homeModeButton = $('#homeMode'), chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
-  const homeDashboard = $('#homeDashboard'), homeContinue = $('#homeContinue'), homeDrafts = $('#homeDrafts');
+  const homeDashboard = $('#homeDashboard'), homeMaterialsOpen = $('#homeMaterialsOpen'), homeDrafts = $('#homeDrafts');
 
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
   const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
@@ -1372,14 +1389,10 @@
     const now = new Date();
     $('#homeGreeting').textContent = BrainyHomeDashboard.greeting(now,'Ila');
     $('#homeDate').textContent = BrainyHomeDashboard.dateLabel(now);
-    homeContinue.replaceChildren();
-    const recentChats = BrainyHomeDashboard.recentChats(historyItems);
-    if (!recentChats.length) homeEmpty(homeContinue,'Your recent conversations will appear here.');
-    recentChats.forEach(item => homeItem(homeContinue,item.title,item.preview,button => {
-      const source = historyItems.find(candidate => String(candidate.key || candidate.id) === item.id);
-      if (!source) return;
-      setInteractionMode('chat'); openHistorySession(source,button);
-    }));
+    const materials = BrainyHomeDashboard.materialsDashboard();
+    $('#homeMaterialsTitle').textContent = `${materials.title} Materials`;
+    $('#homeMaterialsSubtitle').textContent = materials.subtitle;
+    homeMaterialsOpen.href = materials.url;
     homeDrafts.replaceChildren();
     const drafts = BrainyHomeDashboard.recentDrafts(actionDraftItems,BrainyActionCenter.templates());
     if (!drafts.length) homeEmpty(homeDrafts,actionDraftsLoading ? 'Loading saved work…' : 'Saved work will appear here and sync across devices.');
@@ -2497,7 +2510,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=41',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=42',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

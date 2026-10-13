@@ -22,18 +22,12 @@
     }).format(asDate(value));
   }
 
-  function recentChats(items, limit=3) {
-    return (Array.isArray(items) ? items : [])
-      .filter(item => item && (item.key || item.id))
-      .slice()
-      .sort((a,b) => (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0))
-      .slice(0, limit)
-      .map(item => ({
-        id:String(item.key || item.id),
-        title:String(item.title || 'Untitled chat'),
-        preview:String(item.preview || 'Continue conversation'),
-        updatedAt:Number(item.updatedAt) || 0
-      }));
+  function materialsDashboard() {
+    return {
+      title:'My Work HQ',
+      subtitle:'Personal Command Center',
+      url:'https://app.notion.com/p/My-Work-HQ-Personal-Command-Center-3f5877a2c48b815ea32ffa82912e6271?source=copy_link'
+    };
   }
 
   function recentDrafts(items, templates, limit=3) {
@@ -52,5 +46,5 @@
       }));
   }
 
-  return { greeting, dateLabel, recentChats, recentDrafts };
+  return { greeting, dateLabel, materialsDashboard, recentDrafts };
 });

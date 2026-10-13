@@ -78,39 +78,46 @@ test('work home creates a local greeting and readable date without a network cal
   assert.doesNotMatch(source, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
 });
 
-test('work home summarizes recent chats and server-backed drafts without mutating state', () => {
-  const chats = [
-    {key:'older', title:'Older work', preview:'Earlier', updatedAt:100},
-    {key:'latest', title:'Latest work', preview:'Continue this', updatedAt:300},
-    {key:'middle', title:'Middle work', preview:'In progress', updatedAt:200},
-    {key:'fourth', title:'Fourth work', preview:'Not shown', updatedAt:50}
-  ];
+test('work home exposes the canonical Notion materials dashboard and server-backed drafts', () => {
+  const materials = HomeDashboard.materialsDashboard();
+  assert.deepEqual(materials, {
+    title:'My Work HQ',
+    subtitle:'Personal Command Center',
+    url:'https://app.notion.com/p/My-Work-HQ-Personal-Command-Center-3f5877a2c48b815ea32ffa82912e6271?source=copy_link'
+  });
   const drafts = [
     {id:'d1', intent:'brainstorm', request:'Retention ideas', updatedAt:10},
     {id:'d2', intent:'analyze', request:'Review appraisal data', updatedAt:20}
   ];
-  const snapshot = JSON.stringify({chats,drafts});
-  assert.deepEqual(HomeDashboard.recentChats(chats).map(item => item.id), ['latest','middle','older']);
+  const snapshot = JSON.stringify(drafts);
   assert.deepEqual(HomeDashboard.recentDrafts(drafts, [
     {id:'brainstorm',title:'Brainstorm'}, {id:'analyze',title:'Analyze'}
   ]), [
     {id:'d2',intent:'analyze',title:'Analyze',preview:'Review appraisal data',updatedAt:20},
     {id:'d1',intent:'brainstorm',title:'Brainstorm',preview:'Retention ideas',updatedAt:10}
   ]);
-  assert.equal(JSON.stringify({chats,drafts}), snapshot);
+  assert.equal(JSON.stringify(drafts), snapshot);
 });
 
-test('work home is a focused zero-token launchpad with synced recents and four quick starts', () => {
+test('work home replaces Continue Working with a zero-token Notion materials dashboard', () => {
   assert.match(html, /<script src="\.\/home-dashboard\.js"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
   assert.match(html, /Work thinking space · 0 tokens/);
-  assert.match(html, /id="homeContinue"/);
+  assert.doesNotMatch(html, /Continue working|id="homeContinue"/i);
+  assert.match(html, /id="homeMaterials"/);
+  assert.match(html, /id="homeMaterialsOpen"/);
+  assert.match(html, /aria-label="Open My Work HQ in Notion \(opens in new tab\)"/);
+  assert.match(html, /My Work HQ/);
+  assert.match(html, /3f5877a2c48b815ea32ffa82912e6271/);
+  assert.match(html, /Notion · live source/);
+  assert.match(html, /\.home-material-open \{[^}]*color:var\(--accentText\)/);
   assert.match(html, /id="homeDrafts"/);
   for (const intent of ['brainstorm','draft','analyze','run-task']) {
     assert.match(html, new RegExp(`data-home-intent="${intent}"`));
   }
-  assert.match(html, /BrainyHomeDashboard\.recentChats\(historyItems\)/);
+  assert.match(html, /BrainyHomeDashboard\.materialsDashboard\(\)/);
+  assert.doesNotMatch(html, /BrainyHomeDashboard\.recentChats\(historyItems\)/);
   assert.match(html, /BrainyHomeDashboard\.recentDrafts\(actionDraftItems/);
   assert.match(html, /function showHomeDashboard\(\)/);
   assert.match(html, /\.mode-switch \{[^}]*grid-template-columns:repeat\(5,1fr\)/);
@@ -794,7 +801,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=41'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=42'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1024,7 +1031,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v41/);
+  assert.match(sw, /brainy-shell-v42/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
