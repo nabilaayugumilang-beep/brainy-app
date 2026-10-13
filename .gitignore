@@ -1,0 +1,9 @@
+# Local working-data exports — never publish through GitHub Pages
+airtable_records.json
+notion_page.json
+verify_notion.json
+
+# One-off local data migration/inspection helpers
+inspect_recs.py
+parse_canonical.py
+update_notion.py
