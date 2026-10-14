@@ -853,7 +853,7 @@
 <script src="./agent-mode.js"></script>
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
-<script src="./home-dashboard.js?v=46"></script>
+<script src="./home-dashboard.js?v=47"></script>
 <script src="./multi-brain.js"></script>
 
 <script src="./approval-queue.js"></script>
@@ -1632,7 +1632,10 @@
     data.people.forEach((person,index) => {
       const items = BrainyHomeDashboard.filterTeamItems(person,teamFilter);
       const card = document.createElement('details'); card.className = 'team-card'; card.dataset.person = person.name;
-      card.open = openNames.has(person.name) || (!hadCards && index === 0);
+      card.open = BrainyHomeDashboard.shouldOpenTeamCard({
+        wasOpen:openNames.has(person.name), hadCards, index,
+        isMobile:matchMedia('(max-width:640px)').matches,
+      });
       const summary = document.createElement('summary');
       const personCopy = document.createElement('span'); personCopy.className = 'team-person';
       const personName = document.createElement('strong'); personName.textContent = person.name;
@@ -2845,7 +2848,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=46',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=47',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

@@ -119,5 +119,9 @@
     return (Array.isArray(person?.items) ? person.items : []).filter(item => item.section === section);
   }
 
-  return { greeting, dateLabel, normalizeMaterials, recentDrafts, normalizeTeamGtd, filterTeamItems };
+  function shouldOpenTeamCard({wasOpen=false,hadCards=false,index=0,isMobile=false}={}) {
+    return Boolean(wasOpen || (!hadCards && index === 0 && !isMobile));
+  }
+
+  return { greeting, dateLabel, normalizeMaterials, recentDrafts, normalizeTeamGtd, filterTeamItems, shouldOpenTeamCard };
 });

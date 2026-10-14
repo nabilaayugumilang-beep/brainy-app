@@ -111,7 +111,7 @@ test('work home normalizes a bounded live materials snapshot and server-backed d
 });
 
 test('work home replaces Continue Working with a zero-token inline Notion materials dashboard', () => {
-  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=46"><\/script>/);
+  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=47"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
   assert.match(html, /Work thinking space · 0 tokens/);
@@ -163,6 +163,12 @@ test('work home normalizes and filters a bounded Team GTD manager snapshot', () 
   assert.deepEqual(HomeDashboard.filterTeamItems(team.people[0],'active').map(item => item.id),['a']);
 });
 
+test('Team GTD keeps every person visible on mobile instead of auto-opening the first long card', () => {
+  assert.equal(HomeDashboard.shouldOpenTeamCard({wasOpen:false,hadCards:false,index:0,isMobile:true}),false);
+  assert.equal(HomeDashboard.shouldOpenTeamCard({wasOpen:false,hadCards:false,index:0,isMobile:false}),true);
+  assert.equal(HomeDashboard.shouldOpenTeamCard({wasOpen:true,hadCards:true,index:2,isMobile:true}),true);
+});
+
 test('Team GTD is an expandable responsive Home cockpit with explicit separate actions', () => {
   assert.match(html,/id="homeTeamGtd"/);
   assert.match(html,/id="homeTeamCards"/);
@@ -176,8 +182,8 @@ test('Team GTD is an expandable responsive Home cockpit with explicit separate a
   assert.match(html,/\.team-card-list/);
   assert.match(html,/@media \(max-width:640px\)[\s\S]*\.team-card-list\s*\{[^}]*grid-template-columns:1fr/);
   assert.equal((html.match(/disabled = teamMutationBusy \|\| teamState === 'loading'/g) || []).length,2);
-  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=46"><\/script>/);
-  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=46'/);
+  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=47"><\/script>/);
+  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=47'/);
 });
 
 test('action center asks for one outcome across four simple work intents', () => {
@@ -857,7 +863,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=46'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=47'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1087,7 +1093,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v46/);
+  assert.match(sw, /brainy-shell-v47/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
