@@ -140,6 +140,43 @@ test('work home replaces Continue Working with a zero-token inline Notion materi
   assert.doesNotMatch(html, /Personal workspace|Local drafts|Saved on this device/);
 });
 
+test('work home normalizes and filters a bounded Team GTD manager snapshot', () => {
+  const team = HomeDashboard.normalizeTeamGtd({
+    ok:true,
+    people:[
+      {name:'Tasa',updatedAt:'2026-10-14T01:00:00.000Z',counts:{active:2,waiting:1,completed:1,reviewed:1},items:[
+        {id:'a',title:'Prepare report',section:'active',checked:false,reviewed:true,canComplete:true},
+        {id:'b',title:'Confirm approval',section:'waiting',checked:false,reviewed:false,canComplete:true},
+        {id:'c',title:'Old report',section:'completed',checked:true,reviewed:false,canComplete:false},
+      ]},
+      {name:'Dinisha Verliany',items:[{id:'x',title:'Must not render as a fourth card',section:'active'}]},
+      {name:'Disha',items:[]},
+      {name:'Intan',items:[]},
+    ],
+    meta:{refreshedAt:'2026-10-14T02:00:00.000Z',tokenCost:0},
+  });
+  assert.deepEqual(team.people.map(person => person.name),['Tasa','Disha','Intan']);
+  assert.equal(team.people[0].items[0].reviewed,true);
+  assert.equal(team.meta.tokenCost,0);
+  assert.deepEqual(HomeDashboard.filterTeamItems(team.people[0],'waiting').map(item => item.id),['b']);
+  assert.deepEqual(HomeDashboard.filterTeamItems(team.people[0],'completed').map(item => item.id),['c']);
+  assert.deepEqual(HomeDashboard.filterTeamItems(team.people[0],'active').map(item => item.id),['a']);
+});
+
+test('Team GTD is an expandable responsive Home cockpit with explicit separate actions', () => {
+  assert.match(html,/id="homeTeamGtd"/);
+  assert.match(html,/id="homeTeamCards"/);
+  assert.match(html,/id="homeTeamRefresh"/);
+  assert.match(html,/data-team-filter="active"/);
+  assert.match(html,/data-team-filter="waiting"/);
+  assert.match(html,/data-team-filter="completed"/);
+  assert.match(html,/\/api\/brainy\/team-gtd/);
+  assert.match(html,/Mark done in Notion/);
+  assert.match(html,/Reviewed by Ila/);
+  assert.match(html,/\.team-card-list/);
+  assert.match(html,/@media \(max-width:640px\)[\s\S]*\.team-card-list\s*\{[^}]*grid-template-columns:1fr/);
+});
+
 test('action center asks for one outcome across four simple work intents', () => {
   const ActionCenter = require('./action-center.js');
   assert.deepEqual(ActionCenter.templates().map(item => item.id), [
@@ -817,7 +854,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=43'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=44'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1047,7 +1084,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v43/);
+  assert.match(sw, /brainy-shell-v44/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);

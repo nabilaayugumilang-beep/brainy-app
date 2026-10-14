@@ -328,6 +328,34 @@
     .home-state { flex:none; max-width:52%; overflow:hidden; padding:2px 5px; border-radius:999px; background:var(--electric-soft); color:var(--accent); font-size:7px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
     .home-state.error { background:color-mix(in srgb,var(--danger) 13%,var(--panel)); color:var(--danger); }
     .home-material-footer { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:8px; }
+    .team-gtd { grid-column:1/-1; display:grid; gap:12px; }
+    .team-toolbar { display:flex; align-items:center; gap:9px; }
+    .team-attention { padding:10px 12px; border:1px solid color-mix(in srgb,var(--electric) 18%,var(--line)); border-radius:12px; background:color-mix(in srgb,var(--electric-soft) 42%,var(--panel)); color:var(--muted); font-size:9px; line-height:1.5; }
+    .team-attention.error { color:var(--danger); }
+    .team-filters { display:flex; flex-wrap:wrap; gap:6px; }
+    .team-filter { min-height:32px; padding:0 11px; border:1px solid var(--line); border-radius:999px; background:var(--panel); color:var(--muted); cursor:pointer; font-size:9px; font-weight:700; }
+    .team-filter.active { border-color:var(--accent); background:var(--electric-soft); color:var(--accent); }
+    .team-card-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .team-card { min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--panel); overflow:hidden; }
+    .team-card summary { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 12px; cursor:pointer; list-style:none; }
+    .team-card summary::-webkit-details-marker { display:none; }
+    .team-card summary::after { content:'＋'; color:var(--accent); font-weight:700; }
+    .team-card[open] summary::after { content:'−'; }
+    .team-person { display:grid; gap:2px; min-width:0; }
+    .team-person strong { font-size:10px; }
+    .team-person span { color:var(--muted); font-size:8px; }
+    .team-items { display:grid; gap:7px; padding:0 10px 10px; }
+    .team-task { display:grid; gap:8px; padding:10px; border-radius:10px; background:var(--soft); }
+    .team-task-copy { min-width:0; display:flex; align-items:flex-start; gap:7px; }
+    .team-task-copy strong { min-width:0; font-size:9px; line-height:1.45; overflow-wrap:anywhere; }
+    .team-priority { flex:none; min-width:24px; padding:2px 4px; border-radius:5px; background:var(--electric-soft); color:var(--accent); font-size:7px; font-weight:700; text-align:center; }
+    .team-task-actions { display:flex; flex-wrap:wrap; gap:5px; }
+    .team-task-action { min-height:29px; padding:0 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--muted); cursor:pointer; font-size:8px; font-weight:700; }
+    .team-task-action.reviewed { border-color:color-mix(in srgb,var(--accent) 40%,var(--line)); color:var(--accent); }
+    .team-task-action.complete { color:var(--danger); }
+    .team-task-action:disabled { opacity:.48; cursor:default; }
+    .team-empty { margin:0; padding:12px 3px; color:var(--muted); font-size:8px; }
+    .team-footer { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:8px; }
     .home-saved { grid-column:1/-1; }
     .thread { width:min(var(--content-max),100%); min-width:0; max-width:100%; margin:0 auto; padding:calc(28px * var(--density-space)) calc(24px * var(--density-space)) 120px; }
     .empty { min-height:54vh; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:10px; }
@@ -480,6 +508,8 @@
       .home-hero { border-radius:18px; }
       .home-grid { grid-template-columns:1fr; }
       .home-material-main, .home-material-sources { grid-template-columns:1fr; }
+      .team-card-list { grid-template-columns:1fr; }
+      .team-toolbar, .team-footer { align-items:flex-start; }
       .home-material-stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .home-upcoming-row { grid-template-columns:78px minmax(0,1fr); }
       .home-material-footer { flex-direction:column; gap:2px; }
@@ -640,6 +670,23 @@
             </div>
             <div class="home-material-sources" id="homeMaterialSources"></div>
             <div class="home-material-footer"><span>Read-only dashboard · updates come from My Work HQ</span><span id="homeMaterialsFetched">No AI processing</span></div>
+          </section>
+          <section class="home-panel team-gtd" id="homeTeamGtd" aria-labelledby="homeTeamTitle">
+            <div class="home-panel-head">
+              <div><h2 id="homeTeamTitle">Team GTD</h2><span class="home-panel-meta">Manager cockpit · Notion live source · 0 AI tokens</span></div>
+              <div class="team-toolbar">
+                <span class="home-panel-meta" id="homeTeamUpdated">Waiting for sync</span>
+                <button class="home-refresh" id="homeTeamRefresh" type="button" aria-label="Refresh Team GTD" title="Refresh Team GTD">↻</button>
+              </div>
+            </div>
+            <div class="team-attention" id="homeTeamAttention" role="status" aria-live="polite">Connecting to Tasa, Disha, and Intan…</div>
+            <div class="team-filters" role="group" aria-label="Filter Team GTD items">
+              <button class="team-filter active" type="button" data-team-filter="active" aria-pressed="true">Active</button>
+              <button class="team-filter" type="button" data-team-filter="waiting" aria-pressed="false">Waiting</button>
+              <button class="team-filter" type="button" data-team-filter="completed" aria-pressed="false">Completed</button>
+            </div>
+            <div class="team-card-list" id="homeTeamCards"></div>
+            <div class="team-footer"><span>Reviewed by Ila is manager-only and never completes a Notion task.</span><span id="homeTeamFetched">No AI processing</span></div>
           </section>
           <section class="home-panel home-saved" aria-labelledby="homeDraftsTitle">
             <div class="home-panel-head"><h2 id="homeDraftsTitle">Saved work</h2><span class="home-panel-meta">Synced across devices</span></div>
@@ -831,6 +878,7 @@
   const homeDashboard = $('#homeDashboard'), homeDrafts = $('#homeDrafts');
   const homeMaterialsRefresh = $('#homeMaterialsRefresh'), homeMaterialStatus = $('#homeMaterialStatus');
   const homeFocus = $('#homeFocus'), homeUpcoming = $('#homeUpcoming'), homeMaterialSources = $('#homeMaterialSources');
+  const homeTeamRefresh = $('#homeTeamRefresh'), homeTeamAttention = $('#homeTeamAttention'), homeTeamCards = $('#homeTeamCards');
 
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
   const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
@@ -903,6 +951,7 @@
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
   let actionDraftsAttempted = false;
   let materialsSnapshot = null, materialsState = 'idle', materialsError = '', materialsRequest = null;
+  let teamSnapshot = null, teamState = 'idle', teamError = '', teamRequest = null, teamFilter = 'active', teamMutationBusy = false;
   let backendReady = false;
   const actionDraftSync = BrainyActionCenter.createSyncTracker();
   let activeExpertSkill = ExpertSkills.load(localStorage);
@@ -968,7 +1017,9 @@
       $('#activationPanel').hidden = true;
       $('#activationCode').value = '';
       materialsState = 'idle';
+      teamState = 'idle';
       loadMaterials();
+      loadTeamGtd();
       loadActionDraftsRemote();
       connect().catch(fail);
     } catch (error) {
@@ -1541,12 +1592,134 @@
     });
     return materialsRequest;
   }
+  function renderTeamGtd() {
+    const loading = teamState === 'loading' || teamMutationBusy;
+    homeTeamRefresh.disabled = loading;
+    homeTeamRefresh.setAttribute('aria-busy',String(teamState === 'loading'));
+    homeTeamAttention.classList.toggle('error',teamState === 'error');
+    document.querySelectorAll('[data-team-filter]').forEach(button => {
+      const selected = button.dataset.teamFilter === teamFilter;
+      button.classList.toggle('active',selected);
+      button.setAttribute('aria-pressed',String(selected));
+      button.disabled = teamMutationBusy;
+    });
+    if (!teamSnapshot) {
+      homeTeamAttention.textContent = teamState === 'error' ? (teamError || 'Team GTD could not be refreshed.') : 'Connecting to Tasa, Disha, and Intan…';
+      $('#homeTeamUpdated').textContent = teamState === 'loading' ? 'Refreshing…' : 'Waiting for sync';
+      $('#homeTeamFetched').textContent = 'No AI processing';
+      homeTeamCards.replaceChildren();
+      homeEmpty(homeTeamCards,teamState === 'loading' ? 'Loading team trackers…' : 'No team data yet.');
+      return;
+    }
+    const data = teamSnapshot;
+    const totals = data.people.reduce((sum,person) => {
+      sum.active += person.counts.active; sum.waiting += person.counts.waiting; sum.completed += person.counts.completed;
+      sum.unreviewed += person.items.filter(item => item.section !== 'completed' && !item.reviewed).length;
+      return sum;
+    },{active:0,waiting:0,completed:0,unreviewed:0});
+    homeTeamAttention.textContent = `${totals.active} active · ${totals.waiting} waiting · ${totals.unreviewed} not reviewed by Ila`;
+    $('#homeTeamUpdated').textContent = materialDate(data.meta.refreshedAt) || 'Live source';
+    $('#homeTeamFetched').textContent = `Refreshed ${materialDate(data.meta.refreshedAt) || 'now'} · 0 tokens`;
+    document.querySelectorAll('[data-team-filter]').forEach(button => {
+      const key = button.dataset.teamFilter;
+      const label = key === 'active' ? 'Active' : key === 'waiting' ? 'Waiting' : 'Completed';
+      button.textContent = `${label} ${totals[key]}`;
+    });
+    const existingCards = [...homeTeamCards.querySelectorAll('details[open]')];
+    const openNames = new Set(existingCards.map(card => card.dataset.person));
+    const hadCards = Boolean(homeTeamCards.querySelector('details'));
+    homeTeamCards.replaceChildren();
+    data.people.forEach((person,index) => {
+      const items = BrainyHomeDashboard.filterTeamItems(person,teamFilter);
+      const card = document.createElement('details'); card.className = 'team-card'; card.dataset.person = person.name;
+      card.open = openNames.has(person.name) || (!hadCards && index === 0);
+      const summary = document.createElement('summary');
+      const personCopy = document.createElement('span'); personCopy.className = 'team-person';
+      const personName = document.createElement('strong'); personName.textContent = person.name;
+      const personMeta = document.createElement('span'); personMeta.textContent = `${items.length} ${teamFilter} · ${person.counts.reviewed} reviewed`;
+      personCopy.append(personName,personMeta); summary.append(personCopy);
+      const list = document.createElement('div'); list.className = 'team-items';
+      if (!items.length) {
+        const emptyItems = document.createElement('p'); emptyItems.className = 'team-empty'; emptyItems.textContent = `No ${teamFilter} items.`; list.append(emptyItems);
+      }
+      const visibleItems = items.slice(0,40);
+      visibleItems.forEach(item => {
+        const task = document.createElement('article'); task.className = 'team-task';
+        const copy = document.createElement('div'); copy.className = 'team-task-copy';
+        if (item.priority) {
+          const priority = document.createElement('span'); priority.className = 'team-priority'; priority.textContent = item.priority; copy.append(priority);
+        }
+        const title = document.createElement('strong'); title.textContent = item.title; copy.append(title);
+        const actions = document.createElement('div'); actions.className = 'team-task-actions';
+        if (item.section !== 'completed') {
+          const review = document.createElement('button'); review.type = 'button'; review.className = `team-task-action${item.reviewed ? ' reviewed' : ''}`;
+          review.textContent = item.reviewed ? 'Reviewed ✓' : 'Reviewed by Ila'; review.setAttribute('aria-pressed',String(item.reviewed)); review.disabled = teamMutationBusy;
+          review.addEventListener('click',() => mutateTeamGtd('review',item,!item.reviewed)); actions.append(review);
+        }
+        if (item.canComplete) {
+          const complete = document.createElement('button'); complete.type = 'button'; complete.className = 'team-task-action complete';
+          complete.textContent = item.section === 'completed' ? 'Reopen in Notion' : 'Mark done in Notion'; complete.disabled = teamMutationBusy;
+          complete.addEventListener('click',() => {
+            const next = item.section !== 'completed';
+            const question = next ? `Mark “${item.title}” done in Notion?` : `Reopen “${item.title}” in Notion?`;
+            if (confirm(question)) mutateTeamGtd('complete',item,next);
+          });
+          actions.append(complete);
+        }
+        task.append(copy,actions); list.append(task);
+      });
+      if (items.length > visibleItems.length) {
+        const remainder = document.createElement('p'); remainder.className = 'team-empty';
+        remainder.textContent = `Showing ${visibleItems.length} of ${items.length} ${teamFilter} items.`; list.append(remainder);
+      }
+      card.append(summary,list); homeTeamCards.append(card);
+    });
+  }
+  async function loadTeamGtd(force=false) {
+    if (teamRequest) return teamRequest;
+    if (!accessKey) { teamState='error'; teamError='Activate BRAINY to load Team GTD.'; renderTeamGtd(); return; }
+    teamState='loading'; teamError=''; renderTeamGtd();
+    teamRequest = (async() => {
+      const response = await fetch(`${backendUrl}/api/brainy/team-gtd${force ? '?refresh=1' : ''}`,{headers:authHeaders});
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Team GTD could not be refreshed');
+      teamSnapshot = BrainyHomeDashboard.normalizeTeamGtd(payload);
+      teamState='ready';
+    })().catch(error => {
+      teamState='error'; teamError=error.message || 'Team GTD could not be refreshed';
+      if (force) showToast(teamError);
+    }).finally(() => {
+      teamRequest=null; renderTeamGtd();
+    });
+    return teamRequest;
+  }
+  async function mutateTeamGtd(op,item,value) {
+    if (teamMutationBusy || !accessKey) return;
+    teamMutationBusy = true; renderTeamGtd();
+    try {
+      const response = await fetch(`${backendUrl}/api/brainy/team-gtd`,{
+        method:'POST', headers:{...authHeaders,'content-type':'application/json'},
+        body:JSON.stringify({op,id:item.id,value:Boolean(value)}),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Team GTD update failed');
+      teamSnapshot = BrainyHomeDashboard.normalizeTeamGtd(payload);
+      teamState='ready'; teamError='';
+      showToast(op === 'review' ? (value ? 'Marked as reviewed' : 'Review removed') : (value ? 'Completed in Notion' : 'Reopened in Notion'));
+    } catch (error) {
+      teamState='error'; teamError=error.message || 'Team GTD update failed'; showToast(teamError);
+    } finally {
+      teamMutationBusy=false; renderTeamGtd();
+    }
+  }
   function renderHomeDashboard() {
     const now = new Date();
     $('#homeGreeting').textContent = BrainyHomeDashboard.greeting(now,'Ila');
     $('#homeDate').textContent = BrainyHomeDashboard.dateLabel(now);
     renderMaterialsDashboard();
+    renderTeamGtd();
     if (materialsState === 'idle' && backendReady) loadMaterials();
+    if (teamState === 'idle' && backendReady) loadTeamGtd();
     homeDrafts.replaceChildren();
     const drafts = BrainyHomeDashboard.recentDrafts(actionDraftItems,BrainyActionCenter.templates());
     if (!drafts.length) homeEmpty(homeDrafts,actionDraftsLoading ? 'Loading saved work…' : 'Saved work will appear here and sync across devices.');
@@ -2414,6 +2587,13 @@
   }
   homeModeButton.onclick = showHomeDashboard;
   homeMaterialsRefresh.onclick = () => loadMaterials(true);
+  homeTeamRefresh.onclick = () => loadTeamGtd(true);
+  document.querySelectorAll('[data-team-filter]').forEach(button => {
+    button.addEventListener('click',() => {
+      teamFilter = button.dataset.teamFilter;
+      renderTeamGtd();
+    });
+  });
   chatModeButton.onclick = () => setInteractionMode('chat');
   agentModeButton.onclick = () => setInteractionMode('agent');
   actionsModeButton.onclick = showActionCenter;
@@ -2665,15 +2845,16 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=43',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=44',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
   }
   refreshBackend().finally(() => {
     backendReady = true;
-    if (!accessKey) { showActivation(); renderMaterialsDashboard(); return; }
+    if (!accessKey) { showActivation(); renderMaterialsDashboard(); renderTeamGtd(); return; }
     loadMaterials();
+    loadTeamGtd();
     loadActionDraftsRemote();
     connect().catch(fail);
   });

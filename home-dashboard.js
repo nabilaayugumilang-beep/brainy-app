@@ -68,5 +68,56 @@
       }));
   }
 
-  return { greeting, dateLabel, normalizeMaterials, recentDrafts };
+  function normalizeTeamGtd(value) {
+    const source = value && typeof value === 'object' ? value : {};
+    const peopleByName = new Map(['Tasa','Disha','Intan'].map(name => [name,{name,updatedAt:'',items:[]}]))
+    for (const rawPerson of Array.isArray(source.people) ? source.people.slice(0,8) : []) {
+      const rawName = text(rawPerson?.name,80).toLowerCase();
+      const name = rawName.includes('tasa') ? 'Tasa'
+        : (rawName.includes('disha') || rawName.includes('dinisha')) ? 'Disha'
+        : rawName.includes('intan') ? 'Intan' : '';
+      if (!name) continue;
+      const person = peopleByName.get(name);
+      const updatedAt = text(rawPerson?.updatedAt,50);
+      if (updatedAt > person.updatedAt) person.updatedAt = updatedAt;
+      for (const rawItem of Array.isArray(rawPerson?.items) ? rawPerson.items.slice(0,180) : []) {
+        const id = text(rawItem?.id,80);
+        const title = text(rawItem?.title,360);
+        const section = ['active','waiting','completed'].includes(rawItem?.section) ? rawItem.section : '';
+        if (!id || !title || !section || person.items.some(item => item.id === id)) continue;
+        person.items.push({
+          id,title,section,
+          priority:['P1','P2','P3'].includes(rawItem?.priority) ? rawItem.priority : '',
+          checked:Boolean(rawItem?.checked),
+          reviewed:Boolean(rawItem?.reviewed),
+          canComplete:Boolean(rawItem?.canComplete),
+        });
+      }
+    }
+    const people = [...peopleByName.values()].map(person => ({
+      ...person,
+      counts:{
+        active:person.items.filter(item => item.section === 'active').length,
+        waiting:person.items.filter(item => item.section === 'waiting').length,
+        completed:person.items.filter(item => item.section === 'completed').length,
+        reviewed:person.items.filter(item => item.reviewed && item.section !== 'completed').length,
+      },
+    }));
+    return {
+      ok:source.ok === true,
+      people,
+      meta:{
+        refreshedAt:text(source.meta?.refreshedAt,50),
+        tokenCost:source.meta?.tokenCost === 0 ? 0 : null,
+        source:text(source.meta?.source,80),
+      },
+    };
+  }
+
+  function filterTeamItems(person,filter) {
+    const section = ['active','waiting','completed'].includes(filter) ? filter : 'active';
+    return (Array.isArray(person?.items) ? person.items : []).filter(item => item.section === section);
+  }
+
+  return { greeting, dateLabel, normalizeMaterials, recentDrafts, normalizeTeamGtd, filterTeamItems };
 });
