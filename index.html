@@ -335,6 +335,10 @@
     .team-filters { display:flex; flex-wrap:wrap; gap:6px; }
     .team-filter { min-height:32px; padding:0 11px; border:1px solid var(--line); border-radius:999px; background:var(--panel); color:var(--muted); cursor:pointer; font-size:9px; font-weight:700; }
     .team-filter.active { border-color:var(--accent); background:var(--electric-soft); color:var(--accent); }
+    .team-people { position:sticky; top:0; z-index:2; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:4px; border:1px solid var(--line); border-radius:12px; background:color-mix(in srgb,var(--panel) 94%,transparent); backdrop-filter:blur(12px); }
+    .team-person-select { min-width:0; min-height:40px; padding:6px; border:0; border-radius:9px; background:transparent; color:var(--muted); cursor:pointer; font-size:9px; font-weight:700; }
+    .team-person-select span { display:block; margin-top:1px; font-size:7px; font-weight:400; }
+    .team-person-select.active { background:var(--electric-soft); color:var(--accent); }
     .team-card-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
     .team-card { min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--panel); overflow:hidden; }
     .team-card summary { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 12px; cursor:pointer; list-style:none; }
@@ -685,6 +689,7 @@
               <button class="team-filter" type="button" data-team-filter="waiting" aria-pressed="false">Waiting</button>
               <button class="team-filter" type="button" data-team-filter="completed" aria-pressed="false">Completed</button>
             </div>
+            <div class="team-people" id="homeTeamPeople" role="group" aria-label="Choose team member"></div>
             <div class="team-card-list" id="homeTeamCards"></div>
             <div class="team-footer"><span>Reviewed by Ila is manager-only and never completes a Notion task.</span><span id="homeTeamFetched">No AI processing</span></div>
           </section>
@@ -853,7 +858,7 @@
 <script src="./agent-mode.js"></script>
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
-<script src="./home-dashboard.js?v=47"></script>
+<script src="./home-dashboard.js?v=48"></script>
 <script src="./multi-brain.js"></script>
 
 <script src="./approval-queue.js"></script>
@@ -878,7 +883,7 @@
   const homeDashboard = $('#homeDashboard'), homeDrafts = $('#homeDrafts');
   const homeMaterialsRefresh = $('#homeMaterialsRefresh'), homeMaterialStatus = $('#homeMaterialStatus');
   const homeFocus = $('#homeFocus'), homeUpcoming = $('#homeUpcoming'), homeMaterialSources = $('#homeMaterialSources');
-  const homeTeamRefresh = $('#homeTeamRefresh'), homeTeamAttention = $('#homeTeamAttention'), homeTeamCards = $('#homeTeamCards');
+  const homeTeamRefresh = $('#homeTeamRefresh'), homeTeamAttention = $('#homeTeamAttention'), homeTeamPeople = $('#homeTeamPeople'), homeTeamCards = $('#homeTeamCards');
 
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
   const actionCenter = $('#actionCenter'), actionTemplates = $('#actionTemplates'), actionForm = $('#actionForm');
@@ -1607,6 +1612,7 @@
       homeTeamAttention.textContent = teamState === 'error' ? (teamError || 'Team GTD could not be refreshed.') : 'Connecting to Tasa, Disha, and Intan…';
       $('#homeTeamUpdated').textContent = teamState === 'loading' ? 'Refreshing…' : 'Waiting for sync';
       $('#homeTeamFetched').textContent = 'No AI processing';
+      homeTeamPeople.replaceChildren();
       homeTeamCards.replaceChildren();
       homeEmpty(homeTeamCards,teamState === 'loading' ? 'Loading team trackers…' : 'No team data yet.');
       return;
@@ -1676,6 +1682,25 @@
         remainder.textContent = `Showing ${visibleItems.length} of ${items.length} ${teamFilter} items.`; list.append(remainder);
       }
       card.append(summary,list); homeTeamCards.append(card);
+    });
+    homeTeamPeople.replaceChildren();
+    data.people.forEach(person => {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'team-person-select';
+      button.dataset.teamPerson = person.name;
+      button.setAttribute('aria-pressed',String(openNames.has(person.name)));
+      button.classList.toggle('active',openNames.has(person.name));
+      button.textContent = person.name;
+      const count = document.createElement('span'); count.textContent = `${person.counts[teamFilter]} ${teamFilter}`; button.append(count);
+      button.addEventListener('click',() => {
+        [...homeTeamCards.querySelectorAll('details')].forEach(card => {
+          card.open = card.dataset.person === person.name;
+        });
+        [...homeTeamPeople.querySelectorAll('[data-team-person]')].forEach(choice => {
+          const selected = choice.dataset.teamPerson === person.name;
+          choice.classList.toggle('active',selected); choice.setAttribute('aria-pressed',String(selected));
+        });
+      });
+      homeTeamPeople.append(button);
     });
   }
   async function loadTeamGtd(force=false) {
@@ -2848,7 +2873,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=47',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=48',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });

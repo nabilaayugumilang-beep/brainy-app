@@ -111,7 +111,7 @@ test('work home normalizes a bounded live materials snapshot and server-backed d
 });
 
 test('work home replaces Continue Working with a zero-token inline Notion materials dashboard', () => {
-  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=47"><\/script>/);
+  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=48"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
   assert.match(html, /Work thinking space · 0 tokens/);
@@ -172,6 +172,9 @@ test('Team GTD keeps every person visible on mobile instead of auto-opening the 
 test('Team GTD is an expandable responsive Home cockpit with explicit separate actions', () => {
   assert.match(html,/id="homeTeamGtd"/);
   assert.match(html,/id="homeTeamCards"/);
+  assert.match(html,/id="homeTeamPeople"[^>]*aria-label="Choose team member"/);
+  assert.match(html,/button\.dataset\.teamPerson = person\.name/);
+  assert.match(html,/card\.open = card\.dataset\.person === person\.name/);
   assert.match(html,/id="homeTeamRefresh"/);
   assert.match(html,/data-team-filter="active"/);
   assert.match(html,/data-team-filter="waiting"/);
@@ -182,8 +185,8 @@ test('Team GTD is an expandable responsive Home cockpit with explicit separate a
   assert.match(html,/\.team-card-list/);
   assert.match(html,/@media \(max-width:640px\)[\s\S]*\.team-card-list\s*\{[^}]*grid-template-columns:1fr/);
   assert.equal((html.match(/disabled = teamMutationBusy \|\| teamState === 'loading'/g) || []).length,2);
-  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=47"><\/script>/);
-  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=47'/);
+  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=48"><\/script>/);
+  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=48'/);
 });
 
 test('action center asks for one outcome across four simple work intents', () => {
@@ -863,7 +866,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=47'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=48'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1093,7 +1096,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v47/);
+  assert.match(sw, /brainy-shell-v48/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
