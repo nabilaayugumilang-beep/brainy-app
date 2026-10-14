@@ -175,6 +175,7 @@ test('Team GTD is an expandable responsive Home cockpit with explicit separate a
   assert.match(html,/Reviewed by Ila/);
   assert.match(html,/\.team-card-list/);
   assert.match(html,/@media \(max-width:640px\)[\s\S]*\.team-card-list\s*\{[^}]*grid-template-columns:1fr/);
+  assert.equal((html.match(/disabled = teamMutationBusy \|\| teamState === 'loading'/g) || []).length,2);
 });
 
 test('action center asks for one outcome across four simple work intents', () => {
@@ -854,7 +855,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=44'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=45'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1084,7 +1085,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v44/);
+  assert.match(sw, /brainy-shell-v45/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);

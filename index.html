@@ -1653,12 +1653,12 @@
         const actions = document.createElement('div'); actions.className = 'team-task-actions';
         if (item.section !== 'completed') {
           const review = document.createElement('button'); review.type = 'button'; review.className = `team-task-action${item.reviewed ? ' reviewed' : ''}`;
-          review.textContent = item.reviewed ? 'Reviewed ✓' : 'Reviewed by Ila'; review.setAttribute('aria-pressed',String(item.reviewed)); review.disabled = teamMutationBusy;
+          review.textContent = item.reviewed ? 'Reviewed ✓' : 'Reviewed by Ila'; review.setAttribute('aria-pressed',String(item.reviewed)); review.disabled = teamMutationBusy || teamState === 'loading';
           review.addEventListener('click',() => mutateTeamGtd('review',item,!item.reviewed)); actions.append(review);
         }
         if (item.canComplete) {
           const complete = document.createElement('button'); complete.type = 'button'; complete.className = 'team-task-action complete';
-          complete.textContent = item.section === 'completed' ? 'Reopen in Notion' : 'Mark done in Notion'; complete.disabled = teamMutationBusy;
+          complete.textContent = item.section === 'completed' ? 'Reopen in Notion' : 'Mark done in Notion'; complete.disabled = teamMutationBusy || teamState === 'loading';
           complete.addEventListener('click',() => {
             const next = item.section !== 'completed';
             const question = next ? `Mark “${item.title}” done in Notion?` : `Reopen “${item.title}” in Notion?`;
@@ -2845,7 +2845,7 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=44',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=45',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
