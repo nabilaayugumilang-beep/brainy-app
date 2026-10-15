@@ -291,43 +291,38 @@
     .home-item strong { font-size:10px; }
     .home-item span, .home-empty-copy { color:var(--muted); font-size:9px; }
     .home-empty-copy { margin:0; padding:12px 2px; }
-    .home-materials { grid-column:1/-1; display:grid; align-content:start; gap:12px; overflow:hidden; }
-    .home-material-toolbar { display:flex; align-items:center; gap:9px; }
+    .home-newsletter { grid-column:1/-1; display:grid; align-content:start; gap:12px; overflow:hidden; }
+    .home-newsletter-toolbar { display:flex; align-items:center; gap:9px; }
     .home-refresh { width:34px; height:34px; display:inline-grid; place-items:center; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--accent); cursor:pointer; transition:transform .16s ease,border-color .16s ease; }
     .home-refresh:hover { border-color:var(--accent); transform:translateY(-1px); }
     .home-refresh:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-    .home-refresh[aria-busy="true"] { animation:material-spin .9s linear infinite; }
-    @keyframes material-spin { to { transform:rotate(360deg); } }
-    .home-material-status { display:flex; align-items:flex-start; gap:8px; padding:10px 12px; border:1px solid color-mix(in srgb,var(--electric) 18%,var(--line)); border-radius:12px; background:color-mix(in srgb,var(--electric-soft) 52%,var(--panel)); color:var(--muted); font-size:9px; line-height:1.55; }
-    .home-material-status::before { content:''; flex:none; width:7px; height:7px; margin-top:4px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px var(--glow); }
-    .home-material-status.error::before { background:var(--danger); }
-    .home-material-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
-    .home-material-stat { min-width:0; display:grid; gap:2px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
-    .home-material-stat strong { color:var(--accent); font-size:16px; line-height:1.1; }
-    .home-material-stat span { color:var(--muted); font-size:8px; text-transform:uppercase; letter-spacing:.08em; }
-    .home-material-main { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:10px; }
-    .home-material-section, .home-source-card { min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
-    .home-material-section { padding:13px; }
-    .home-material-section h3, .home-source-card h3 { margin:0; font-size:10px; }
-    .home-material-section-head, .home-source-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:9px; }
-    .home-count { color:var(--muted); font-size:8px; }
-    .home-material-list { display:grid; gap:6px; }
-    .home-focus-row, .home-upcoming-row { min-width:0; display:grid; gap:3px; padding:9px 10px; border-radius:10px; background:var(--soft); }
-    .home-focus-row { grid-template-columns:auto minmax(0,1fr); align-items:start; column-gap:8px; }
-    .home-priority { min-width:25px; padding:2px 5px; border-radius:6px; background:var(--electric-soft); color:var(--accent); font-size:8px; font-weight:700; text-align:center; }
-    .home-focus-copy { min-width:0; display:grid; gap:2px; }
-    .home-focus-copy strong, .home-upcoming-row strong, .home-source-item strong { overflow:hidden; font-size:9px; text-overflow:ellipsis; }
-    .home-focus-copy span, .home-upcoming-row span, .home-source-item span { color:var(--muted); font-size:8px; line-height:1.45; }
-    .home-upcoming-row { grid-template-columns:86px minmax(0,1fr); column-gap:8px; }
-    .home-upcoming-time { color:var(--accent)!important; font-weight:700; }
-    .home-material-sources { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
-    .home-source-card { padding:13px; }
-    .home-source-list { display:grid; gap:6px; }
-    .home-source-item { min-width:0; display:grid; gap:2px; padding:8px 9px; border-radius:9px; background:var(--soft); }
-    .home-source-line { display:flex; align-items:center; justify-content:space-between; gap:7px; }
-    .home-state { flex:none; max-width:52%; overflow:hidden; padding:2px 5px; border-radius:999px; background:var(--electric-soft); color:var(--accent); font-size:7px; font-weight:700; text-overflow:ellipsis; white-space:nowrap; }
-    .home-state.error { background:color-mix(in srgb,var(--danger) 13%,var(--panel)); color:var(--danger); }
-    .home-material-footer { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:8px; }
+    .home-refresh[aria-busy="true"] { animation:home-spin .9s linear infinite; }
+    @keyframes home-spin { to { transform:rotate(360deg); } }
+    .home-newsletter-status { display:flex; align-items:flex-start; gap:8px; padding:10px 12px; border:1px solid color-mix(in srgb,var(--electric) 18%,var(--line)); border-radius:12px; background:color-mix(in srgb,var(--electric-soft) 52%,var(--panel)); color:var(--muted); font-size:9px; line-height:1.55; }
+    .home-newsletter-status::before { content:''; flex:none; width:7px; height:7px; margin-top:4px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px var(--glow); }
+    .home-newsletter-status.error::before { background:var(--danger); }
+    .newsletter-feature { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr); gap:10px; }
+    .newsletter-article, .newsletter-side-card { min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--panel); }
+    .newsletter-article { display:grid; gap:13px; padding:17px; }
+    .newsletter-edition { color:var(--accent); font-size:8px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .newsletter-book { margin:0; font-size:17px; line-height:1.3; letter-spacing:-.035em; overflow-wrap:anywhere; }
+    .newsletter-idea { display:grid; gap:6px; padding:13px 14px; border-left:3px solid var(--accent); border-radius:0 11px 11px 0; background:var(--electric-soft); }
+    .newsletter-label { color:var(--accent); font-size:8px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+    .newsletter-idea p, .newsletter-copy p { margin:0; color:var(--text); font-size:10px; line-height:1.65; }
+    .newsletter-copy { display:grid; gap:7px; }
+    .newsletter-copy h3, .newsletter-side-card h3 { margin:0; font-size:10px; }
+    .newsletter-side { display:grid; align-content:start; gap:10px; }
+    .newsletter-side-card { display:grid; gap:9px; padding:13px; }
+    .newsletter-try-intro, .newsletter-remember { margin:0; color:var(--muted); font-size:9px; line-height:1.55; }
+    .newsletter-steps { margin:0; padding-left:18px; color:var(--text); font-size:9px; line-height:1.6; }
+    .newsletter-archive { display:grid; gap:6px; }
+    .newsletter-archive-link { display:grid; gap:2px; padding:8px 9px; border:0; border-radius:9px; background:var(--soft); color:var(--text); text-decoration:none; }
+    .newsletter-archive-link:hover { color:var(--accent); }
+    .newsletter-archive-link strong { overflow:hidden; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+    .newsletter-archive-link span { color:var(--muted); font-size:7px; }
+    .newsletter-open { width:max-content; max-width:100%; min-height:32px; display:inline-flex; align-items:center; padding:0 11px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--accent); text-decoration:none; font-size:8px; font-weight:700; }
+    .newsletter-open:hover { border-color:var(--accent); background:var(--electric-soft); }
+    .newsletter-footer { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:8px; }
     .team-gtd { grid-column:1/-1; display:grid; gap:12px; }
     .team-toolbar { display:flex; align-items:center; gap:9px; }
     .team-attention { padding:10px 12px; border:1px solid color-mix(in srgb,var(--electric) 18%,var(--line)); border-radius:12px; background:color-mix(in srgb,var(--electric-soft) 42%,var(--panel)); color:var(--muted); font-size:9px; line-height:1.5; }
@@ -511,12 +506,10 @@
       .home-dashboard { padding:20px 14px 64px; }
       .home-hero { border-radius:18px; }
       .home-grid { grid-template-columns:1fr; }
-      .home-material-main, .home-material-sources { grid-template-columns:1fr; }
+      .newsletter-feature { grid-template-columns:1fr; }
       .team-card-list { grid-template-columns:1fr; }
-      .team-toolbar, .team-footer { align-items:flex-start; }
-      .home-material-stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
-      .home-upcoming-row { grid-template-columns:78px minmax(0,1fr); }
-      .home-material-footer { flex-direction:column; gap:2px; }
+      .team-toolbar, .team-footer, .newsletter-footer { align-items:flex-start; }
+      .newsletter-footer { flex-direction:column; gap:2px; }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
       .empty h1 { font-size:clamp(28px,10vw,38px); }
       .empty p { margin-bottom:18px; font-size:12px; line-height:1.5; }
@@ -648,32 +641,30 @@
           </div>
         </div>
         <div class="home-grid">
-          <section class="home-panel home-materials" id="homeMaterials" aria-labelledby="homeMaterialsTitle">
+          <section class="home-panel home-newsletter" id="homeNewsletter" aria-labelledby="homeNewsletterTitle">
             <div class="home-panel-head">
-              <div><h2 id="homeMaterialsTitle">My Work HQ</h2><span class="home-panel-meta">Notion · live source · 0 AI tokens</span></div>
-              <div class="home-material-toolbar">
-                <span class="home-panel-meta" id="homeMaterialsUpdated">Waiting for sync</span>
-                <button class="home-refresh" id="homeMaterialsRefresh" type="button" aria-label="Refresh materials dashboard" title="Refresh materials">↻</button>
+              <div><h2 id="homeNewsletterTitle">One Book, One Idea Worth Stealing</h2><span class="home-panel-meta">Notion · latest published issue · 0 AI tokens</span></div>
+              <div class="home-newsletter-toolbar">
+                <span class="home-panel-meta" id="homeNewsletterUpdated">Waiting for sync</span>
+                <button class="home-refresh" id="homeNewsletterRefresh" type="button" aria-label="Refresh Newsletter" title="Refresh Newsletter">↻</button>
               </div>
             </div>
-            <div class="home-material-status" id="homeMaterialStatus" role="status" aria-live="polite">Connecting to your materials…</div>
-            <div class="home-material-stats" aria-label="Materials overview">
-              <div class="home-material-stat"><strong id="homeFocusCount">—</strong><span>Focus</span></div>
-              <div class="home-material-stat"><strong id="homeUpcomingCount">—</strong><span>Upcoming</span></div>
-              <div class="home-material-stat"><strong id="homeActionCount">—</strong><span>Actions</span></div>
+            <div class="home-newsletter-status" id="homeNewsletterStatus" role="status" aria-live="polite">Connecting to Newsletter…</div>
+            <div class="newsletter-feature">
+              <article class="newsletter-article" aria-labelledby="homeNewsletterBook">
+                <span class="newsletter-edition" id="homeNewsletterEdition">Latest published issue</span>
+                <h3 class="newsletter-book" id="homeNewsletterBook">Loading from Notion…</h3>
+                <div class="newsletter-idea"><span class="newsletter-label">One big idea</span><p id="homeNewsletterIdea">—</p></div>
+                <div class="newsletter-copy" id="homeNewsletterWhy"></div>
+                <a class="newsletter-open" id="homeNewsletterOpen" href="#" target="_blank" rel="noopener noreferrer" hidden>Read full issue in Notion ↗</a>
+              </article>
+              <aside class="newsletter-side" aria-label="Newsletter highlights">
+                <section class="newsletter-side-card"><h3>Try this</h3><div id="homeNewsletterTry"></div></section>
+                <section class="newsletter-side-card"><h3>Remember</h3><p class="newsletter-remember" id="homeNewsletterRemember">—</p></section>
+                <section class="newsletter-side-card"><h3>Recent issues</h3><div class="newsletter-archive" id="homeNewsletterArchive"></div></section>
+              </aside>
             </div>
-            <div class="home-material-main">
-              <section class="home-material-section" aria-labelledby="homeFocusTitle">
-                <div class="home-material-section-head"><h3 id="homeFocusTitle">My focus</h3><span class="home-count" id="homeFocusMeta"></span></div>
-                <div class="home-material-list" id="homeFocus"></div>
-              </section>
-              <section class="home-material-section" aria-labelledby="homeUpcomingTitle">
-                <div class="home-material-section-head"><h3 id="homeUpcomingTitle">Upcoming</h3><span class="home-count" id="homeUpcomingMeta"></span></div>
-                <div class="home-material-list" id="homeUpcoming"></div>
-              </section>
-            </div>
-            <div class="home-material-sources" id="homeMaterialSources"></div>
-            <div class="home-material-footer"><span>Read-only dashboard · updates come from My Work HQ</span><span id="homeMaterialsFetched">No AI processing</span></div>
+            <div class="newsletter-footer"><span id="homeNewsletterCadence">A fresh idea every Thursday · from Notion</span><span id="homeNewsletterFetched">No AI processing</span></div>
           </section>
           <section class="home-panel team-gtd" id="homeTeamGtd" aria-labelledby="homeTeamTitle">
             <div class="home-panel-head">
@@ -858,7 +849,7 @@
 <script src="./agent-mode.js"></script>
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
-<script src="./home-dashboard.js?v=48"></script>
+<script src="./home-dashboard.js?v=49"></script>
 <script src="./multi-brain.js"></script>
 
 <script src="./approval-queue.js"></script>
@@ -881,8 +872,8 @@
   const commandPalette = $('#commandPalette');
   const homeModeButton = $('#homeMode'), chatModeButton = $('#chatMode'), agentModeButton = $('#agentMode'), actionsModeButton = $('#actionsMode'), hqModeButton = $('#hqMode');
   const homeDashboard = $('#homeDashboard'), homeDrafts = $('#homeDrafts');
-  const homeMaterialsRefresh = $('#homeMaterialsRefresh'), homeMaterialStatus = $('#homeMaterialStatus');
-  const homeFocus = $('#homeFocus'), homeUpcoming = $('#homeUpcoming'), homeMaterialSources = $('#homeMaterialSources');
+  const homeNewsletterRefresh = $('#homeNewsletterRefresh'), homeNewsletterStatus = $('#homeNewsletterStatus');
+  const homeNewsletterWhy = $('#homeNewsletterWhy'), homeNewsletterTry = $('#homeNewsletterTry'), homeNewsletterArchive = $('#homeNewsletterArchive');
   const homeTeamRefresh = $('#homeTeamRefresh'), homeTeamAttention = $('#homeTeamAttention'), homeTeamPeople = $('#homeTeamPeople'), homeTeamCards = $('#homeTeamCards');
 
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
@@ -955,7 +946,7 @@
   let activeActionId = '', editingActionDraftId = '';
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
   let actionDraftsAttempted = false;
-  let materialsSnapshot = null, materialsState = 'idle', materialsError = '', materialsRequest = null;
+  let newsletterSnapshot = null, newsletterState = 'idle', newsletterError = '', newsletterRequest = null;
   let teamSnapshot = null, teamState = 'idle', teamError = '', teamRequest = null, teamFilter = 'active', teamMutationBusy = false;
   let backendReady = false;
   const actionDraftSync = BrainyActionCenter.createSyncTracker();
@@ -1021,9 +1012,9 @@
       setAccessKey(data.access);
       $('#activationPanel').hidden = true;
       $('#activationCode').value = '';
-      materialsState = 'idle';
+      newsletterState = 'idle';
       teamState = 'idle';
-      loadMaterials();
+      loadNewsletter();
       loadTeamGtd();
       loadActionDraftsRemote();
       connect().catch(fail);
@@ -1501,101 +1492,78 @@
     if (Number.isNaN(date.getTime())) return '';
     return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
   }
-  function materialEmpty(target,text) {
-    target.replaceChildren(); homeEmpty(target,text);
-  }
-  function materialSourceCard(title,collection,kind) {
-    const card = document.createElement('section'); card.className = 'home-source-card';
-    const head = document.createElement('div'); head.className = 'home-source-head';
-    const heading = document.createElement('h3'); heading.textContent = title;
-    const count = document.createElement('span'); count.className = 'home-count'; count.textContent = `${collection.count} total`;
-    head.append(heading,count);
-    const list = document.createElement('div'); list.className = 'home-source-list';
-    if (!collection.items.length) homeEmpty(list,'Nothing waiting here.');
-    collection.items.slice(0,kind === 'actions' ? 3 : 4).forEach(item => {
-      const row = document.createElement('div'); row.className = 'home-source-item';
-      const line = document.createElement('div'); line.className = 'home-source-line';
-      const strong = document.createElement('strong'); strong.textContent = item.title || item.source;
-      const state = document.createElement('span'); state.className = 'home-state';
-      state.textContent = item.priority || item.status || item.state || '—';
-      if (/error|blocked/i.test(state.textContent)) state.classList.add('error');
-      line.append(strong,state);
-      const detail = document.createElement('span');
-      detail.textContent = item.nextAction || item.nextMove || item.notes || item.workstream || 'No additional note';
-      row.append(line,detail); list.append(row);
-    });
-    card.append(head,list); return card;
-  }
-  function renderMaterialsDashboard() {
-    const loading = materialsState === 'loading';
-    homeMaterialsRefresh.disabled = loading;
-    homeMaterialsRefresh.setAttribute('aria-busy',String(loading));
-    homeMaterialStatus.classList.toggle('error',materialsState === 'error');
-    if (!materialsSnapshot) {
-      homeMaterialStatus.textContent = materialsState === 'error' ? (materialsError || 'Materials could not be refreshed.') : 'Connecting to your materials…';
-      ['homeFocusCount','homeUpcomingCount','homeActionCount'].forEach(id => { $(`#${id}`).textContent = '—'; });
-      $('#homeMaterialsUpdated').textContent = loading ? 'Refreshing…' : 'Waiting for sync';
-      $('#homeMaterialsFetched').textContent = 'No AI processing';
-      $('#homeFocusMeta').textContent = '';
-      $('#homeUpcomingMeta').textContent = '';
-      materialEmpty(homeFocus,loading ? 'Loading focus…' : 'No focus data yet.');
-      materialEmpty(homeUpcoming,loading ? 'Loading upcoming items…' : 'No upcoming data yet.');
-      materialEmpty(homeMaterialSources,loading ? 'Loading source status…' : 'No source data yet.');
+  function renderNewsletter() {
+    const loading = newsletterState === 'loading';
+    homeNewsletterRefresh.disabled = loading;
+    homeNewsletterRefresh.setAttribute('aria-busy',String(loading));
+    homeNewsletterStatus.classList.toggle('error',newsletterState === 'error');
+    if (!newsletterSnapshot) {
+      homeNewsletterStatus.textContent = newsletterState === 'error' ? (newsletterError || 'Newsletter could not be refreshed.') : 'Connecting to Newsletter…';
+      $('#homeNewsletterUpdated').textContent = loading ? 'Refreshing…' : 'Waiting for sync';
+      $('#homeNewsletterFetched').textContent = 'No AI processing';
+      $('#homeNewsletterEdition').textContent = 'Latest published issue';
+      $('#homeNewsletterBook').textContent = loading ? 'Loading from Notion…' : 'No published issue yet';
+      $('#homeNewsletterIdea').textContent = '—';
+      $('#homeNewsletterRemember').textContent = '—';
+      $('#homeNewsletterOpen').hidden = true;
+      homeNewsletterWhy.replaceChildren(); homeNewsletterTry.replaceChildren(); homeNewsletterArchive.replaceChildren();
       return;
     }
-    const data = materialsSnapshot;
-    $('#homeMaterialsTitle').textContent = data.title.split('|')[0].trim() || 'My Work HQ';
-    homeMaterialStatus.textContent = data.status || 'Materials synced from Notion.';
-    $('#homeFocusCount').textContent = String(data.focus.length);
-    $('#homeUpcomingCount').textContent = String(data.upcoming.length);
-    $('#homeActionCount').textContent = String(data.collections.actions.count);
-    $('#homeFocusMeta').textContent = `${data.focus.filter(item => !item.checked).length} active`;
-    $('#homeUpcomingMeta').textContent = `${data.upcoming.length} items`;
-    $('#homeMaterialsUpdated').textContent = materialDate(data.meta.sourceUpdatedAt) || 'Live source';
-    $('#homeMaterialsFetched').textContent = `Refreshed ${materialDate(data.meta.refreshedAt) || 'now'} · 0 tokens`;
-    homeFocus.replaceChildren();
-    if (!data.focus.length) homeEmpty(homeFocus,'No active focus items.');
-    data.focus.forEach(item => {
-      const row = document.createElement('div'); row.className = 'home-focus-row';
-      const priority = document.createElement('span'); priority.className = 'home-priority'; priority.textContent = item.priority;
-      const copy = document.createElement('div'); copy.className = 'home-focus-copy';
-      const strong = document.createElement('strong'); strong.textContent = item.title;
-      const detail = document.createElement('span'); detail.textContent = item.detail || (item.checked ? 'Complete' : 'Active');
-      copy.append(strong,detail); row.append(priority,copy); homeFocus.append(row);
+    const data = newsletterSnapshot;
+    const latest = data.latest;
+    $('#homeNewsletterTitle').textContent = data.title;
+    $('#homeNewsletterCadence').textContent = data.cadence;
+    $('#homeNewsletterUpdated').textContent = materialDate(data.meta.sourceUpdatedAt) || 'Live source';
+    $('#homeNewsletterFetched').textContent = `Refreshed ${materialDate(data.meta.refreshedAt) || 'now'} · 0 tokens`;
+    homeNewsletterStatus.textContent = latest ? `Latest published issue · ${data.archive.length} issues available in Notion` : 'No published Newsletter issue is available yet.';
+    homeNewsletterWhy.replaceChildren(); homeNewsletterTry.replaceChildren(); homeNewsletterArchive.replaceChildren();
+    const open = $('#homeNewsletterOpen');
+    if (!latest) {
+      $('#homeNewsletterEdition').textContent = 'Latest published issue'; $('#homeNewsletterBook').textContent = 'No published issue yet';
+      $('#homeNewsletterIdea').textContent = '—'; $('#homeNewsletterRemember').textContent = '—'; open.hidden = true;
+      homeEmpty(homeNewsletterArchive,'Published issues will appear here.'); return;
+    }
+    $('#homeNewsletterEdition').textContent = latest.title;
+    $('#homeNewsletterBook').textContent = latest.book || latest.title;
+    $('#homeNewsletterIdea').textContent = latest.idea || 'Open the issue in Notion for the full idea.';
+    $('#homeNewsletterRemember').textContent = latest.remember || 'Read the full issue in Notion.';
+    if (latest.why.length || latest.meaning.length) {
+      const heading = document.createElement('h3'); heading.textContent = 'Why it matters'; homeNewsletterWhy.append(heading);
+      [...latest.why,...latest.meaning.slice(0,1)].slice(0,3).forEach(copy => { const paragraph=document.createElement('p'); paragraph.textContent=copy; homeNewsletterWhy.append(paragraph); });
+    }
+    if (latest.tryThis.intro) { const intro=document.createElement('p'); intro.className='newsletter-try-intro'; intro.textContent=latest.tryThis.intro; homeNewsletterTry.append(intro); }
+    if (latest.tryThis.steps.length) {
+      const list=document.createElement('ol'); list.className='newsletter-steps';
+      latest.tryThis.steps.forEach(copy => { const item=document.createElement('li'); item.textContent=copy; list.append(item); }); homeNewsletterTry.append(list);
+    } else homeEmpty(homeNewsletterTry,'Open the full issue for this week’s practice.');
+    open.hidden = !latest.url; if (latest.url) open.href = latest.url;
+    const older = data.archive.filter(issue => issue.id !== latest.id).slice(0,4);
+    if (!older.length) homeEmpty(homeNewsletterArchive,'No earlier issues yet.');
+    older.forEach(issue => {
+      const row=document.createElement(issue.url ? 'a' : 'div'); row.className='newsletter-archive-link';
+      if (issue.url) { row.href=issue.url; row.target='_blank'; row.rel='noopener noreferrer'; }
+      const title=document.createElement('strong'); title.textContent=issue.title;
+      const date=document.createElement('span'); date.textContent=materialDate(issue.editedAt) || 'Published in Notion';
+      row.append(title,date); homeNewsletterArchive.append(row);
     });
-    homeUpcoming.replaceChildren();
-    if (!data.upcoming.length) homeEmpty(homeUpcoming,'Nothing upcoming.');
-    data.upcoming.slice(0,6).forEach(item => {
-      const row = document.createElement('div'); row.className = 'home-upcoming-row';
-      const when = document.createElement('span'); when.className = 'home-upcoming-time'; when.textContent = item.when;
-      const copy = document.createElement('div'); copy.className = 'home-focus-copy';
-      const strong = document.createElement('strong'); strong.textContent = item.event;
-      const detail = document.createElement('span'); detail.textContent = item.next;
-      copy.append(strong,detail); row.append(when,copy); homeUpcoming.append(row);
-    });
-    homeMaterialSources.replaceChildren(
-      materialSourceCard('Action inbox',data.collections.actions,'actions'),
-      materialSourceCard('Decision queue',data.collections.decisions,'decisions'),
-      materialSourceCard('Sync status',data.collections.sync,'sync')
-    );
   }
-  async function loadMaterials(force=false) {
-    if (materialsRequest) return materialsRequest;
-    if (!accessKey) { materialsState='error'; materialsError='Activate BRAINY to load your private materials.'; renderMaterialsDashboard(); return; }
-    materialsState='loading'; materialsError=''; renderMaterialsDashboard();
-    materialsRequest = (async() => {
-      const response = await fetch(`${backendUrl}/api/brainy/materials${force ? '?refresh=1' : ''}`,{headers:authHeaders});
+  async function loadNewsletter(force=false) {
+    if (newsletterRequest) return newsletterRequest;
+    if (!accessKey) { newsletterState='error'; newsletterError='Activate BRAINY to load Newsletter.'; renderNewsletter(); return; }
+    newsletterState='loading'; newsletterError=''; renderNewsletter();
+    newsletterRequest = (async() => {
+      const response = await fetch(`${backendUrl}/api/brainy/newsletter${force ? '?refresh=1' : ''}`,{headers:authHeaders});
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Materials could not be refreshed');
-      materialsSnapshot = BrainyHomeDashboard.normalizeMaterials(payload);
-      materialsState='ready';
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Newsletter could not be refreshed');
+      newsletterSnapshot = BrainyHomeDashboard.normalizeNewsletter(payload);
+      newsletterState='ready';
     })().catch(error => {
-      materialsState='error'; materialsError=error.message || 'Materials could not be refreshed';
-      if (force) showToast(materialsError);
+      newsletterState='error'; newsletterError=error.message || 'Newsletter could not be refreshed';
+      if (force) showToast(newsletterError);
     }).finally(() => {
-      materialsRequest=null; renderMaterialsDashboard();
+      newsletterRequest=null; renderNewsletter();
     });
-    return materialsRequest;
+    return newsletterRequest;
   }
   function renderTeamGtd() {
     const loading = teamState === 'loading' || teamMutationBusy;
@@ -1744,9 +1712,9 @@
     const now = new Date();
     $('#homeGreeting').textContent = BrainyHomeDashboard.greeting(now,'Ila');
     $('#homeDate').textContent = BrainyHomeDashboard.dateLabel(now);
-    renderMaterialsDashboard();
+    renderNewsletter();
     renderTeamGtd();
-    if (materialsState === 'idle' && backendReady) loadMaterials();
+    if (newsletterState === 'idle' && backendReady) loadNewsletter();
     if (teamState === 'idle' && backendReady) loadTeamGtd();
     homeDrafts.replaceChildren();
     const drafts = BrainyHomeDashboard.recentDrafts(actionDraftItems,BrainyActionCenter.templates());
@@ -2614,7 +2582,7 @@
     ws.onerror = () => setStatus('Connection interrupted');
   }
   homeModeButton.onclick = showHomeDashboard;
-  homeMaterialsRefresh.onclick = () => loadMaterials(true);
+  homeNewsletterRefresh.onclick = () => loadNewsletter(true);
   homeTeamRefresh.onclick = () => loadTeamGtd(true);
   document.querySelectorAll('[data-team-filter]').forEach(button => {
     button.addEventListener('click',() => {
@@ -2873,15 +2841,15 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=48',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
   }
   refreshBackend().finally(() => {
     backendReady = true;
-    if (!accessKey) { showActivation(); renderMaterialsDashboard(); renderTeamGtd(); return; }
-    loadMaterials();
+    if (!accessKey) { showActivation(); renderNewsletter(); renderTeamGtd(); return; }
+    loadNewsletter();
     loadTeamGtd();
     loadActionDraftsRemote();
     connect().catch(fail);

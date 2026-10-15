@@ -26,28 +26,31 @@
     return String(value || '').replace(/\s+/g,' ').trim().slice(0,limit);
   }
 
-  function normalizeMaterials(payload) {
-    if (!payload || payload.ok !== true) throw new Error('Materials snapshot is invalid');
-    const source = payload.collections && typeof payload.collections === 'object' ? payload.collections : {};
-    const collection = (value,max,map) => {
-      const item = value && typeof value === 'object' ? value : {};
-      const rows = Array.isArray(item.items) ? item.items.slice(0,max).map(map).filter(row => row.title || row.source) : [];
-      return {count:Math.max(0,Number(item.count) || rows.length),items:rows};
-    };
+  function notionUrl(value) {
+    try {
+      const url = new URL(String(value || ''));
+      return url.protocol === 'https:' && /(^|\.)notion\.so$|(^|\.)notion\.com$/.test(url.hostname) ? url.toString() : '';
+    } catch { return ''; }
+  }
+
+  function normalizeNewsletter(payload) {
+    if (!payload || payload.ok !== true) throw new Error('Newsletter snapshot is invalid');
+    const strings = (value,max=3,limit=900) => (Array.isArray(value) ? value : []).slice(0,max).map(item => text(item,limit)).filter(Boolean);
+    const rawLatest = payload.latest && typeof payload.latest === 'object' ? payload.latest : null;
+    const latest = rawLatest ? {
+      id:text(rawLatest.id,80), title:text(rawLatest.title,180), editedAt:text(rawLatest.editedAt,50), url:notionUrl(rawLatest.url),
+      book:text(rawLatest.book,180), why:strings(rawLatest.why,3), idea:text(rawLatest.idea,1200),
+      meaning:strings(rawLatest.meaning,3), example:strings(rawLatest.example,2),
+      tryThis:{intro:text(rawLatest.tryThis?.intro,900),steps:strings(rawLatest.tryThis?.steps,6,500)},
+      remember:text(rawLatest.remember,900), sources:strings(rawLatest.sources,4,300),
+    } : null;
     return {
-      title:text(payload.title,100) || 'My Work HQ',
-      status:text(payload.status,360),
-      focus:(Array.isArray(payload.focus) ? payload.focus : []).slice(0,8).map(item => ({
-        title:text(item?.title,120), detail:text(item?.detail,220), priority:text(item?.priority,12) || '—', checked:Boolean(item?.checked)
-      })).filter(item => item.title).sort((a,b) => ({P1:1,P2:2,P3:3}[a.priority] || 9) - ({P1:1,P2:2,P3:3}[b.priority] || 9)),
-      upcoming:(Array.isArray(payload.upcoming) ? payload.upcoming : []).slice(0,12).map(item => ({
-        when:text(item?.when,60), event:text(item?.event,120), next:text(item?.next,100)
-      })).filter(item => item.when || item.event),
-      collections:{
-        actions:collection(source.actions,5,item => ({title:text(item?.title,120),priority:text(item?.priority,12),state:text(item?.state,50),workstream:text(item?.workstream,80),nextAction:text(item?.nextAction,220),due:text(item?.due,40)})),
-        decisions:collection(source.decisions,4,item => ({title:text(item?.title,120),status:text(item?.status,50),workstream:text(item?.workstream,80),nextMove:text(item?.nextMove,220),due:text(item?.due,40)})),
-        sync:collection(source.sync,6,item => ({source:text(item?.source,80),state:text(item?.state,50),lastSync:text(item?.lastSync,50),frequency:text(item?.frequency,80),notes:text(item?.notes,220)})),
-      },
+      title:text(payload.title,100) || 'One Book, One Idea Worth Stealing',
+      cadence:text(payload.cadence,120) || 'A fresh idea every Thursday · from Notion',
+      latest:latest && latest.id && latest.title ? latest : null,
+      archive:(Array.isArray(payload.archive) ? payload.archive : []).slice(0,6).map(item => ({
+        id:text(item?.id,80),title:text(item?.title,180),editedAt:text(item?.editedAt,50),url:notionUrl(item?.url)
+      })).filter(item => item.id && item.title),
       meta:{sourceUpdatedAt:text(payload.meta?.sourceUpdatedAt,50),refreshedAt:text(payload.meta?.refreshedAt,50),tokenCost:0},
     };
   }
@@ -123,5 +126,5 @@
     return Boolean(wasOpen || (!hadCards && index === 0 && !isMobile));
   }
 
-  return { greeting, dateLabel, normalizeMaterials, recentDrafts, normalizeTeamGtd, filterTeamItems, shouldOpenTeamCard };
+  return { greeting, dateLabel, normalizeNewsletter, recentDrafts, normalizeTeamGtd, filterTeamItems, shouldOpenTeamCard };
 });

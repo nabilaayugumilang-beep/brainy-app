@@ -78,24 +78,30 @@ test('work home creates a local greeting and readable date without a network cal
   assert.doesNotMatch(source, /\bfetch\s*\(|\bWebSocket\b|\brpc\s*\(/);
 });
 
-test('work home normalizes a bounded live materials snapshot and server-backed drafts', () => {
-  const materials = HomeDashboard.normalizeMaterials({
+test('work home normalizes a bounded live Newsletter snapshot and server-backed drafts', () => {
+  const newsletter = HomeDashboard.normalizeNewsletter({
     ok:true,
-    title:'My Work HQ | Personal Command Center',
-    status:'Manual publish verified',
-    focus:[{title:'Review TOR',priority:'P1',checked:false},{title:'Check brief',priority:'P2',checked:true}],
-    upcoming:[{when:'14 Oct · 10.00',event:'Talent Review',next:'Prepare'}],
-    collections:{
-      actions:{count:9,items:[{title:'Review TOR',priority:'P1',state:'Needs Verification',workstream:'L&D'}]},
-      decisions:{count:1,items:[{title:'SOP reply',status:'Needs Verification',nextMove:'Confirm comments'}]},
-      sync:{count:2,items:[{source:'Google Drive',state:'Healthy',lastSync:'2026-10-12'}]}
+    title:'One Book, One Idea Worth Stealing',
+    cadence:'A fresh idea every Thursday · from Notion',
+    latest:{
+      id:'latest', title:'8 October 2026 — The Anxious Generation', editedAt:'2026-10-08T02:01:00.000Z',
+      url:'https://www.notion.so/latest', book:'The Anxious Generation — Jonathan Haidt',
+      why:['First reason','Second reason'], idea:'Protect play-based childhood.',
+      meaning:['Meaning one'], example:['Example one'],
+      tryThis:{intro:'Audit notifications.',steps:['Disable shopping alerts','Keep emergency calls']},
+      remember:'Protect attention deliberately.', sources:['Publisher page']
     },
-    meta:{sourceUpdatedAt:'2026-10-13T14:48:00.000Z',refreshedAt:'2026-10-13T15:00:00.000Z',tokenCost:0}
+    archive:[
+      {id:'latest',title:'8 October 2026 — The Anxious Generation',editedAt:'2026-10-08T02:01:00.000Z',url:'https://www.notion.so/latest'},
+      {id:'bad',title:'Old issue',editedAt:'2026-09-01T02:00:00.000Z',url:'javascript:alert(1)'}
+    ],
+    meta:{sourceUpdatedAt:'2026-10-08T02:01:00.000Z',refreshedAt:'2026-10-15T01:00:00.000Z',tokenCost:0}
   });
-  assert.equal(materials.title,'My Work HQ | Personal Command Center');
-  assert.deepEqual(materials.focus.map(item => item.priority),['P1','P2']);
-  assert.equal(materials.collections.actions.count,9);
-  assert.equal(materials.meta.tokenCost,0);
+  assert.equal(newsletter.title,'One Book, One Idea Worth Stealing');
+  assert.equal(newsletter.latest.idea,'Protect play-based childhood.');
+  assert.deepEqual(newsletter.latest.tryThis.steps,['Disable shopping alerts','Keep emergency calls']);
+  assert.equal(newsletter.archive[1].url,'');
+  assert.equal(newsletter.meta.tokenCost,0);
   const drafts = [
     {id:'d1', intent:'brainstorm', request:'Retention ideas', updatedAt:10},
     {id:'d2', intent:'analyze', request:'Review appraisal data', updatedAt:20}
@@ -110,29 +116,30 @@ test('work home normalizes a bounded live materials snapshot and server-backed d
   assert.equal(JSON.stringify(drafts), snapshot);
 });
 
-test('work home replaces Continue Working with a zero-token inline Notion materials dashboard', () => {
-  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=48"><\/script>/);
+test('work home replaces My Work HQ with a zero-token inline Notion Newsletter', () => {
+  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=49"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
   assert.match(html, /Work thinking space · 0 tokens/);
-  assert.doesNotMatch(html, /Continue working|id="homeContinue"/i);
-  assert.match(html, /id="homeMaterials"/);
-  assert.match(html, /id="homeMaterialsRefresh"/);
-  assert.match(html, /id="homeMaterialStatus"/);
-  assert.match(html, /id="homeFocus"/);
-  assert.match(html, /id="homeUpcoming"/);
-  assert.match(html, /id="homeMaterialSources"/);
-  assert.match(html, /My Work HQ/);
-  assert.match(html, /Notion · live source/);
-  assert.doesNotMatch(html, /Open in Notion|homeMaterialsOpen|app\.notion\.com\/p\//);
-  assert.match(html, /\/api\/brainy\/materials/);
-  assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/materials/);
+  assert.doesNotMatch(html, /Continue working|id="homeContinue"|My Work HQ|homeMaterials|homeMaterialStatus|homeFocus|homeUpcoming|homeMaterialSources/i);
+  assert.match(html, /id="homeNewsletter"/);
+  assert.match(html, /id="homeNewsletterRefresh"/);
+  assert.match(html, /id="homeNewsletterStatus"/);
+  assert.match(html, /id="homeNewsletterIdea"/);
+  assert.match(html, /id="homeNewsletterTry"/);
+  assert.match(html, /id="homeNewsletterArchive"/);
+  assert.match(html, /One Book, One Idea Worth Stealing/);
+  assert.match(html, /Notion · latest published issue · 0 AI tokens/);
+  assert.match(html, /\/api\/brainy\/newsletter/);
+  assert.match(html, /fetch\(`\$\{backendUrl\}\/api\/brainy\/newsletter/);
+  assert.doesNotMatch(html, /\/api\/brainy\/materials/);
   assert.match(html, /headers:authHeaders/);
   assert.match(html, /id="homeDrafts"/);
   for (const intent of ['brainstorm','draft','analyze','run-task']) {
     assert.match(html, new RegExp(`data-home-intent="${intent}"`));
   }
-  assert.match(html, /BrainyHomeDashboard\.normalizeMaterials\(/);
+  assert.match(html, /BrainyHomeDashboard\.normalizeNewsletter\(/);
+  assert.doesNotMatch(html, /BrainyHomeDashboard\.normalizeMaterials\(/);
   assert.doesNotMatch(html, /BrainyHomeDashboard\.recentChats\(historyItems\)/);
   assert.match(html, /BrainyHomeDashboard\.recentDrafts\(actionDraftItems/);
   assert.match(html, /function showHomeDashboard\(\)/);
@@ -185,8 +192,8 @@ test('Team GTD is an expandable responsive Home cockpit with explicit separate a
   assert.match(html,/\.team-card-list/);
   assert.match(html,/@media \(max-width:640px\)[\s\S]*\.team-card-list\s*\{[^}]*grid-template-columns:1fr/);
   assert.equal((html.match(/disabled = teamMutationBusy \|\| teamState === 'loading'/g) || []).length,2);
-  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=48"><\/script>/);
-  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=48'/);
+  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=49"><\/script>/);
+  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=49'/);
 });
 
 test('action center asks for one outcome across four simple work intents', () => {
@@ -866,7 +873,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=48'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=49'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -1096,7 +1103,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v48/);
+  assert.match(sw, /brainy-shell-v49/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
