@@ -285,6 +285,31 @@
     .home-panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
     .home-panel h2 { margin:0; font-size:11px; letter-spacing:.01em; }
     .home-panel-meta { color:var(--muted); font-size:9px; }
+    .work-summary { grid-column:1/-1; display:grid; gap:12px; }
+    .work-summary .home-panel-head { margin-bottom:0; }
+    .work-summary-toolbar { display:flex; align-items:center; gap:9px; }
+    .work-summary-status { min-height:34px; display:flex; align-items:center; gap:8px; padding:8px 11px; border:1px solid color-mix(in srgb,var(--electric) 18%,var(--line)); border-radius:11px; background:color-mix(in srgb,var(--electric-soft) 42%,var(--panel)); color:var(--muted); font-size:9px; }
+    .work-summary-status::before { content:''; flex:none; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px var(--glow); }
+    .work-summary-status.error::before { background:var(--danger); }
+    .work-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
+    .work-metric { display:grid; gap:2px; padding:9px 10px; border-radius:10px; background:var(--soft); }
+    .work-metric strong { font-size:15px; line-height:1.1; }
+    .work-metric span { color:var(--muted); font-size:8px; }
+    .work-metric.alert strong { color:var(--danger); }
+    .work-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .work-summary-card { min-width:0; padding:12px; border:1px solid var(--line); border-radius:13px; background:var(--panel); }
+    .work-summary-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .work-summary-card h3 { margin:0; font-size:9px; }
+    .work-summary-count { color:var(--accent); font-size:8px; font-weight:700; }
+    .work-summary-list { display:grid; gap:6px; }
+    .work-summary-item { min-width:0; display:grid; gap:4px; padding:9px; border:1px solid transparent; border-radius:9px; background:var(--soft); color:var(--text); text-decoration:none; }
+    .work-summary-item:hover { border-color:color-mix(in srgb,var(--accent) 42%,var(--line)); }
+    .work-summary-item strong { overflow:hidden; font-size:9px; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+    .work-summary-item span { overflow:hidden; color:var(--muted); font-size:8px; line-height:1.45; text-overflow:ellipsis; white-space:nowrap; }
+    .work-summary-item[data-health="error"] { border-color:color-mix(in srgb,var(--danger) 40%,var(--line)); }
+    .work-summary-item[data-health="error"] strong, .work-summary-item.overdue strong { color:var(--danger); }
+    .work-summary-footer { display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:8px; }
+    @media (max-width:900px) { .work-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     .home-list { display:grid; gap:7px; }
     .home-item { width:100%; min-width:0; display:grid; gap:3px; padding:11px 12px; border:1px solid transparent; border-radius:12px; background:var(--soft); cursor:pointer; text-align:left; transition:transform .16s ease,border-color .16s ease; }
     .home-item strong, .home-item span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
@@ -506,8 +531,14 @@
       .home-dashboard { padding:20px 14px 64px; }
       .home-hero { border-radius:18px; }
       .home-grid { grid-template-columns:1fr; }
+      .work-summary-grid { grid-template-columns:1fr; }
+      .work-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .work-summary .home-panel-head, .work-summary-footer { align-items:flex-start; flex-direction:column; }
+      .work-summary-toolbar { width:100%; justify-content:space-between; }
       .newsletter-feature { grid-template-columns:1fr; }
       .team-card-list { grid-template-columns:1fr; }
+      .home-newsletter .home-panel-head { align-items:flex-start; flex-wrap:wrap; }
+      .home-newsletter-toolbar { width:100%; justify-content:space-between; }
       .team-toolbar, .team-footer, .newsletter-footer { align-items:flex-start; }
       .newsletter-footer { flex-direction:column; gap:2px; }
       .empty { min-height:100%; justify-content:center; gap:8px; padding:24px 0; }
@@ -641,6 +672,29 @@
           </div>
         </div>
         <div class="home-grid">
+          <section class="home-panel work-summary" id="homeWorkSummary" aria-labelledby="homeWorkTitle">
+            <div class="home-panel-head">
+              <div><h2 id="homeWorkTitle">Work Command Center</h2><span class="home-panel-meta">Focus, decisions, actions, and source health</span></div>
+              <div class="work-summary-toolbar">
+                <span class="home-panel-meta" id="homeWorkUpdated">Waiting for sync</span>
+                <button class="home-refresh" id="homeWorkRefresh" type="button" aria-label="Refresh Work Command Center" title="Refresh Work Command Center">↻</button>
+              </div>
+            </div>
+            <div class="work-summary-status" id="homeWorkStatus" role="status" aria-live="polite">Connecting to bounded Notion work sources…</div>
+            <div class="work-metrics" aria-label="Work summary metrics">
+              <div class="work-metric"><strong id="homeWorkOpen">—</strong><span>Open tasks</span></div>
+              <div class="work-metric"><strong id="homeWorkDueSoon">—</strong><span>Due within 7 days</span></div>
+              <div class="work-metric"><strong id="homeWorkHigh">—</strong><span>High priority</span></div>
+              <div class="work-metric alert"><strong id="homeWorkOverdue">—</strong><span>Overdue</span></div>
+            </div>
+            <div class="work-summary-grid">
+              <section class="work-summary-card" aria-labelledby="homeFocusTitle"><div class="work-summary-card-head"><h3 id="homeFocusTitle">My Focus</h3><span class="work-summary-count" id="homeFocusCount">0</span></div><div class="work-summary-list" id="homeFocusList"></div></section>
+              <section class="work-summary-card" aria-labelledby="homeDecisionTitle"><div class="work-summary-card-head"><h3 id="homeDecisionTitle">Decisions</h3><span class="work-summary-count" id="homeDecisionCount">0</span></div><div class="work-summary-list" id="homeDecisionList"></div></section>
+              <section class="work-summary-card" aria-labelledby="homeActionTitle"><div class="work-summary-card-head"><h3 id="homeActionTitle">Action Inbox</h3><span class="work-summary-count" id="homeActionCount">0</span></div><div class="work-summary-list" id="homeActionList"></div></section>
+              <section class="work-summary-card" aria-labelledby="homeSyncTitle"><div class="work-summary-card-head"><h3 id="homeSyncTitle">Sync Health</h3><span class="work-summary-count" id="homeSyncCount">0</span></div><div class="work-summary-list" id="homeSyncList"></div></section>
+            </div>
+            <div class="work-summary-footer"><span>Notion · bounded work sources · 0 AI tokens</span><span id="homeWorkFetched">No AI processing</span></div>
+          </section>
           <section class="home-panel home-newsletter" id="homeNewsletter" aria-labelledby="homeNewsletterTitle">
             <div class="home-panel-head">
               <div><h2 id="homeNewsletterTitle">One Book, One Idea Worth Stealing</h2><span class="home-panel-meta">Notion · latest published issue · 0 AI tokens</span></div>
@@ -849,7 +903,7 @@
 <script src="./agent-mode.js"></script>
 <script src="./expert-skills.js"></script>
 <script src="./action-center.js"></script>
-<script src="./home-dashboard.js?v=49"></script>
+<script src="./home-dashboard.js?v=51"></script>
 <script src="./multi-brain.js"></script>
 
 <script src="./approval-queue.js"></script>
@@ -874,6 +928,8 @@
   const homeDashboard = $('#homeDashboard'), homeDrafts = $('#homeDrafts');
   const homeNewsletterRefresh = $('#homeNewsletterRefresh'), homeNewsletterStatus = $('#homeNewsletterStatus');
   const homeNewsletterWhy = $('#homeNewsletterWhy'), homeNewsletterTry = $('#homeNewsletterTry'), homeNewsletterArchive = $('#homeNewsletterArchive');
+  const homeWorkRefresh = $('#homeWorkRefresh'), homeWorkStatus = $('#homeWorkStatus');
+  const homeFocusList = $('#homeFocusList'), homeDecisionList = $('#homeDecisionList'), homeActionList = $('#homeActionList'), homeSyncList = $('#homeSyncList');
   const homeTeamRefresh = $('#homeTeamRefresh'), homeTeamAttention = $('#homeTeamAttention'), homeTeamPeople = $('#homeTeamPeople'), homeTeamCards = $('#homeTeamCards');
 
   const agentHQ = $('#agentHQ'), hqAgents = $('#hqAgents'), hqActivity = $('#hqActivity');
@@ -912,8 +968,38 @@
   let accessKey = queryAccess || localStorage.getItem('brainy_access') || '';
   ['brainy_local_tools_v1','brainy_note_scratch_v1','brainy_local_reminder_v1'].forEach(key => localStorage.removeItem(key));
   const authHeaders = {};
+  let newsletterSnapshot = null, newsletterState = 'idle', newsletterError = '', newsletterRequest = null;
+  let workSummarySnapshot = null, workSummaryState = 'idle', workSummaryError = '', workSummaryRequest = null;
+  let teamSnapshot = null, teamState = 'idle', teamError = '', teamRequest = null, teamFilter = 'active', teamMutationBusy = false;
+  const newsletterRequestGate = BrainyHomeDashboard.createLatestRequestGate();
+  const workSummaryRequestGate = BrainyHomeDashboard.createLatestRequestGate();
+  const teamRequestGate = BrainyHomeDashboard.createLatestRequestGate();
+  const teamMutationGate = BrainyHomeDashboard.createLatestRequestGate();
   function setAccessKey(value) {
-    accessKey = String(value || '');
+    const nextAccessKey = String(value || '');
+    if (nextAccessKey !== accessKey) {
+      newsletterRequestGate.invalidate();
+      workSummaryRequestGate.invalidate();
+      teamRequestGate.invalidate();
+      teamMutationGate.invalidate();
+      newsletterRequest = null;
+      workSummaryRequest = null;
+      teamRequest = null;
+      newsletterSnapshot = null;
+      workSummarySnapshot = null;
+      teamSnapshot = null;
+      newsletterState = 'idle';
+      workSummaryState = 'idle';
+      teamState = 'idle';
+      teamMutationBusy = false;
+      newsletterError = '';
+      workSummaryError = '';
+      teamError = '';
+      renderWorkSummary();
+      renderNewsletter();
+      renderTeamGtd();
+    }
+    accessKey = nextAccessKey;
     if (accessKey) {
       authHeaders['x-brainy-key'] = accessKey;
       localStorage.setItem('brainy_access', accessKey);
@@ -946,8 +1032,6 @@
   let activeActionId = '', editingActionDraftId = '';
   let actionDraftItems = [], actionDraftsLoaded = false, actionDraftsLoading = false;
   let actionDraftsAttempted = false;
-  let newsletterSnapshot = null, newsletterState = 'idle', newsletterError = '', newsletterRequest = null;
-  let teamSnapshot = null, teamState = 'idle', teamError = '', teamRequest = null, teamFilter = 'active', teamMutationBusy = false;
   let backendReady = false;
   const actionDraftSync = BrainyActionCenter.createSyncTracker();
   let activeExpertSkill = ExpertSkills.load(localStorage);
@@ -1012,8 +1096,10 @@
       setAccessKey(data.access);
       $('#activationPanel').hidden = true;
       $('#activationCode').value = '';
+      workSummaryState = 'idle';
       newsletterState = 'idle';
       teamState = 'idle';
+      loadWorkSummary();
       loadNewsletter();
       loadTeamGtd();
       loadActionDraftsRemote();
@@ -1492,6 +1578,81 @@
     if (Number.isNaN(date.getTime())) return '';
     return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
   }
+  function workDate(value) {
+    const date = new Date(value || '');
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short'}).format(date);
+  }
+  function workSummaryItem(target,item,detail,options={}) {
+    const row = document.createElement(item.url ? 'a' : 'article');
+    row.className = `work-summary-item${options.overdue ? ' overdue' : ''}`;
+    if (item.url) { row.href=item.url; row.target='_blank'; row.rel='noopener noreferrer'; }
+    if (options.health) row.dataset.health = options.health;
+    const title = document.createElement('strong'); title.textContent = item.title;
+    const meta = document.createElement('span'); meta.textContent = detail || 'Open in Notion for details';
+    row.append(title,meta); target.append(row);
+  }
+  function renderWorkSummary() {
+    const loading = workSummaryState === 'loading';
+    homeWorkRefresh.disabled = loading;
+    homeWorkRefresh.setAttribute('aria-busy',String(loading));
+    homeWorkStatus.classList.toggle('error',workSummaryState === 'error');
+    homeWorkStatus.textContent = BrainyHomeDashboard.workSummaryStatus(workSummaryState,workSummaryError,Boolean(workSummarySnapshot));
+    [homeFocusList,homeDecisionList,homeActionList,homeSyncList].forEach(target => target.replaceChildren());
+    if (!workSummarySnapshot) {
+      ['homeWorkOpen','homeWorkDueSoon','homeWorkHigh','homeWorkOverdue'].forEach(id => $(`#${id}`).textContent='—');
+      ['homeFocusCount','homeDecisionCount','homeActionCount','homeSyncCount'].forEach(id => $(`#${id}`).textContent='0');
+      $('#homeWorkUpdated').textContent = loading ? 'Refreshing…' : 'Waiting for sync';
+      $('#homeWorkFetched').textContent = 'No AI processing';
+      homeEmpty(homeFocusList,loading ? 'Loading priorities…' : 'No focus data yet.');
+      homeEmpty(homeDecisionList,loading ? 'Loading decisions…' : 'No decision data yet.');
+      homeEmpty(homeActionList,loading ? 'Loading actions…' : 'No action data yet.');
+      homeEmpty(homeSyncList,loading ? 'Checking sources…' : 'No sync data yet.');
+      return;
+    }
+    const data = workSummarySnapshot;
+    $('#homeWorkOpen').textContent = data.focus.counts.open;
+    $('#homeWorkDueSoon').textContent = data.focus.counts.dueSoon;
+    $('#homeWorkHigh').textContent = data.focus.counts.highPriority;
+    $('#homeWorkOverdue').textContent = data.focus.counts.overdue;
+    $('#homeFocusCount').textContent = `${data.focus.items.length} shown`;
+    $('#homeDecisionCount').textContent = data.decisions.count;
+    $('#homeActionCount').textContent = data.actions.count;
+    $('#homeSyncCount').textContent = data.sync.count;
+    $('#homeWorkUpdated').textContent = materialDate(data.meta.sourceUpdatedAt) || 'Live source';
+    $('#homeWorkFetched').textContent = `Refreshed ${materialDate(data.meta.refreshedAt) || 'now'} · 0 tokens`;
+    if (!data.focus.items.length) homeEmpty(homeFocusList,'No open priorities.');
+    data.focus.items.forEach(item => workSummaryItem(homeFocusList,item,[item.priority,item.status,item.due ? `Due ${workDate(item.due)}` : '',item.owner].filter(Boolean).join(' · '),{overdue:item.overdue}));
+    if (!data.decisions.items.length) homeEmpty(homeDecisionList,'No open decisions.');
+    data.decisions.items.forEach(item => workSummaryItem(homeDecisionList,item,item.nextMove || [item.status,item.due ? `Due ${workDate(item.due)}` : '',item.owner].filter(Boolean).join(' · ')));
+    if (!data.actions.items.length) homeEmpty(homeActionList,'No actions need verification.');
+    data.actions.items.forEach(item => workSummaryItem(homeActionList,item,item.nextAction || [item.priority,item.state,item.confidence].filter(Boolean).join(' · ')));
+    if (!data.sync.items.length) homeEmpty(homeSyncList,'No source health data.');
+    data.sync.items.forEach(item => workSummaryItem(homeSyncList,item,[item.health,item.state,materialDate(item.lastSync),item.notes].filter(Boolean).join(' · '),{health:item.health}));
+  }
+  async function loadWorkSummary(force=false) {
+    if (workSummaryRequest) return workSummaryRequest;
+    if (!accessKey) { workSummaryState='error'; workSummaryError='Activate BRAINY to load the Work Command Center.'; renderWorkSummary(); return; }
+    workSummaryState='loading'; workSummaryError=''; renderWorkSummary();
+    const requestToken = workSummaryRequestGate.start();
+    const request = (async() => {
+      const response = await fetch(`${backendUrl}/api/brainy/work-summary${force ? '?refresh=1' : ''}`,{headers:authHeaders});
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || 'Work Command Center could not be refreshed');
+      if (!workSummaryRequestGate.isCurrent(requestToken)) return;
+      workSummarySnapshot = BrainyHomeDashboard.normalizeWorkSummary(payload);
+      workSummaryState='ready';
+    })().catch(error => {
+      if (!workSummaryRequestGate.isCurrent(requestToken)) return;
+      workSummaryState='error'; workSummaryError=error.message || 'Work Command Center could not be refreshed';
+      if (force) showToast(workSummaryError);
+    }).finally(() => {
+      if (!workSummaryRequestGate.isCurrent(requestToken)) return;
+      workSummaryRequest=null; renderWorkSummary();
+    });
+    workSummaryRequest = request;
+    return request;
+  }
   function renderNewsletter() {
     const loading = newsletterState === 'loading';
     homeNewsletterRefresh.disabled = loading;
@@ -1506,6 +1667,7 @@
       $('#homeNewsletterIdea').textContent = '—';
       $('#homeNewsletterRemember').textContent = '—';
       $('#homeNewsletterOpen').hidden = true;
+      $('#homeNewsletterOpen').removeAttribute('href');
       homeNewsletterWhy.replaceChildren(); homeNewsletterTry.replaceChildren(); homeNewsletterArchive.replaceChildren();
       return;
     }
@@ -1515,9 +1677,10 @@
     $('#homeNewsletterCadence').textContent = data.cadence;
     $('#homeNewsletterUpdated').textContent = materialDate(data.meta.sourceUpdatedAt) || 'Live source';
     $('#homeNewsletterFetched').textContent = `Refreshed ${materialDate(data.meta.refreshedAt) || 'now'} · 0 tokens`;
-    homeNewsletterStatus.textContent = latest ? `Latest published issue · ${data.archive.length} issues available in Notion` : 'No published Newsletter issue is available yet.';
+    homeNewsletterStatus.textContent = BrainyHomeDashboard.newsletterStatus(newsletterState,newsletterError,true,Boolean(latest),data.archive.length);
     homeNewsletterWhy.replaceChildren(); homeNewsletterTry.replaceChildren(); homeNewsletterArchive.replaceChildren();
     const open = $('#homeNewsletterOpen');
+    open.removeAttribute('href');
     if (!latest) {
       $('#homeNewsletterEdition').textContent = 'Latest published issue'; $('#homeNewsletterBook').textContent = 'No published issue yet';
       $('#homeNewsletterIdea').textContent = '—'; $('#homeNewsletterRemember').textContent = '—'; open.hidden = true;
@@ -1551,19 +1714,24 @@
     if (newsletterRequest) return newsletterRequest;
     if (!accessKey) { newsletterState='error'; newsletterError='Activate BRAINY to load Newsletter.'; renderNewsletter(); return; }
     newsletterState='loading'; newsletterError=''; renderNewsletter();
-    newsletterRequest = (async() => {
+    const requestToken = newsletterRequestGate.start();
+    const request = (async() => {
       const response = await fetch(`${backendUrl}/api/brainy/newsletter${force ? '?refresh=1' : ''}`,{headers:authHeaders});
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || 'Newsletter could not be refreshed');
+      if (!newsletterRequestGate.isCurrent(requestToken)) return;
       newsletterSnapshot = BrainyHomeDashboard.normalizeNewsletter(payload);
       newsletterState='ready';
     })().catch(error => {
+      if (!newsletterRequestGate.isCurrent(requestToken)) return;
       newsletterState='error'; newsletterError=error.message || 'Newsletter could not be refreshed';
       if (force) showToast(newsletterError);
     }).finally(() => {
+      if (!newsletterRequestGate.isCurrent(requestToken)) return;
       newsletterRequest=null; renderNewsletter();
     });
-    return newsletterRequest;
+    newsletterRequest = request;
+    return request;
   }
   function renderTeamGtd() {
     const loading = teamState === 'loading' || teamMutationBusy;
@@ -1675,22 +1843,28 @@
     if (teamRequest) return teamRequest;
     if (!accessKey) { teamState='error'; teamError='Activate BRAINY to load Team GTD.'; renderTeamGtd(); return; }
     teamState='loading'; teamError=''; renderTeamGtd();
-    teamRequest = (async() => {
+    const requestToken = teamRequestGate.start();
+    const request = (async() => {
       const response = await fetch(`${backendUrl}/api/brainy/team-gtd${force ? '?refresh=1' : ''}`,{headers:authHeaders});
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || 'Team GTD could not be refreshed');
+      if (!teamRequestGate.isCurrent(requestToken)) return;
       teamSnapshot = BrainyHomeDashboard.normalizeTeamGtd(payload);
       teamState='ready';
     })().catch(error => {
+      if (!teamRequestGate.isCurrent(requestToken)) return;
       teamState='error'; teamError=error.message || 'Team GTD could not be refreshed';
       if (force) showToast(teamError);
     }).finally(() => {
+      if (!teamRequestGate.isCurrent(requestToken)) return;
       teamRequest=null; renderTeamGtd();
     });
-    return teamRequest;
+    teamRequest = request;
+    return request;
   }
   async function mutateTeamGtd(op,item,value) {
     if (teamMutationBusy || !accessKey) return;
+    const mutationToken = teamMutationGate.start();
     teamMutationBusy = true; renderTeamGtd();
     try {
       const response = await fetch(`${backendUrl}/api/brainy/team-gtd`,{
@@ -1699,12 +1873,15 @@
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || 'Team GTD update failed');
+      if (!teamMutationGate.isCurrent(mutationToken)) return;
       teamSnapshot = BrainyHomeDashboard.normalizeTeamGtd(payload);
       teamState='ready'; teamError='';
       showToast(op === 'review' ? (value ? 'Marked as reviewed' : 'Review removed') : (value ? 'Completed in Notion' : 'Reopened in Notion'));
     } catch (error) {
+      if (!teamMutationGate.isCurrent(mutationToken)) return;
       teamState='error'; teamError=error.message || 'Team GTD update failed'; showToast(teamError);
     } finally {
+      if (!teamMutationGate.isCurrent(mutationToken)) return;
       teamMutationBusy=false; renderTeamGtd();
     }
   }
@@ -1712,8 +1889,10 @@
     const now = new Date();
     $('#homeGreeting').textContent = BrainyHomeDashboard.greeting(now,'Ila');
     $('#homeDate').textContent = BrainyHomeDashboard.dateLabel(now);
+    renderWorkSummary();
     renderNewsletter();
     renderTeamGtd();
+    if (workSummaryState === 'idle' && backendReady) loadWorkSummary();
     if (newsletterState === 'idle' && backendReady) loadNewsletter();
     if (teamState === 'idle' && backendReady) loadTeamGtd();
     homeDrafts.replaceChildren();
@@ -2582,6 +2761,7 @@
     ws.onerror = () => setStatus('Connection interrupted');
   }
   homeModeButton.onclick = showHomeDashboard;
+  homeWorkRefresh.onclick = () => loadWorkSummary(true);
   homeNewsletterRefresh.onclick = () => loadNewsletter(true);
   homeTeamRefresh.onclick = () => loadTeamGtd(true);
   document.querySelectorAll('[data-team-filter]').forEach(button => {
@@ -2841,14 +3021,15 @@
       location.reload();
     });
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js?v=49',{updateViaCache:'none'})
+      navigator.serviceWorker.register('./sw.js?v=51',{updateViaCache:'none'})
         .then((registration) => registration.update())
         .catch(() => {});
     });
   }
   refreshBackend().finally(() => {
     backendReady = true;
-    if (!accessKey) { showActivation(); renderNewsletter(); renderTeamGtd(); return; }
+    if (!accessKey) { showActivation(); renderWorkSummary(); renderNewsletter(); renderTeamGtd(); return; }
+    loadWorkSummary();
     loadNewsletter();
     loadTeamGtd();
     loadActionDraftsRemote();

@@ -93,7 +93,9 @@ test('work home normalizes a bounded live Newsletter snapshot and server-backed 
     },
     archive:[
       {id:'latest',title:'8 October 2026 — The Anxious Generation',editedAt:'2026-10-08T02:01:00.000Z',url:'https://www.notion.so/latest'},
-      {id:'bad',title:'Old issue',editedAt:'2026-09-01T02:00:00.000Z',url:'javascript:alert(1)'}
+      {id:'bad',title:'Old issue',editedAt:'2026-09-01T02:00:00.000Z',url:'javascript:alert(1)'},
+      {id:'credentialed',title:'Unsafe issue',editedAt:'2026-08-01T02:00:00.000Z',url:'https://user:pass@www.notion.so/private'},
+      {id:'fragmented',title:'Fragment issue',editedAt:'2026-07-01T02:00:00.000Z',url:'https://www.notion.so/private#fragment'}
     ],
     meta:{sourceUpdatedAt:'2026-10-08T02:01:00.000Z',refreshedAt:'2026-10-15T01:00:00.000Z',tokenCost:0}
   });
@@ -101,7 +103,20 @@ test('work home normalizes a bounded live Newsletter snapshot and server-backed 
   assert.equal(newsletter.latest.idea,'Protect play-based childhood.');
   assert.deepEqual(newsletter.latest.tryThis.steps,['Disable shopping alerts','Keep emergency calls']);
   assert.equal(newsletter.archive[1].url,'');
+  assert.equal(newsletter.archive[2].url,'');
+  assert.equal(newsletter.archive[3].url,'');
   assert.equal(newsletter.meta.tokenCost,0);
+  for (const unsafeUrl of [
+    'https://www.notion.so:443/private',
+    'https://@www.notion.so/private',
+    'https://www.notion.so/private#',
+    `https://www.notion.so/${'x'.repeat(2100)}`,
+    'http://www.notion.so/private',
+    'https://notion.so.evil.example/private',
+  ]) {
+    const unsafe = HomeDashboard.normalizeNewsletter({ok:true,latest:{id:'x',title:'Unsafe',url:unsafeUrl},archive:[],meta:{}});
+    assert.equal(unsafe.latest.url,'');
+  }
   const drafts = [
     {id:'d1', intent:'brainstorm', request:'Retention ideas', updatedAt:10},
     {id:'d2', intent:'analyze', request:'Review appraisal data', updatedAt:20}
@@ -116,12 +131,65 @@ test('work home normalizes a bounded live Newsletter snapshot and server-backed 
   assert.equal(JSON.stringify(drafts), snapshot);
 });
 
+test('work home normalizes a bounded Work Command Center snapshot', () => {
+  const summary = HomeDashboard.normalizeWorkSummary({
+    ok:true,
+    focus:{counts:{open:18,overdue:2,dueSoon:5,highPriority:10},items:[
+      ...Array.from({length:5},(_,index) => ({
+        id:`f${index}`,title:`Focus ${index}`,status:'In progress',priority:index ? 'Medium Priority' : 'High Priority',
+        owner:'Intan',workstream:'Talent',due:'2026-10-20',overdue:index === 0,url:`https://www.notion.so/f${index}`,
+      })),
+      {id:'f6',title:'Must be bounded',url:'https://www.notion.so/f6'},
+    ]},
+    decisions:{count:1,items:[{id:'d1',title:'Approve SOP',status:'Needs Verification',owner:'Nabila',nextMove:'Confirm Legal comments',url:'https://app.notion.com/p/d1'}]},
+    actions:{count:1,items:[{id:'a1',title:'Verify evidence',priority:'P1',state:'Needs Verification',confidence:'Confirmed',nextAction:'Review links',url:'javascript:alert(1)'}]},
+    sync:{count:2,items:[
+      {id:'s1',source:'Notion publisher',state:'Error',health:'error',lastSync:'2026-10-12T00:55:00.000Z',notes:'Failed safely',url:'https://www.notion.so/s1'},
+      {id:'s2',source:'Drive',state:'Healthy',health:'invented',url:'https://www.notion.so/s2'},
+    ]},
+    meta:{source:'Notion Work Command Center',sourceUpdatedAt:'2026-10-19T05:28:00.000Z',refreshedAt:'2026-10-19T06:00:00.000Z',tokenCost:0},
+  });
+  assert.equal(summary.focus.items.length,5);
+  assert.deepEqual(summary.focus.counts,{open:18,overdue:2,dueSoon:5,highPriority:10});
+  assert.equal(summary.focus.items[0].overdue,true);
+  assert.equal(summary.decisions.items[0].nextMove,'Confirm Legal comments');
+  assert.equal(summary.actions.items[0].url,'');
+  assert.equal(summary.sync.items[0].health,'error');
+  assert.equal(summary.sync.items[1].health,'unknown');
+  assert.equal(summary.meta.tokenCost,0);
+  assert.equal(HomeDashboard.workSummaryStatus('error','Notion timed out',true),'Notion timed out · Showing the last successful snapshot.');
+});
+
+test('Home includes a responsive authenticated zero-token Work Command Center', () => {
+  for (const id of ['homeWorkSummary','homeWorkRefresh','homeWorkStatus','homeFocusList','homeDecisionList','homeActionList','homeSyncList']) {
+    assert.match(html,new RegExp(`id="${id}"`));
+  }
+  assert.match(html,/\/api\/brainy\/work-summary/);
+  assert.match(html,/fetch\(`\$\{backendUrl\}\/api\/brainy\/work-summary/);
+  assert.match(html,/BrainyHomeDashboard\.normalizeWorkSummary\(/);
+  assert.match(html,/nextAccessKey !== accessKey[\s\S]*newsletterSnapshot = null[\s\S]*workSummarySnapshot = null[\s\S]*teamSnapshot = null/);
+  assert.match(html,/nextAccessKey !== accessKey[\s\S]*teamRequestGate\.invalidate\(\)[\s\S]*teamMutationGate\.invalidate\(\)/);
+  assert.match(html,/nextAccessKey !== accessKey[\s\S]*teamMutationBusy = false[\s\S]*renderWorkSummary\(\)[\s\S]*renderNewsletter\(\)[\s\S]*renderTeamGtd\(\)/);
+  assert.match(html,/setAccessKey\(data\.access\)[\s\S]*workSummaryState = 'idle'[\s\S]*loadWorkSummary\(\)/);
+  assert.match(html,/Notion · bounded work sources · 0 AI tokens/);
+  assert.match(html,/@media \(max-width:640px\)[\s\S]*\.work-summary-grid\s*\{[^}]*grid-template-columns:1fr/);
+  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=51"><\/script>/);
+  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=51'/);
+});
+
+test('Team GTD rejects stale reads and mutations across authentication changes', () => {
+  assert.match(html,/const teamRequestGate = BrainyHomeDashboard\.createLatestRequestGate\(\)/);
+  assert.match(html,/const teamMutationGate = BrainyHomeDashboard\.createLatestRequestGate\(\)/);
+  assert.match(html,/async function loadTeamGtd[\s\S]*const requestToken = teamRequestGate\.start\(\)[\s\S]*if \(!teamRequestGate\.isCurrent\(requestToken\)\) return;[\s\S]*finally\(\(\) => \{[\s\S]*if \(!teamRequestGate\.isCurrent\(requestToken\)\) return;/);
+  assert.match(html,/async function mutateTeamGtd[\s\S]*const mutationToken = teamMutationGate\.start\(\)[\s\S]*if \(!teamMutationGate\.isCurrent\(mutationToken\)\) return;[\s\S]*finally \{[\s\S]*if \(!teamMutationGate\.isCurrent\(mutationToken\)\) return;/);
+});
+
 test('work home replaces My Work HQ with a zero-token inline Notion Newsletter', () => {
-  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=49"><\/script>/);
+  assert.match(html, /<script src="\.\/home-dashboard\.js\?v=51"><\/script>/);
   assert.match(html, /id="homeMode"[^>]*>Home<\/button>/);
   assert.match(html, /id="homeDashboard"[^>]*hidden/);
   assert.match(html, /Work thinking space · 0 tokens/);
-  assert.doesNotMatch(html, /Continue working|id="homeContinue"|My Work HQ|homeMaterials|homeMaterialStatus|homeFocus|homeUpcoming|homeMaterialSources/i);
+  assert.doesNotMatch(html, /Continue working|id="homeContinue"|My Work HQ|homeMaterials|homeMaterialStatus|id="homeFocus"|homeUpcoming|homeMaterialSources/i);
   assert.match(html, /id="homeNewsletter"/);
   assert.match(html, /id="homeNewsletterRefresh"/);
   assert.match(html, /id="homeNewsletterStatus"/);
@@ -192,8 +260,8 @@ test('Team GTD is an expandable responsive Home cockpit with explicit separate a
   assert.match(html,/\.team-card-list/);
   assert.match(html,/@media \(max-width:640px\)[\s\S]*\.team-card-list\s*\{[^}]*grid-template-columns:1fr/);
   assert.equal((html.match(/disabled = teamMutationBusy \|\| teamState === 'loading'/g) || []).length,2);
-  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=49"><\/script>/);
-  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=49'/);
+  assert.match(html,/<script src="\.\/home-dashboard\.js\?v=51"><\/script>/);
+  assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=51'/);
 });
 
 test('action center asks for one outcome across four simple work intents', () => {
@@ -873,7 +941,7 @@ test('app is installable and keeps its secure backend after launch', () => {
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /localStorage\.setItem\('brainy_backend'/);
   assert.match(html, /localStorage\.getItem\('brainy_backend'/);
-  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=49'/);
+  assert.match(html, /serviceWorker\.register\('\.\/sw\.js\?v=51'/);
 });
 
 test('mobile app fills the true phone viewport without desktop overflow', () => {
@@ -885,6 +953,8 @@ test('mobile app fills the true phone viewport without desktop overflow', () => 
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.content \{[^}]*font-size:12px;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.speaker \{[^}]*font-size:11px;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*\.empty h1 \{[^}]*font-size:clamp\(28px,10vw,38px\);/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.home-newsletter \.home-panel-head \{[^}]*flex-wrap:wrap;/);
+  assert.match(html, /@media \(max-width:640px\)[\s\S]*\.home-newsletter-toolbar \{[^}]*width:100%;/);
   assert.match(html, /@media \(max-width:640px\)[\s\S]*textarea \{[^}]*font-size:12px;/);
 });
 
@@ -1103,7 +1173,7 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.equal(manifest.name, 'BRAINY Desk');
   assert.ok(manifest.icons.some((icon) => icon.sizes === '192x192'));
   assert.ok(manifest.icons.some((icon) => icon.sizes === '512x512'));
-  assert.match(sw, /brainy-shell-v49/);
+  assert.match(sw, /brainy-shell-v51/);
   assert.match(sw, /\.\/multi-brain\.js/);
   assert.doesNotMatch(sw, /local-tools/);
   assert.match(sw, /\.\/home-dashboard\.js/);
@@ -1121,4 +1191,30 @@ test('manifest and service worker provide a standalone offline app shell', () =>
   assert.match(sw, /markdown-renderer\.js/);
   assert.match(sw, /index\.html/);
   assert.match(sw, /manifest\.webmanifest/);
+});
+
+test('Newsletter request gate rejects stale completions after authentication changes', () => {
+  const gate = HomeDashboard.createLatestRequestGate();
+  const stale = gate.start();
+  gate.invalidate();
+  const current = gate.start();
+  assert.equal(gate.isCurrent(stale),false);
+  assert.equal(gate.isCurrent(current),true);
+  assert.match(html,/if \(nextAccessKey !== accessKey\)[\s\S]{0,180}newsletterRequestGate\.invalidate\(\)/);
+  assert.ok((html.match(/newsletterRequestGate\.isCurrent\(requestToken\)/g) || []).length >= 3);
+  assert.match(html,/open\.removeAttribute\('href'\)/);
+});
+
+test('Newsletter keeps refresh errors visible while showing the last successful snapshot', () => {
+  assert.equal(
+    HomeDashboard.newsletterStatus('error','Notion timed out',true,true,6),
+    'Notion timed out · Showing the last successful issue.'
+  );
+  assert.equal(
+    HomeDashboard.newsletterStatus('ready','',true,true,6),
+    'Latest published issue · 6 issues available in Notion'
+  );
+  assert.match(html, /newsletterRequestGate\.invalidate\(\)/);
+  assert.match(html, /newsletterRequestGate\.isCurrent\(requestToken\)/);
+  assert.match(html, /open\.removeAttribute\('href'\)/);
 });

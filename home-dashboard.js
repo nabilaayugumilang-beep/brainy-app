@@ -28,9 +28,35 @@
 
   function notionUrl(value) {
     try {
-      const url = new URL(String(value || ''));
-      return url.protocol === 'https:' && /(^|\.)notion\.so$|(^|\.)notion\.com$/.test(url.hostname) ? url.toString() : '';
+      const raw = String(value || '').trim();
+      const authority = raw.match(/^https:\/\/([^/?#]*)(?:[/?#]|$)/i)?.[1] || '';
+      if (!raw || raw.length > 2048 || raw.includes('#') || !authority || authority.includes('@') || authority.includes(':')) return '';
+      const url = new URL(raw);
+      const safe = url.protocol === 'https:'
+        && /(^|\.)notion\.so$|(^|\.)notion\.com$/.test(url.hostname)
+        && !url.username && !url.password && !url.port && !url.hash;
+      const normalized = safe ? url.toString() : '';
+      return normalized.length <= 2048 ? normalized : '';
     } catch { return ''; }
+  }
+
+  function createLatestRequestGate() {
+    let generation = 0;
+    return {
+      start() { generation += 1; return generation; },
+      invalidate() { generation += 1; },
+      isCurrent(token) { return token === generation; },
+    };
+  }
+
+  function newsletterStatus(state,error,hasSnapshot,hasLatest,archiveLength=0) {
+    if (state === 'error') {
+      const message = text(error,360) || 'Newsletter could not be refreshed.';
+      return hasSnapshot ? `${message} · Showing the last successful issue.` : message;
+    }
+    return hasLatest
+      ? `Latest published issue · ${Math.max(0,Number(archiveLength) || 0)} issues available in Notion`
+      : 'No published Newsletter issue is available yet.';
   }
 
   function normalizeNewsletter(payload) {
@@ -126,5 +152,74 @@
     return Boolean(wasOpen || (!hadCards && index === 0 && !isMobile));
   }
 
-  return { greeting, dateLabel, normalizeNewsletter, recentDrafts, normalizeTeamGtd, filterTeamItems, shouldOpenTeamCard };
+  function safeCount(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0,Math.min(9999,Math.trunc(number))) : 0;
+  }
+
+  function normalizeWorkItem(raw,kind) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const item = {
+      id:text(source.id,80),
+      title:text(source.title || source.source,360),
+      url:notionUrl(source.url),
+      status:text(source.status || source.state,80),
+      priority:text(source.priority,40),
+      owner:text(source.owner,100),
+      workstream:text(source.workstream,100),
+      due:text(source.due,50),
+    };
+    if (kind === 'focus') item.overdue = Boolean(source.overdue);
+    if (kind === 'decision') item.nextMove = text(source.nextMove,600);
+    if (kind === 'action') {
+      item.state = text(source.state,80);
+      item.confidence = text(source.confidence,80);
+      item.nextAction = text(source.nextAction,600);
+    }
+    if (kind === 'sync') {
+      item.source = text(source.source,180);
+      item.state = text(source.state,80);
+      item.health = ['error','stale','manual','healthy'].includes(source.health) ? source.health : 'unknown';
+      item.lastSync = text(source.lastSync,50);
+      item.notes = text(source.notes,600);
+    }
+    return item;
+  }
+
+  function normalizeWorkSummary(payload) {
+    if (!payload || payload.ok !== true) throw new Error('Work summary snapshot is invalid');
+    const items = (section,kind,max=5) => (Array.isArray(section?.items) ? section.items : [])
+      .slice(0,max).map(raw => normalizeWorkItem(raw,kind)).filter(item => item.id && item.title);
+    return {
+      focus:{
+        counts:{
+          open:safeCount(payload.focus?.counts?.open),
+          overdue:safeCount(payload.focus?.counts?.overdue),
+          dueSoon:safeCount(payload.focus?.counts?.dueSoon),
+          highPriority:safeCount(payload.focus?.counts?.highPriority),
+        },
+        items:items(payload.focus,'focus'),
+      },
+      decisions:{count:safeCount(payload.decisions?.count),items:items(payload.decisions,'decision')},
+      actions:{count:safeCount(payload.actions?.count),items:items(payload.actions,'action')},
+      sync:{count:safeCount(payload.sync?.count),items:items(payload.sync,'sync',8)},
+      meta:{
+        source:text(payload.meta?.source,100) || 'Notion Work Command Center',
+        sourceUpdatedAt:text(payload.meta?.sourceUpdatedAt,50),
+        refreshedAt:text(payload.meta?.refreshedAt,50),
+        tokenCost:0,
+      },
+    };
+  }
+
+  function workSummaryStatus(state,error,hasSnapshot) {
+    if (state === 'error') {
+      const message = text(error,360) || 'Work summary could not be refreshed.';
+      return hasSnapshot ? `${message} · Showing the last successful snapshot.` : message;
+    }
+    if (state === 'loading' && !hasSnapshot) return 'Loading bounded Notion work sources…';
+    return hasSnapshot ? 'Notion · bounded work sources · 0 AI tokens' : 'Waiting for sync';
+  }
+
+  return { greeting, dateLabel, normalizeNewsletter, createLatestRequestGate, newsletterStatus, recentDrafts, normalizeTeamGtd, filterTeamItems, shouldOpenTeamCard, normalizeWorkSummary, workSummaryStatus };
 });

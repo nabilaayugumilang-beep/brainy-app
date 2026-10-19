@@ -1,4 +1,4 @@
-const CACHE = 'brainy-shell-v49';
+const CACHE = 'brainy-shell-v51';
 const SHELL = [
   './',
   './index.html',
@@ -8,7 +8,7 @@ const SHELL = [
   './agent-mode.js',
   './expert-skills.js',
   './action-center.js',
-  './home-dashboard.js?v=49',
+  './home-dashboard.js?v=51',
   './multi-brain.js',
   './approval-queue.js',
   './agent-hq.js',
