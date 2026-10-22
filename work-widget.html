@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Work week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --ink:#37322f;--muted:#746f6a;--paper:#fffdfb;--line:rgba(55,50,47,.12);
+  --wisteria:#ddd3ed;--matcha:#dfe7bd;--milkshake:#f4d9df;--attic:#cfe1ea;
+  --butter:#f5e6a9;--clover:#c9dfbf;--seafoam:#c9e6dc;--apricot:#f2cfb3;
+  --rainy:#ccd8e3;--latte:#dfcdbd;--ballet:#f1d0d8;--cherry:#e4a9ae;
+}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:transparent;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{padding:12px}
+.shell{max-width:900px;margin:0 auto;padding:18px;border:1px solid var(--line);border-radius:20px;background:var(--paper);box-shadow:0 8px 30px rgba(55,50,47,.06)}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}h1{font-size:18px;line-height:1.25;margin:0 0 5px;font-weight:600;letter-spacing:-.02em}p{margin:0}.status{font-size:12px;color:var(--muted)}button,.link{border:0;border-radius:999px;padding:8px 12px;background:#fff;color:var(--ink);font:600 12px/1 Inter;text-decoration:none;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}.card{border-radius:16px;padding:14px;min-width:0}.calendar{background:var(--attic);grid-row:span 2}.notes{background:var(--milkshake)}.review{background:var(--butter);display:flex;align-items:center;justify-content:space-between;gap:12px}.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;margin:0 0 10px;font-weight:600}.list{display:grid;gap:7px}.item{display:block;padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.6);color:var(--ink);text-decoration:none;min-width:0}.item:hover{background:rgba(255,255,255,.82)}.item strong,.item span{display:block;overflow:hidden;text-overflow:ellipsis}.item strong{font-size:13px;line-height:1.35;font-weight:600}.item span,.empty{font-size:11px;line-height:1.4;color:var(--muted);margin-top:3px}.count{font-size:32px;line-height:1;font-weight:600}.review-copy{font-size:12px;color:var(--muted);margin-top:4px}.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.links .link:first-child{background:var(--wisteria)}.links .link:last-child{background:var(--matcha)}
+.activation{max-width:480px;margin:30px auto;padding:18px;border-radius:16px;background:var(--latte)}.activation h2{margin:0 0 6px;font-size:16px}.activation p{font-size:12px;color:var(--muted);line-height:1.5}.activation form{display:flex;gap:8px;margin-top:12px}.activation input{min-width:0;flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;font:14px Inter}.activation button{background:var(--wisteria)}[hidden]{display:none!important}
+@media (max-width:640px){body{padding:6px}.shell{padding:14px;border-radius:16px}.grid{grid-template-columns:1fr}.calendar{grid-row:auto}.item{padding:8px 9px}header{align-items:center}.review{min-height:86px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header><div><h1>This week</h1><p id="widgetStatus" class="status" aria-live="polite">Connecting to live sources…</p></div><button id="refreshWidget" type="button">Refresh</button></header>
+  <section id="activationPanel" class="activation" hidden>
+    <h2>Private workspace access</h2><p>This embedded view reads your Work Calendar and Meeting Notes. Activate it once on this browser.</p>
+    <form id="activationForm"><input id="activationCode" type="password" autocomplete="one-time-code" placeholder="Activation code" aria-label="BRAINY activation code"><button type="submit">Activate</button></form>
+  </section>
+  <section id="widgetContent" hidden>
+    <div class="grid">
+      <article class="card calendar"><h2>Next meetings</h2><div id="calendarItems" class="list"></div></article>
+      <article class="card notes"><h2>Latest meeting notes</h2><div id="meetingNotes" class="list"></div></article>
+      <article class="card review"><div><h2>Needs review</h2><p class="review-copy">Meeting notes waiting to be organized</p></div><strong id="reviewCount" class="count">0</strong></article>
+    </div>
+    <nav class="links" aria-label="Open live sources"><a id="openCalendar" class="link" href="https://calendar.google.com/calendar/u/0/r/week" target="_blank" rel="noopener noreferrer">Open Work Calendar</a><a id="openNotes" class="link" href="https://app.notion.com/p/398877a2c48b80ddb64fe8cfaff85283" target="_blank" rel="noopener noreferrer">All Meeting Notes</a></nav>
+  </section>
+</main>
+<script src="./work-widget.js?v=1"></script>
+</body>
+</html>
