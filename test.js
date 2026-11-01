@@ -160,19 +160,15 @@ test('work home normalizes a bounded Work Command Center snapshot', () => {
   assert.equal(HomeDashboard.workSummaryStatus('error','Notion timed out',true),'Notion timed out · Showing the last successful snapshot.');
 });
 
-test('Home includes a responsive authenticated zero-token Work Command Center', () => {
-  for (const id of ['homeWorkSummary','homeWorkRefresh','homeWorkStatus','homeFocusList','homeDecisionList','homeActionList','homeSyncList']) {
-    assert.match(html,new RegExp(`id="${id}"`));
-  }
-  assert.match(html,/\/api\/brainy\/work-summary/);
-  assert.match(html,/fetch\(`\$\{backendUrl\}\/api\/brainy\/work-summary/);
-  assert.match(html,/BrainyHomeDashboard\.normalizeWorkSummary\(/);
-  assert.match(html,/nextAccessKey !== accessKey[\s\S]*newsletterSnapshot = null[\s\S]*workSummarySnapshot = null[\s\S]*teamSnapshot = null/);
-  assert.match(html,/nextAccessKey !== accessKey[\s\S]*teamRequestGate\.invalidate\(\)[\s\S]*teamMutationGate\.invalidate\(\)/);
-  assert.match(html,/nextAccessKey !== accessKey[\s\S]*teamMutationBusy = false[\s\S]*renderWorkSummary\(\)[\s\S]*renderNewsletter\(\)[\s\S]*renderTeamGtd\(\)/);
-  assert.match(html,/setAccessKey\(data\.access\)[\s\S]*workSummaryState = 'idle'[\s\S]*loadWorkSummary\(\)/);
-  assert.match(html,/Notion · bounded work sources · 0 AI tokens/);
-  assert.match(html,/@media \(max-width:640px\)[\s\S]*\.work-summary-grid\s*\{[^}]*grid-template-columns:1fr/);
+test('Home goes directly to Newsletter and Team GTD without Work Command Center', () => {
+  assert.doesNotMatch(html,/Work Command Center|homeWorkSummary|homeWorkRefresh|homeWorkStatus|homeFocusList|homeDecisionList|homeActionList|homeSyncList/);
+  assert.doesNotMatch(html,/\/api\/brainy\/work-summary|loadWorkSummary\(|renderWorkSummary\(|workSummarySnapshot|workSummaryRequestGate/);
+  const newsletterIndex = html.indexOf('id="homeNewsletter"');
+  const teamIndex = html.indexOf('id="homeTeamGtd"');
+  const draftsIndex = html.indexOf('id="homeDrafts"');
+  assert.ok(newsletterIndex >= 0);
+  assert.ok(teamIndex > newsletterIndex);
+  assert.ok(draftsIndex > teamIndex);
   assert.match(html,/<script src="\.\/home-dashboard\.js\?v=51"><\/script>/);
   assert.match(fs.readFileSync('sw.js','utf8'),/'\.\/home-dashboard\.js\?v=51'/);
 });
